@@ -1,7 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useEffect, useState } from "react";
-import { ActivityIndicator, Text, View } from "react-native";
+import { ActivityIndicator, Alert, Pressable, Text, View } from "react-native";
 import { KeyboardAwareScrollView } from "react-native-keyboard-controller";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
@@ -13,7 +13,7 @@ import {
 } from "@/components/commitment-form";
 import { PrimaryButton, ScreenHeader } from "@/components/ui";
 import { useReport } from "@/lib/commitments";
-import { localToday } from "@/lib/date";
+import { formatMonthDay, localToday, toDateString } from "@/lib/date";
 import { colors } from "@/lib/theme";
 import { trpc } from "@/utils/trpc";
 
@@ -59,6 +59,51 @@ function StreakCard({ streak, dueToday, reportedToday, week, onReport }: Detail)
   );
 }
 
+type Invitation = {
+  kind: "registered" | "sign_up";
+  status: "sent" | "failed";
+  createdAt: string | Date;
+};
+
+// 友達に送った招待メールの状況と、再送ボタン
+function InvitationStatus({
+  invitation,
+  resending,
+  onResend,
+}: {
+  invitation: Invitation;
+  resending: boolean;
+  onResend: () => void;
+}) {
+  const failed = invitation.status === "failed";
+  return (
+    <View className="mx-[30px] mt-3 min-h-[62px] flex-row items-center gap-3 rounded-[31px] bg-field py-2 pl-[26px] pr-2">
+      <View className="flex-1 gap-0.5">
+        <Text className="text-[12px] text-mute">
+          {invitation.kind === "registered" ? "チェックのお願い" : "会員登録のお願い"}
+        </Text>
+        <Text
+          className="text-[15px] font-semibold"
+          style={{ color: failed ? colors.pinkDeep : colors.ink }}
+        >
+          {failed
+            ? "送れませんでした"
+            : `${formatMonthDay(toDateString(new Date(invitation.createdAt)))} に送信ずみ`}
+        </Text>
+      </View>
+      <Pressable
+        accessibilityRole="button"
+        disabled={resending}
+        onPress={onResend}
+        className="h-[46px] items-center justify-center rounded-[23px] bg-white px-4 active:bg-pink-soft"
+        style={{ opacity: resending ? 0.6 : 1 }}
+      >
+        <Text className="text-[15px] font-bold text-ink">{resending ? "…" : "再送する"}</Text>
+      </Pressable>
+    </View>
+  );
+}
+
 export default function CommitmentDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
@@ -68,6 +113,7 @@ export default function CommitmentDetailScreen() {
   const today = localToday();
   const { data } = useQuery(trpc.commitment.get.queryOptions({ id, today }));
   const update = useMutation(trpc.commitment.update.mutationOptions());
+  const resend = useMutation(trpc.commitment.resendInvitation.mutationOptions());
   const [values, setValues] = useState<FormValues | null>(null);
   const [error, setError] = useState<string | null>(null);
 
@@ -101,13 +147,42 @@ export default function CommitmentDetailScreen() {
       { id, values: toApiValues(values) },
       {
         onError: (e) => setError(e.message),
-        onSuccess: () => {
+        onSuccess: (c) => {
           queryClient.invalidateQueries(trpc.commitment.pathFilter());
           router.back();
+          if (c.invitation?.status === "failed") {
+            Alert.alert(
+              "招待メールを送れませんでした",
+              "変更は保存されています。詳細ページから再送できます。",
+            );
+          }
         },
       },
     );
   };
+
+  const resendInvitation = () => {
+    resend.mutate(
+      { id },
+      {
+        onError: (e) => Alert.alert("再送できませんでした", e.message),
+        onSuccess: (inv) => {
+          queryClient.invalidateQueries(trpc.commitment.get.queryFilter({ id, today }));
+          if (inv.status === "failed") {
+            Alert.alert("招待メールを送れませんでした", "時間をおいてもう一度お試しください。");
+          }
+        },
+      },
+    );
+  };
+
+  // 保存ずみの友達のメールアドレスのままのときだけ、送信状況を出す
+  const invitation =
+    data?.invitation &&
+    values?.checker === "friend" &&
+    values.friendEmail.trim().toLowerCase() === data.invitation.email
+      ? data.invitation
+      : null;
 
   return (
     <KeyboardAwareScrollView
@@ -124,6 +199,15 @@ export default function CommitmentDetailScreen() {
           showSuggestions={false}
           minimumDate={data.startDate}
           header={<StreakCard {...data} onReport={() => report(data)} />}
+          friendFooter={
+            invitation ? (
+              <InvitationStatus
+                invitation={invitation}
+                resending={resend.isPending}
+                onResend={resendInvitation}
+              />
+            ) : null
+          }
           cta="変更を保存"
           submitting={update.isPending}
           error={error}
