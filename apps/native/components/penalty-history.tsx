@@ -2,17 +2,24 @@ import { Text, View } from "react-native";
 
 import { formatMonthDay, formatYen } from "@/lib/date";
 
-type Status = "pending" | "paid" | "failed";
+type Status = "pending" | "processing" | "paid" | "failed";
 
 type Props = {
   penaltyAmount: number | null;
   penaltyTotal: number;
-  penalties: { id: string; dueDate: string; amount: number; status: Status }[];
+  penalties: {
+    id: string;
+    dueDate: string;
+    amount: number;
+    status: Status;
+    failureMessage: string | null;
+  }[];
 };
 
 const STATUS_LABELS: Record<Status, string> = {
   paid: "徴収ずみ",
   pending: "徴収待ち",
+  processing: "処理中",
   failed: "徴収できませんでした",
 };
 
@@ -44,11 +51,16 @@ export function PenaltyHistory({ penaltyAmount, penaltyTotal, penalties }: Props
               <Text className="w-[52px] text-[15px] font-semibold text-ink">
                 {formatMonthDay(p.dueDate)}
               </Text>
-              <Text
-                className={`flex-1 text-[13px] ${p.status === "failed" ? "text-alert" : "text-mute"}`}
-              >
-                {STATUS_LABELS[p.status]}
-              </Text>
+              <View className="flex-1 gap-0.5 py-2.5">
+                <Text
+                  className={`text-[13px] ${p.status === "failed" ? "text-alert" : "text-mute"}`}
+                >
+                  {STATUS_LABELS[p.status]}
+                </Text>
+                {p.status === "failed" && p.failureMessage ? (
+                  <Text className="text-[12px] leading-[17px] text-faint">{p.failureMessage}</Text>
+                ) : null}
+              </View>
               <Text className="text-[16px] font-bold text-ink">{formatYen(p.amount)}</Text>
             </View>
           ))}

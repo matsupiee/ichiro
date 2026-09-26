@@ -2,10 +2,9 @@ import { describe, expect, test } from "bun:test";
 import { commitment, penalty } from "@ichiro/db/schema/index";
 import { and, eq } from "drizzle-orm";
 
-import type { PaymentGateway } from "../lib/payment";
-import { stubPaymentGateway } from "../lib/payment";
 import { runPenaltyJob } from "../lib/penalty";
 import { addDays } from "../lib/schedule";
+import { stripeGateway } from "../lib/stripe";
 import { callerFor, createUser, setupDemo } from "../test/helpers";
 
 const values = {
@@ -16,7 +15,7 @@ const values = {
   monthDays: [1],
   untilDate: "2099-12-31",
   penaltyAmount: null,
-  paymentMethod: null,
+  paymentMethodId: null,
   checker: "self" as const,
   friendEmail: null,
 };
@@ -58,11 +57,11 @@ describe("コミットメントを作成できる", () => {
   });
 
   test("罰金は100円未満にできない", async () => {
-    const { caller, today } = await setupDemo();
+    const { caller, today, seeded } = await setupDemo();
     await expect(
       caller.commitment.create({
         today,
-        values: { ...values, penaltyAmount: 99, paymentMethod: "apple_pay" },
+        values: { ...values, penaltyAmount: 99, paymentMethodId: seeded.paymentMethodIds[0]! },
       }),
     ).rejects.toThrow("罰金は100円以上にしてください");
   });
@@ -75,12 +74,23 @@ describe("コミットメントを作成できる", () => {
   });
 
   test("罰金なしなら支払い方法は保存されない", async () => {
-    const { caller, today } = await setupDemo();
+    const { caller, today, seeded } = await setupDemo();
     const created = await caller.commitment.create({
       today,
-      values: { ...values, paymentMethod: "card" },
+      values: { ...values, paymentMethodId: seeded.paymentMethodIds[1]! },
     });
-    expect(created.paymentMethod).toBeNull();
+    expect(created.paymentMethodId).toBeNull();
+  });
+
+  test("罰金は、自分が登録した支払い方法でしか設定できない", async () => {
+    const { db, today, seeded } = await setupDemo();
+    const other = callerFor(db, await createUser(db, "other@example.com"));
+    await expect(
+      other.commitment.create({
+        today,
+        values: { ...values, penaltyAmount: 500, paymentMethodId: seeded.paymentMethodIds[0]! },
+      }),
+    ).rejects.toThrow("支払い方法が見つかりません");
   });
 
   test("友達にチェックしてもらうならメールアドレスが必要", async () => {
@@ -140,7 +150,7 @@ describe("コミットメントの詳細を見て、途中で設定を変えら�
         ...values,
         goal: "広東語ペラペラ",
         penaltyAmount: 1500,
-        paymentMethod: "card",
+        paymentMethodId: seeded.paymentMethodIds[1]!,
       },
     });
     const after = await caller.commitment.get({ id, today });
@@ -148,7 +158,7 @@ describe("コミットメントの詳細を見て、途中で設定を変えら�
     expect(after).toMatchObject({
       goal: "広東語ペラペラ",
       penaltyAmount: 1500,
-      paymentMethod: "card",
+      paymentMethodId: seeded.paymentMethodIds[1],
       startDate: before.startDate,
       streak: before.streak,
     });
@@ -212,9 +222,20 @@ describe("今日の達成を報告できる", () => {
 describe("報告できなかった日は罰金が徴収される", () => {
   // デモデータは UTC で作るので、翌日の 0:30（UTC）には今日の締め切りが過ぎている
   const tomorrow = (today: string) => new Date(`${addDays(today, 1)}T00:30:00Z`);
+  type Demo = Awaited<ReturnType<typeof setupDemo>>;
+  const runJob = ({ db, stripe }: Demo, now?: Date) =>
+    runPenaltyJob(db, stripeGateway(stripe.client), now);
+  const penaltyOn = async ({ db }: Demo, commitmentId: string, dueDate: string) => {
+    const [row] = await db
+      .select()
+      .from(penalty)
+      .where(and(eq(penalty.commitmentId, commitmentId), eq(penalty.dueDate, dueDate)));
+    return row!;
+  };
 
-  test("締め切りを過ぎると、未報告の日の罰金ができて引き落とされ、詳細の履歴に出る", async () => {
-    const { db, caller, today, seeded } = await setupDemo();
+  test("締め切りを過ぎると、未報告の日の罰金を Stripe で引き落とし、詳細の履歴に出る", async () => {
+    const demo = await setupDemo();
+    const { caller, today, seeded, stripe } = demo;
     const cantonese = seeded.commitmentIds[0]!;
 
     const before = await caller.commitment.get({ id: cantonese, today });
@@ -224,18 +245,27 @@ describe("報告できなかった日は罰金が徴収される", () => {
     ]);
     expect(before.penaltyTotal).toBe(1000);
 
-    const result = await runPenaltyJob(db, stubPaymentGateway, tomorrow(today));
-    expect(result.failed).toBe(0);
+    const result = await runJob(demo, tomorrow(today));
+    expect(result).toMatchObject({ failed: 0, processing: 0 });
     expect(result.paid).toBe(result.created);
 
     const after = await caller.commitment.get({ id: cantonese, today });
-    expect(after.penalties[0]).toMatchObject({
-      dueDate: today,
-      amount: 500,
-      paymentMethod: "apple_pay",
-      status: "paid",
-    });
+    expect(after.penalties[0]).toMatchObject({ dueDate: today, amount: 500, status: "paid" });
     expect(after.penaltyTotal).toBe(1500);
+
+    // 保存した支払い方法で、ユーザーがいないときの決済として引き落とす
+    const row = await penaltyOn(demo, cantonese, today);
+    const charge = stripe.charges.find((c) => c.params.metadata?.penalty_id === row.id)!;
+    expect(charge.params).toMatchObject({
+      amount: 500,
+      currency: "jpy",
+      customer: `cus_demo_${seeded.userId}`,
+      payment_method: `pm_demo_apple_pay_${seeded.userId}`,
+      off_session: true,
+      confirm: true,
+    });
+    expect(charge.idempotencyKey).toBe(`penalty:${row.id}:1`);
+    expect(row.chargeReference).toStartWith("pi_");
 
     // 今日も報告ずみの「禁煙」には罰金がかからない
     const smoking = await caller.commitment.get({ id: seeded.commitmentIds[2]!, today });
@@ -243,47 +273,54 @@ describe("報告できなかった日は罰金が徴収される", () => {
   });
 
   test("締め切り前に報告すれば罰金はかからない", async () => {
-    const { db, caller, today, seeded } = await setupDemo();
+    const demo = await setupDemo();
+    const { caller, today, seeded } = demo;
     const id = seeded.commitmentIds[0]!;
     await caller.commitment.report({ id, today });
 
-    await runPenaltyJob(db, stubPaymentGateway, tomorrow(today));
+    await runJob(demo, tomorrow(today));
     const detail = await caller.commitment.get({ id, today });
     expect(detail.penalties.map((p) => p.dueDate)).not.toContain(today);
   });
 
   test("同じ日の罰金を二重に徴収しない", async () => {
-    const { db, today } = await setupDemo();
-    const first = await runPenaltyJob(db, stubPaymentGateway, tomorrow(today));
+    const demo = await setupDemo();
+    const first = await runJob(demo, tomorrow(demo.today));
     expect(first.created).toBeGreaterThan(0);
-    const second = await runPenaltyJob(db, stubPaymentGateway, tomorrow(today));
-    expect(second).toEqual({ created: 0, paid: 0, failed: 0 });
+    const charges = demo.stripe.charges.length;
+
+    const second = await runJob(demo, tomorrow(demo.today));
+    expect(second).toEqual({ created: 0, paid: 0, processing: 0, failed: 0 });
+    expect(demo.stripe.charges.length).toBe(charges);
   });
 
   test("罰金を設定していないコミットメントでは徴収しない", async () => {
-    const { db, caller, today } = await setupDemo();
+    const demo = await setupDemo();
+    const { caller, today } = demo;
     const created = await caller.commitment.create({ today, timeZone: "UTC", values });
 
-    await runPenaltyJob(db, stubPaymentGateway, new Date(`${addDays(today, 3)}T00:30:00Z`));
+    await runJob(demo, new Date(`${addDays(today, 3)}T00:30:00Z`));
     const detail = await caller.commitment.get({ id: created.id, today });
     expect(detail.penalties).toEqual([]);
   });
 
   test("締め切りを過ぎた日には、あとから報告できない", async () => {
-    const { db, caller, today, seeded } = await setupDemo();
-    await runPenaltyJob(db, stubPaymentGateway, tomorrow(today));
+    const demo = await setupDemo();
+    await runJob(demo, tomorrow(demo.today));
 
-    await expect(caller.commitment.report({ id: seeded.commitmentIds[0]!, today })).rejects.toThrow(
-      "締め切りを過ぎたため報告できません",
-    );
+    await expect(
+      demo.caller.commitment.report({ id: demo.seeded.commitmentIds[0]!, today: demo.today }),
+    ).rejects.toThrow("締め切りを過ぎたため報告できません");
   });
 
-  test("設定を変えても、締め切りを過ぎた分は変更前の金額で徴収する", async () => {
-    const { db, caller, today } = await setupDemo();
+  test("設定を変えても、締め切りを過ぎた分は変更前の金額と支払い方法で徴収する", async () => {
+    const demo = await setupDemo();
+    const { db, caller, today, seeded } = demo;
+    const [applePay, card] = seeded.paymentMethodIds as [string, string];
     const created = await caller.commitment.create({
       today,
       timeZone: "UTC",
-      values: { ...values, penaltyAmount: 500, paymentMethod: "card" },
+      values: { ...values, penaltyAmount: 500, paymentMethodId: card },
     });
     // 3日前に始めて、おとといと昨日は報告しなかった（まだ cron が回っていない）
     await db
@@ -293,24 +330,29 @@ describe("報告できなかった日は罰金が徴収される", () => {
 
     await caller.commitment.update({
       id: created.id,
-      values: { ...values, penaltyAmount: 2000, paymentMethod: "apple_pay" },
+      values: { ...values, penaltyAmount: 2000, paymentMethodId: applePay },
     });
-    await runPenaltyJob(db, stubPaymentGateway, tomorrow(today));
+    await runJob(demo, tomorrow(today));
 
-    const detail = await caller.commitment.get({ id: created.id, today });
-    expect(detail.penalties.map((p) => [p.dueDate, p.amount, p.paymentMethod])).toEqual([
-      [today, 2000, "apple_pay"],
-      [addDays(today, -1), 500, "card"],
-      [addDays(today, -2), 500, "card"],
+    const rows = await db
+      .select()
+      .from(penalty)
+      .where(eq(penalty.commitmentId, created.id))
+      .orderBy(penalty.dueDate);
+    expect(rows.map((p) => [p.dueDate, p.amount, p.paymentMethodId])).toEqual([
+      [addDays(today, -2), 500, card],
+      [addDays(today, -1), 500, card],
+      [today, 2000, applePay],
     ]);
   });
 
   test("終了日を延ばしても、終わっていた期間の分はさかのぼって徴収しない", async () => {
-    const { db, caller, today } = await setupDemo();
+    const { db, caller, today, seeded } = await setupDemo();
+    const card = seeded.paymentMethodIds[1]!;
     const created = await caller.commitment.create({
       today,
       timeZone: "UTC",
-      values: { ...values, penaltyAmount: 500, paymentMethod: "card" },
+      values: { ...values, penaltyAmount: 500, paymentMethodId: card },
     });
     // 10日前から5日前まで続けて、全部報告できたコミットメント
     await db
@@ -327,7 +369,7 @@ describe("報告できなかった日は罰金が徴収される", () => {
       values: {
         ...values,
         penaltyAmount: 500,
-        paymentMethod: "card",
+        paymentMethodId: card,
         untilDate: addDays(today, 30),
       },
     });
@@ -337,57 +379,96 @@ describe("報告できなかった日は罰金が徴収される", () => {
   });
 
   test("この機能より前に作られたコミットメントは、過去の分をさかのぼらない", async () => {
-    const { db, caller, today, seeded } = await setupDemo();
+    const demo = await setupDemo();
+    const { db, caller, today, seeded } = demo;
     const id = seeded.commitmentIds[0]!;
     await db.delete(penalty).where(eq(penalty.commitmentId, id));
     await db.update(commitment).set({ settledThrough: null }).where(eq(commitment.id, id));
 
-    const result = await runPenaltyJob(db, stubPaymentGateway);
+    const result = await runJob(demo);
     const detail = await caller.commitment.get({ id, today });
     expect(detail.penalties).toEqual([]);
     expect(detail.settledThrough).toBe(addDays(today, -1));
     expect(result.created).toBe(0);
   });
 
-  test("引き落としに失敗したら、3回まで試し直す", async () => {
-    const { db, caller, today, seeded } = await setupDemo();
-    let calls = 0;
-    const declined: PaymentGateway = {
-      async charge() {
-        calls++;
-        return { ok: false, message: "カードが拒否されました" };
-      },
-    };
+  test("カードが拒否されたら、試行ごとに冪等キーを変えて3回まで試し直す", async () => {
+    const demo = await setupDemo();
+    const { caller, today, seeded, stripe } = demo;
+    const cantonese = seeded.commitmentIds[0]!;
+    stripe.willCharge("card_declined");
 
-    for (let i = 0; i < 4; i++) await runPenaltyJob(db, declined, tomorrow(today));
+    for (let i = 0; i < 4; i++) await runJob(demo, tomorrow(today));
 
-    const [row] = await db
-      .select()
-      .from(penalty)
-      .where(and(eq(penalty.commitmentId, seeded.commitmentIds[0]!), eq(penalty.dueDate, today)));
+    const row = await penaltyOn(demo, cantonese, today);
     expect(row).toMatchObject({
-      dueDate: today,
       status: "failed",
       attempts: 3,
       failureMessage: "カードが拒否されました",
     });
-    const failedCount = (await db.select().from(penalty).where(eq(penalty.status, "failed")))
-      .length;
-    expect(calls).toBe(failedCount * 3);
+    expect(row.chargeReference).toStartWith("pi_");
+    const keys = stripe.charges
+      .filter((c) => c.params.metadata?.penalty_id === row.id)
+      .map((c) => c.idempotencyKey);
+    expect(keys).toEqual([1, 2, 3].map((n) => `penalty:${row.id}:${n}`));
 
     // 失敗したものも支払うべき罰金として履歴に出る
-    const detail = await caller.commitment.get({ id: seeded.commitmentIds[0]!, today });
-    expect(detail.penalties[0]).toMatchObject({ dueDate: today, status: "failed" });
+    const detail = await caller.commitment.get({ id: cantonese, today });
+    expect(detail.penalties[0]).toMatchObject({
+      dueDate: today,
+      status: "failed",
+      failureMessage: "カードが拒否されました",
+    });
+  });
 
-    // 決済サービスが例外を投げても、失敗として記録して続ける
-    const { db: db2, today: today2 } = await setupDemo();
-    const throwing: PaymentGateway = {
-      async charge() {
-        throw new Error("timeout");
-      },
+  test("本人認証が必要なカードは、その理由を残す", async () => {
+    const demo = await setupDemo();
+    demo.stripe.willCharge("authentication_required");
+    await runJob(demo, tomorrow(demo.today));
+
+    const row = await penaltyOn(demo, demo.seeded.commitmentIds[0]!, demo.today);
+    expect(row.failureMessage).toBe("カードの本人認証が必要なため引き落とせませんでした");
+  });
+
+  test("Stripe 側で処理中になったものは、試し直さずに Webhook を待つ", async () => {
+    const demo = await setupDemo();
+    demo.stripe.willCharge("processing");
+    const first = await runJob(demo, tomorrow(demo.today));
+    expect(first.processing).toBe(first.created);
+    const charges = demo.stripe.charges.length;
+
+    await runJob(demo, tomorrow(demo.today));
+    expect(demo.stripe.charges.length).toBe(charges);
+    const row = await penaltyOn(demo, demo.seeded.commitmentIds[0]!, demo.today);
+    expect(row.status).toBe("processing");
+  });
+
+  test("支払い方法がない罰金は、Stripe を呼ばずに徴収できなかったものとして残す", async () => {
+    const demo = await setupDemo();
+    const cantonese = demo.seeded.commitmentIds[0]!;
+    await demo.db
+      .update(commitment)
+      .set({ paymentMethodId: null })
+      .where(eq(commitment.id, cantonese));
+
+    await runJob(demo, tomorrow(demo.today));
+    const row = await penaltyOn(demo, cantonese, demo.today);
+    expect(row).toMatchObject({
+      status: "failed",
+      failureMessage: "支払い方法が登録されていません",
+    });
+    expect(demo.stripe.charges.some((c) => c.params.metadata?.penalty_id === row.id)).toBe(false);
+  });
+
+  test("Stripe に届かなかったときも、失敗として記録して続ける", async () => {
+    const demo = await setupDemo();
+    demo.stripe.client.paymentIntents.create = async () => {
+      throw new Error("timeout");
     };
-    const result = await runPenaltyJob(db2, throwing, tomorrow(today2));
+    const result = await runJob(demo, tomorrow(demo.today));
     expect(result.failed).toBe(result.created);
+    const row = await penaltyOn(demo, demo.seeded.commitmentIds[0]!, demo.today);
+    expect(row.failureMessage).toBe("timeout");
   });
 
   test("タイムゾーンを保存し、正しくないものは受け付けない", async () => {

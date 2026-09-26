@@ -3,9 +3,11 @@ import { sql } from "drizzle-orm";
 import { index, integer, sqliteTable, text, uniqueIndex } from "drizzle-orm/sqlite-core";
 
 import { user } from "./auth";
-import { commitment, paymentMethods } from "./commitment";
+import { commitment } from "./commitment";
+import { paymentMethod } from "./payment-method";
 
-export const penaltyStatuses = ["pending", "paid", "failed"] as const;
+// pending: 徴収待ち / processing: Stripe で処理中（Webhook で確定する） / paid: 徴収ずみ / failed: 徴収できなかった
+export const penaltyStatuses = ["pending", "processing", "paid", "failed"] as const;
 export type PenaltyStatus = (typeof penaltyStatuses)[number];
 
 // 報告日の締め切りまでに報告できなかったときの罰金。1回の未達成につき1行
@@ -25,11 +27,14 @@ export const penalty = sqliteTable(
     dueDate: text("due_date").notNull(),
     // 精算した時点のコミットメントの金額と支払い方法を写しておく
     amount: integer("amount").notNull(),
-    paymentMethod: text("payment_method", { enum: paymentMethods }).notNull(),
+    // null は支払い方法が登録されていない（この変更より前に作られたコミットメント）。徴収できない
+    paymentMethodId: text("payment_method_id").references(() => paymentMethod.id, {
+      onDelete: "set null",
+    }),
     status: text("status", { enum: penaltyStatuses }).notNull().default("pending"),
     // 決済を試みた回数。失敗が続いたら打ち切る
     attempts: integer("attempts").notNull().default(0),
-    // 決済サービス側の取引ID
+    // Stripe の PaymentIntent の ID
     chargeReference: text("charge_reference"),
     failureMessage: text("failure_message"),
     paidAt: integer("paid_at", { mode: "timestamp_ms" }),

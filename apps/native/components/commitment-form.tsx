@@ -3,12 +3,12 @@ import { type ReactNode, useEffect, useState } from "react";
 import { Platform, Pressable, Text, TextInput, View } from "react-native";
 import Animated, { useAnimatedStyle, useSharedValue, withTiming } from "react-native-reanimated";
 
+import { PaymentMethodPicker } from "@/components/payment-method-picker";
 import { ErrorText, Field, FieldLabel, NoteText, PrimaryButton } from "@/components/ui";
 import { formatFullDate, formatYen, fromDateString, toDateString } from "@/lib/date";
 import { colors, shadows } from "@/lib/theme";
 
 export type Frequency = "daily" | "weekly" | "monthly" | "once";
-export type PaymentMethod = "apple_pay" | "card";
 export type Checker = "self" | "friend";
 
 export type FormValues = {
@@ -20,7 +20,8 @@ export type FormValues = {
   untilDate: string;
   penalty: boolean;
   amount: number;
-  paymentMethod: PaymentMethod;
+  // payment.methods の ID。罰金ありのときに使う
+  paymentMethodId: string | null;
   checker: Checker;
   friendEmail: string;
 };
@@ -35,10 +36,6 @@ const FREQUENCIES: [Frequency, string][] = [
 ];
 const SUGGESTIONS = ["毎日30分広東語を練習する", "週3でジムに行く", "禁煙する"];
 const QUICK_AMOUNTS = [500, 1000, 3000];
-const PAYMENTS: [PaymentMethod, string][] = [
-  ["apple_pay", "Apple Pay"],
-  ["card", "Visa •••• 4242"],
-];
 const CHECKERS: [Checker, string][] = [
   ["self", "自分"],
   ["friend", "友達"],
@@ -53,7 +50,7 @@ export function toApiValues(v: FormValues) {
     monthDays: v.monthDays,
     untilDate: v.untilDate,
     penaltyAmount: v.penalty ? v.amount : null,
-    paymentMethod: v.penalty ? v.paymentMethod : null,
+    paymentMethodId: v.penalty ? v.paymentMethodId : null,
     checker: v.checker,
     friendEmail: v.checker === "friend" ? v.friendEmail.trim() : null,
   };
@@ -66,6 +63,7 @@ export function validate(v: FormValues): string | null {
   if (v.frequency === "weekly" && v.weekdays.length === 0) return "曜日を選んでください";
   if (v.frequency === "monthly" && v.monthDays.length === 0) return "日付を選んでください";
   if (v.penalty && v.amount < MIN_PENALTY) return `罰金は${MIN_PENALTY}円以上にしてください`;
+  if (v.penalty && !v.paymentMethodId) return "支払い方法を選んでください";
   if (v.checker === "friend" && !/^\S+@\S+\.\S+$/.test(v.friendEmail.trim())) {
     return "友達のメールアドレスを入力してください";
   }
@@ -391,27 +389,10 @@ export function CommitmentForm({
           </NoteText>
 
           <FieldLabel>支払い方法</FieldLabel>
-          <View className="mx-[30px] gap-2.5">
-            {PAYMENTS.map(([k, label]) => (
-              <Pressable
-                key={k}
-                onPress={() => set("paymentMethod", k)}
-                className="min-h-[62px] flex-row items-center justify-between rounded-[31px] bg-field pl-[26px] pr-[22px]"
-              >
-                <Text className="text-[17px] text-ink">{label}</Text>
-                <View
-                  style={{
-                    width: 24,
-                    height: 24,
-                    borderRadius: 12,
-                    backgroundColor: "#fff",
-                    borderWidth: v.paymentMethod === k ? 7 : 2,
-                    borderColor: v.paymentMethod === k ? colors.pink : colors.line,
-                  }}
-                />
-              </Pressable>
-            ))}
-          </View>
+          <PaymentMethodPicker
+            value={v.paymentMethodId}
+            onChange={(id) => set("paymentMethodId", id)}
+          />
         </>
       ) : null}
 

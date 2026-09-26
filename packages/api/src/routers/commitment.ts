@@ -1,5 +1,5 @@
-import { commitment, penalty, report } from "@ichiro/db/schema/index";
-import { checkers, commitmentFrequencies, paymentMethods } from "@ichiro/db/schema/commitment";
+import { commitment, paymentMethod, penalty, report } from "@ichiro/db/schema/index";
+import { checkers, commitmentFrequencies } from "@ichiro/db/schema/commitment";
 import { TRPCError } from "@trpc/server";
 import { and, desc, eq, inArray, sql } from "drizzle-orm";
 import z from "zod";
@@ -37,7 +37,8 @@ const fields = z
       .min(MIN_PENALTY, `罰金は${MIN_PENALTY}円以上にしてください`)
       .max(1_000_000)
       .nullable(),
-    paymentMethod: z.enum(paymentMethods).nullable(),
+    // payment.methods で返す支払い方法の ID
+    paymentMethodId: z.string().nullable(),
     checker: z.enum(checkers),
     friendEmail: z.string().trim().email("友達のメールアドレスが正しくありません").nullable(),
   })
@@ -48,10 +49,10 @@ const fields = z
     if (v.frequency === "monthly" && v.monthDays.length === 0) {
       ctx.addIssue({ code: "custom", path: ["monthDays"], message: "日付を選んでください" });
     }
-    if (v.penaltyAmount !== null && v.paymentMethod === null) {
+    if (v.penaltyAmount !== null && v.paymentMethodId === null) {
       ctx.addIssue({
         code: "custom",
-        path: ["paymentMethod"],
+        path: ["paymentMethodId"],
         message: "支払い方法を選んでください",
       });
     }
@@ -72,7 +73,7 @@ function normalize(v: Fields) {
     ...v,
     weekdays: [...new Set(v.weekdays)].sort(),
     monthDays: [...new Set(v.monthDays)].sort((a, b) => a - b),
-    paymentMethod: hasPenalty ? v.paymentMethod : null,
+    paymentMethodId: hasPenalty ? v.paymentMethodId : null,
     friendEmail: v.checker === "friend" ? v.friendEmail : null,
   };
 }
@@ -88,6 +89,23 @@ async function findOwned(ctx: Context & { session: NonNullable<Context["session"
     throw new TRPCError({ code: "NOT_FOUND", message: "コミットメントが見つかりません" });
   }
   return row;
+}
+
+// 罰金を引き落とす支払い方法は、自分が登録したものだけを選べる
+async function assertOwnPaymentMethod(
+  ctx: Context & { session: NonNullable<Context["session"]> },
+  v: Fields,
+) {
+  if (v.penaltyAmount === null || v.paymentMethodId === null) return;
+  const [row] = await ctx.db
+    .select({ id: paymentMethod.id })
+    .from(paymentMethod)
+    .where(
+      and(eq(paymentMethod.id, v.paymentMethodId), eq(paymentMethod.userId, ctx.session.user.id)),
+    );
+  if (!row) {
+    throw new TRPCError({ code: "BAD_REQUEST", message: "支払い方法が見つかりません" });
+  }
 }
 
 async function reportedDates(db: Context["db"], ids: string[]) {
@@ -107,8 +125,8 @@ async function penaltiesOf(db: Context["db"], id: string) {
       id: penalty.id,
       dueDate: penalty.dueDate,
       amount: penalty.amount,
-      paymentMethod: penalty.paymentMethod,
       status: penalty.status,
+      failureMessage: penalty.failureMessage,
       paidAt: penalty.paidAt,
     })
     .from(penalty)
@@ -167,6 +185,7 @@ export const commitmentRouter = router({
           message: "終了日は今日以降にしてください",
         });
       }
+      await assertOwnPaymentMethod(ctx, input.values);
       // 友達への招待メール送信は未実装。メールアドレスだけを保存する。
       const [row] = await ctx.db
         .insert(commitment)
@@ -192,6 +211,7 @@ export const commitmentRouter = router({
           message: "終了日は開始日以降にしてください",
         });
       }
+      await assertOwnPaymentMethod(ctx, input.values);
       // 締め切りを過ぎた分は変更前の設定で精算し、新しい設定は今日の分から使う。
       // 金額を上げたり終了日を延ばしたりしても、過去の分にはさかのぼらない
       const settled = await settleCommitment(ctx.db, current);

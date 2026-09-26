@@ -8,6 +8,7 @@ import { drizzle } from "drizzle-orm/libsql";
 import { migrate } from "drizzle-orm/libsql/migrator";
 
 import { appRouter } from "../routers/index";
+import { createFakeStripe, type FakeStripe } from "./fake-stripe";
 
 const migrationsFolder = new URL("../../../db/src/migrations", import.meta.url).pathname;
 
@@ -47,8 +48,12 @@ export async function createUser(db: Database, email: string, name = "friend") {
   return sessionFor(db, email);
 }
 
-export function callerFor(db: Database, session: Session | null) {
-  return appRouter.createCaller({ db, session });
+export function callerFor(
+  db: Database,
+  session: Session | null,
+  stripe: FakeStripe = createFakeStripe(),
+) {
+  return appRouter.createCaller({ db, session, stripe: stripe.client });
 }
 
 export async function setupDemo() {
@@ -56,5 +61,6 @@ export async function setupDemo() {
   const today = testToday();
   const seeded = await seedDemo(db as never, today, "UTC");
   const session = await sessionFor(db, "demo@ichiro.app");
-  return { db, today, session, seeded, caller: callerFor(db, session) };
+  const stripe = createFakeStripe();
+  return { db, today, session, seeded, stripe, caller: callerFor(db, session, stripe) };
 }

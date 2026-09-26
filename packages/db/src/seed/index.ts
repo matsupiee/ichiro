@@ -5,6 +5,8 @@ import type { SQLiteAsyncDatabase } from "drizzle-orm/sqlite-core";
 
 import { account, user } from "../schema/auth";
 import { commitment } from "../schema/commitment";
+import { paymentCustomer } from "../schema/payment-customer";
+import { paymentMethod } from "../schema/payment-method";
 import { penalty } from "../schema/penalty";
 import { report } from "../schema/report";
 
@@ -40,10 +42,12 @@ export function localTimeZone(): string {
 // デモユーザーと、メインページに並ぶ3件のコミットメントを作る。
 // 何度実行しても同じ状態になるよう、既存のデモユーザーは消してから作り直す。
 // 罰金は昨日の分まで精算ずみにする。timeZone は today と同じ日付になるものを渡す。
+// stripe を渡すと、1つめの支払い方法をその Stripe テスト環境の Customer・PaymentMethod にする。
 export async function seedDemo(
   db: SeedDatabase,
   today: string = localToday(),
   timeZone: string = localTimeZone(),
+  stripe?: { customerId: string; paymentMethodId: string },
 ) {
   await db.delete(user).where(eq(user.email, DEMO_USER.email));
   const settled = { timeZone, settledThrough: addDays(today, -1) };
@@ -65,6 +69,32 @@ export async function seedDemo(
     updatedAt: new Date(),
   });
 
+  // Stripe に登録ずみの支払い方法のつもりのデータ。stripe を渡さないときの ID は Stripe に
+  // 実在しないので、引き落とそうとすると失敗する
+  await db
+    .insert(paymentCustomer)
+    .values({ userId, stripeCustomerId: stripe?.customerId ?? `cus_demo_${userId}` });
+  const [applePay] = await db
+    .insert(paymentMethod)
+    .values({
+      userId,
+      stripePaymentMethodId: stripe?.paymentMethodId ?? `pm_demo_apple_pay_${userId}`,
+      brand: "visa",
+      last4: "4242",
+      wallet: stripe ? null : "apple_pay",
+    })
+    .returning();
+  const [card] = await db
+    .insert(paymentMethod)
+    .values({
+      userId,
+      stripePaymentMethodId: `pm_demo_card_${userId}`,
+      brand: "mastercard",
+      last4: "4444",
+      wallet: null,
+    })
+    .returning();
+
   // 一覧は新しい順に並ぶので、デザインと同じ並び（広東語→体づくり→禁煙）になるよう逆順に作る
   // 1. 毎日。今日まで42日連続で達成ずみ
   const [smoking] = await db
@@ -79,7 +109,7 @@ export async function seedDemo(
       startDate: addDays(today, -41),
       untilDate: addDays(today, 186),
       penaltyAmount: 3000,
-      paymentMethod: "apple_pay",
+      paymentMethodId: applePay!.id,
       checker: "friend",
       friendEmail: "mom@example.com",
       ...settled,
@@ -99,7 +129,7 @@ export async function seedDemo(
       startDate: addDays(today, -19),
       untilDate: addDays(today, 65),
       penaltyAmount: 1000,
-      paymentMethod: "card",
+      paymentMethodId: card!.id,
       checker: "friend",
       friendEmail: "matsukiyo@example.com",
       ...settled,
@@ -120,7 +150,7 @@ export async function seedDemo(
       startDate: addDays(today, -25),
       untilDate: addDays(today, 96),
       penaltyAmount: 500,
-      paymentMethod: "apple_pay",
+      paymentMethodId: applePay!.id,
       checker: "self",
       friendEmail: null,
       ...settled,
@@ -149,7 +179,7 @@ export async function seedDemo(
       commitmentId: cantonese!.id,
       dueDate: addDays(today, d),
       amount: 500,
-      paymentMethod: "apple_pay" as const,
+      paymentMethodId: applePay!.id,
       status: "paid" as const,
       attempts: 1,
       chargeReference: `seed_${d}`,
@@ -157,5 +187,9 @@ export async function seedDemo(
     })),
   );
 
-  return { userId, commitmentIds: [cantonese!.id, gym!.id, smoking!.id] };
+  return {
+    userId,
+    commitmentIds: [cantonese!.id, gym!.id, smoking!.id],
+    paymentMethodIds: [applePay!.id, card!.id],
+  };
 }

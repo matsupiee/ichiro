@@ -1,6 +1,6 @@
 import { trpcServer } from "@hono/trpc-server";
-import { stubPaymentGateway } from "@ichiro/api/lib/payment";
 import { runPenaltyJob } from "@ichiro/api/lib/penalty";
+import { handleStripeEvent, stripeGateway, verifyStripeEvent } from "@ichiro/api/lib/stripe";
 import { appRouter } from "@ichiro/api/routers/index";
 import { Hono } from "hono";
 import { cors } from "hono/cors";
@@ -8,7 +8,7 @@ import { logger } from "hono/logger";
 
 import { createContext } from "./context";
 import { ENV } from "./env.server";
-import { createAuth, getDb } from "./services";
+import { createAuth, getDb, getStripe } from "./services";
 
 const app = new Hono();
 
@@ -35,17 +35,37 @@ app.use(
   }),
 );
 
+// Stripe の Webhook。引き落としの結果と、支払い方法の登録を反映する
+app.post("/stripe/webhook", async (c) => {
+  const signature = c.req.header("stripe-signature");
+  if (!signature) return c.text("missing signature", 400);
+  const stripe = getStripe();
+  let event;
+  try {
+    event = await verifyStripeEvent(
+      stripe,
+      await c.req.text(),
+      signature,
+      ENV.STRIPE_WEBHOOK_SECRET,
+    );
+  } catch {
+    return c.text("invalid signature", 400);
+  }
+  await handleStripeEvent(getDb(), stripe, event);
+  return c.json({ received: true });
+});
+
 app.get("/", (c) => {
   return c.text("OK");
 });
 
 export default {
   fetch: app.fetch,
-  // 1時間ごとの cron。締め切りを過ぎた未報告の日を精算し、罰金を引き落とす
+  // 1時間ごとの cron。締め切りを過ぎた未報告の日を精算し、罰金を Stripe で引き落とす
   scheduled(controller, _env, ctx) {
     ctx.waitUntil(
-      runPenaltyJob(getDb(), stubPaymentGateway, new Date(controller.scheduledTime)).then((r) =>
-        console.log("penalty job", r),
+      runPenaltyJob(getDb(), stripeGateway(getStripe()), new Date(controller.scheduledTime)).then(
+        (r) => console.log("penalty job", r),
       ),
     );
   },

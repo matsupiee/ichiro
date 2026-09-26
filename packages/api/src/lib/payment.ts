@@ -1,24 +1,20 @@
-import type { PaymentMethod } from "@ichiro/db/schema/commitment";
-
 export type ChargeRequest = {
-  // 同じ罰金を二重に引き落とさないためのキー。罰金の ID を使う
+  // 同じ試行を二重に引き落とさないためのキー
   idempotencyKey: string;
-  userId: string;
+  penaltyId: string;
+  stripeCustomerId: string;
+  stripePaymentMethodId: string;
   amount: number;
-  paymentMethod: PaymentMethod;
   description: string;
 };
 
-export type ChargeResult = { ok: true; reference: string } | { ok: false; message: string };
+// succeeded: 引き落とせた / processing: 決済サービス側で処理中（結果は Webhook で届く） / failed: 引き落とせなかった
+export type ChargeResult =
+  | { status: "succeeded"; reference: string }
+  | { status: "processing"; reference: string }
+  | { status: "failed"; reference: string | null; message: string };
 
-// 罰金を引き落とす決済サービスの窓口。実際の決済サービスとつなぐときはこれを実装する
+// 罰金を引き落とす決済サービスの窓口。本番は Stripe（lib/stripe.ts）、テストでは偽物を渡す
 export type PaymentGateway = {
   charge(request: ChargeRequest): Promise<ChargeResult>;
-};
-
-// 決済サービスとはまだつながっていないので、引き落としに成功したことにする仮の窓口
-export const stubPaymentGateway: PaymentGateway = {
-  async charge(request) {
-    return { ok: true, reference: `stub_${request.idempotencyKey}` };
-  },
 };

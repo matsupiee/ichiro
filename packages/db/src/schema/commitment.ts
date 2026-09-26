@@ -3,13 +3,12 @@ import { sql } from "drizzle-orm";
 import { index, integer, sqliteTable, text } from "drizzle-orm/sqlite-core";
 
 import { user } from "./auth";
+import { paymentMethod } from "./payment-method";
 
 export const commitmentFrequencies = ["daily", "weekly", "monthly", "once"] as const;
-export const paymentMethods = ["apple_pay", "card"] as const;
 export const checkers = ["self", "friend"] as const;
 
 export type CommitmentFrequency = (typeof commitmentFrequencies)[number];
-export type PaymentMethod = (typeof paymentMethods)[number];
 export type Checker = (typeof checkers)[number];
 
 export const commitment = sqliteTable(
@@ -33,7 +32,10 @@ export const commitment = sqliteTable(
     untilDate: text("until_date").notNull(),
     // null は罰金なし
     penaltyAmount: integer("penalty_amount"),
-    paymentMethod: text("payment_method", { enum: paymentMethods }),
+    // 罰金を引き落とす支払い方法。罰金ありのときだけ入る
+    paymentMethodId: text("payment_method_id").references(() => paymentMethod.id, {
+      onDelete: "set null",
+    }),
     checker: text("checker", { enum: checkers }).notNull(),
     friendEmail: text("friend_email"),
     // 締め切り（報告日の 23:59:59）を判定するタイムゾーン。IANA 名

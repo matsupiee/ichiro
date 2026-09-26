@@ -1,15 +1,22 @@
 import type { Database } from "@ichiro/db";
-import { commitment, penalty, report } from "@ichiro/db/schema/index";
+import {
+  commitment,
+  paymentCustomer,
+  paymentMethod,
+  penalty,
+  report,
+} from "@ichiro/db/schema/index";
 import { and, eq, isNull, lt, or } from "drizzle-orm";
 
-import type { PaymentGateway } from "./payment";
+import type { ChargeResult, PaymentGateway } from "./payment";
 import { addDays, isScheduled, type Schedule } from "./schedule";
 
 // 罰金は「報告日の 23:59:59（コミットメントのタイムゾーン）までに報告がなかった」ときに発生する。
 //
 // 1. 精算: 締め切りを過ぎた報告日のうち、報告がないものに罰金の行（pending）を作る。
 //    どこまで精算したかを commitment.settled_through に持ち、同じ日を二度精算しない。
-// 2. 徴収: pending（と、回数が残っている failed）の罰金を決済サービスで引き落とす。
+// 2. 徴収: pending（と、回数が残っている failed）の罰金を Stripe で引き落とす。
+//    Stripe 側で処理中になったもの（processing）は、Webhook で結果を反映する。
 //
 // どちらも1時間ごとの cron で動く。精算は、設定の変更・報告・詳細の表示のときにも
 // そのコミットメントについて先に行い、変更前の設定で過去の分を確定させる。
@@ -72,7 +79,7 @@ export async function settleCommitment(db: Database, row: Row, now: Date = new D
 
   let created: (typeof penalty.$inferSelect)[] = [];
   // settled_through が null の行（この機能より前に作られた行）は、過去の分をさかのぼって徴収しない
-  if (row.settledThrough !== null && row.penaltyAmount !== null && row.paymentMethod !== null) {
+  if (row.settledThrough !== null && row.penaltyAmount !== null) {
     const rows = await db
       .select({ reportDate: report.reportDate })
       .from(report)
@@ -89,7 +96,8 @@ export async function settleCommitment(db: Database, row: Row, now: Date = new D
             commitmentId: row.id,
             dueDate,
             amount: row.penaltyAmount!,
-            paymentMethod: row.paymentMethod!,
+            // 支払い方法がなくても罰金は記録する。徴収のときに失敗として残る
+            paymentMethodId: row.paymentMethodId,
           })),
         )
         .onConflictDoNothing()
@@ -121,16 +129,23 @@ export async function settleAll(db: Database, now: Date = new Date()) {
   return created;
 }
 
-// 未徴収の罰金を引き落とす
+// 未徴収の罰金を、登録された支払い方法で引き落とす
 export async function collectPenalties(
   db: Database,
   gateway: PaymentGateway,
   now: Date = new Date(),
 ) {
   const due = await db
-    .select({ penalty, goal: commitment.goal })
+    .select({
+      penalty,
+      goal: commitment.goal,
+      stripePaymentMethodId: paymentMethod.stripePaymentMethodId,
+      stripeCustomerId: paymentCustomer.stripeCustomerId,
+    })
     .from(penalty)
     .innerJoin(commitment, eq(commitment.id, penalty.commitmentId))
+    .leftJoin(paymentMethod, eq(paymentMethod.id, penalty.paymentMethodId))
+    .leftJoin(paymentCustomer, eq(paymentCustomer.userId, penalty.userId))
     .where(
       or(
         eq(penalty.status, "pending"),
@@ -138,48 +153,68 @@ export async function collectPenalties(
       ),
     );
 
-  let paid = 0;
-  let failed = 0;
-  for (const { penalty: p, goal } of due) {
-    const result = await gateway
-      .charge({
-        idempotencyKey: p.id,
-        userId: p.userId,
-        amount: p.amount,
-        paymentMethod: p.paymentMethod,
-        description: `ichiro 罰金「${goal}」${p.dueDate}`,
-      })
-      .catch((e: unknown) => ({
-        ok: false as const,
-        message: e instanceof Error ? e.message : String(e),
-      }));
+  const counts = { paid: 0, processing: 0, failed: 0 };
+  for (const { penalty: p, goal, stripePaymentMethodId, stripeCustomerId } of due) {
+    const attempts = p.attempts + 1;
+    const result: ChargeResult =
+      !stripePaymentMethodId || !stripeCustomerId
+        ? { status: "failed", reference: null, message: "支払い方法が登録されていません" }
+        : await gateway
+            .charge({
+              // 失敗した決済を試し直せるよう、試行ごとにキーを変える
+              idempotencyKey: `penalty:${p.id}:${attempts}`,
+              penaltyId: p.id,
+              stripeCustomerId,
+              stripePaymentMethodId,
+              amount: p.amount,
+              description: `ichiro 罰金「${goal}」${p.dueDate}`,
+            })
+            .catch((e: unknown): ChargeResult => ({
+              status: "failed",
+              reference: null,
+              message: e instanceof Error ? e.message : String(e),
+            }));
 
-    if (result.ok) {
-      paid++;
-      await db
-        .update(penalty)
-        .set({
-          status: "paid",
-          attempts: p.attempts + 1,
-          chargeReference: result.reference,
-          failureMessage: null,
-          paidAt: now,
-        })
-        .where(eq(penalty.id, p.id));
-    } else {
-      failed++;
-      await db
-        .update(penalty)
-        .set({ status: "failed", attempts: p.attempts + 1, failureMessage: result.message })
-        .where(eq(penalty.id, p.id));
+    switch (result.status) {
+      case "succeeded":
+        counts.paid++;
+        await db
+          .update(penalty)
+          .set({
+            status: "paid",
+            attempts,
+            chargeReference: result.reference,
+            failureMessage: null,
+            paidAt: now,
+          })
+          .where(eq(penalty.id, p.id));
+        break;
+      case "processing":
+        counts.processing++;
+        await db
+          .update(penalty)
+          .set({ status: "processing", attempts, chargeReference: result.reference })
+          .where(eq(penalty.id, p.id));
+        break;
+      case "failed":
+        counts.failed++;
+        await db
+          .update(penalty)
+          .set({
+            status: "failed",
+            attempts,
+            chargeReference: result.reference,
+            failureMessage: result.message,
+          })
+          .where(eq(penalty.id, p.id));
+        break;
     }
   }
-  return { paid, failed };
+  return counts;
 }
 
 // cron から呼ぶ。精算してから徴収する
 export async function runPenaltyJob(db: Database, gateway: PaymentGateway, now: Date = new Date()) {
   const created = await settleAll(db, now);
-  const { paid, failed } = await collectPenalties(db, gateway, now);
-  return { created, paid, failed };
+  return { created, ...(await collectPenalties(db, gateway, now)) };
 }

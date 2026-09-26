@@ -84,7 +84,7 @@ export default function CommitmentDetailScreen() {
       untilDate: data.untilDate,
       penalty: data.penaltyAmount !== null,
       amount: data.penaltyAmount ?? 500,
-      paymentMethod: data.paymentMethod ?? "apple_pay",
+      paymentMethodId: data.paymentMethodId,
       checker: data.checker,
       friendEmail: data.friendEmail ?? "",
     });

@@ -25,7 +25,7 @@ function blank(today: string): FormValues {
     untilDate: addDays(today, 90),
     penalty: false,
     amount: 500,
-    paymentMethod: "apple_pay",
+    paymentMethodId: null,
     checker: "self",
     friendEmail: "",
   };
