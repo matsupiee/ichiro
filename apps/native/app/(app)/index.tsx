@@ -10,7 +10,6 @@ import { CommitmentCard } from "@/components/commitment-card";
 import { Dog } from "@/components/dog/dog";
 import { ProfileSheet } from "@/components/profile-sheet";
 import { CheckMark } from "@/components/ui";
-import { authClient } from "@/lib/auth-client";
 import { useAvatar } from "@/lib/avatar";
 import { useReport } from "@/lib/commitments";
 import { localToday } from "@/lib/date";
@@ -21,8 +20,7 @@ export default function MainScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const sheet = useRef<BottomSheetModal>(null);
-  const { data: session } = authClient.useSession();
-  const avatar = useAvatar(session?.user.id);
+  const avatar = useAvatar();
   const report = useReport();
   const today = localToday();
   const { data: items, isPending } = useQuery(trpc.commitment.list.queryOptions({ today }));
@@ -53,7 +51,12 @@ export default function MainScreen() {
             className="h-[58px] w-[58px] items-center justify-center rounded-full bg-white"
             style={{ boxShadow: shadows.avatarButton }}
           >
-            <Avatar uri={avatar.uri} size={42} placeholderColor={colors.field} />
+            <Avatar
+              uri={avatar.uri}
+              size={42}
+              placeholderColor={colors.field}
+              loading={avatar.busy}
+            />
           </Pressable>
         </View>
 
