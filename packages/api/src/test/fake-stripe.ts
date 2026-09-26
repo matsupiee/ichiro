@@ -1,6 +1,6 @@
 import Stripe from "stripe";
 
-import type { StripeClient } from "../lib/stripe";
+import type { StripeClient } from "../third-party-lib/stripe";
 
 type ChargeOutcome = "succeeded" | "processing" | "card_declined" | "authentication_required";
 

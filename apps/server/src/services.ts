@@ -1,6 +1,6 @@
-import { createMailer } from "@ichiro/api/lib/mailer";
+import { createMailer } from "@ichiro/api/third-party-lib/mailer";
 import { createAuth as createConfiguredAuth } from "@ichiro/auth";
-import { createStripe } from "@ichiro/api/lib/stripe";
+import { createStripe } from "@ichiro/api/third-party-lib/stripe";
 import { type Database, createDb } from "@ichiro/db";
 
 import { ENV } from "./env.server";

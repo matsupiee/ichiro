@@ -1,1 +1,1 @@
-docs/coding-pattern/backend.md に従ってください
+docs/rules/backend.md に従ってください

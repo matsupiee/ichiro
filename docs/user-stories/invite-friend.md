@@ -63,5 +63,8 @@
 
 ## 対応するテスト
 
-- `packages/api/src/routers/invitation.test.ts` の「友達に招待メールを送れる」「設定を変えると、新しい友達に招待メールが届く」「招待メールを再送できる」
+- 作成したときの送信は `packages/api/src/routers/consumer/commitment/create/handler.integration.test.ts` の「友達にチェックしてもらうなら、作成したときに招待メールを送る」
+- 設定を変えたときの送信は `packages/api/src/routers/consumer/commitment/update/handler.integration.test.ts` の「設定を変えると、新しい友達に招待メールが届く」
+- 再送は `packages/api/src/routers/consumer/commitment/resend-invitation/handler.integration.test.ts`
+- メールの本文は `packages/api/src/shared/invitation/build-invitation-email.test.ts`
 - メールの本文は同じファイルの「招待メールの本文」

@@ -40,4 +40,4 @@
 ## 対応するテスト
 
 - 認証そのものは Better Auth に任せており、API のテストはない。
-- ログインしていないと API を呼べないことは `packages/api/src/routers/commitment.test.ts` の「ログインしていないと一覧できない」で確かめる。
+- ログインしていないと API を呼べないことは `packages/api/src/routers/consumer/commitment/list/handler.integration.test.ts` の「ログインしていないと一覧できない」で確かめる。

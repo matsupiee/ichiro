@@ -112,9 +112,9 @@ export default function CommitmentDetailScreen() {
   const queryClient = useQueryClient();
   const report = useReport();
   const today = localToday();
-  const { data } = useQuery(trpc.commitment.get.queryOptions({ id, today }));
-  const update = useMutation(trpc.commitment.update.mutationOptions());
-  const resend = useMutation(trpc.commitment.resendInvitation.mutationOptions());
+  const { data } = useQuery(trpc.consumer.commitment.get.queryOptions({ id, today }));
+  const update = useMutation(trpc.consumer.commitment.update.mutationOptions());
+  const resend = useMutation(trpc.consumer.commitment.resendInvitation.mutationOptions());
   const [values, setValues] = useState<FormValues | null>(null);
   const [error, setError] = useState<string | null>(null);
 
@@ -149,7 +149,7 @@ export default function CommitmentDetailScreen() {
       {
         onError: (e) => setError(e.message),
         onSuccess: (c) => {
-          queryClient.invalidateQueries(trpc.commitment.pathFilter());
+          queryClient.invalidateQueries(trpc.consumer.commitment.pathFilter());
           router.back();
           if (c.invitation?.status === "failed") {
             Alert.alert(
@@ -168,7 +168,7 @@ export default function CommitmentDetailScreen() {
       {
         onError: (e) => Alert.alert("再送できませんでした", e.message),
         onSuccess: (inv) => {
-          queryClient.invalidateQueries(trpc.commitment.get.queryFilter({ id, today }));
+          queryClient.invalidateQueries(trpc.consumer.commitment.get.queryFilter({ id, today }));
           if (inv.status === "failed") {
             Alert.alert("招待メールを送れませんでした", "時間をおいてもう一度お試しください。");
           }

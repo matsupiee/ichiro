@@ -1,18 +1,41 @@
-import { protectedProcedure, publicProcedure, router } from "../index";
-import { commitmentRouter } from "./commitment";
-import { paymentRouter } from "./payment";
+import type { HttpRoute } from "../http";
+import { router } from "../trpc";
+import { commitmentCreateRoute } from "./consumer/commitment/create/route";
+import { commitmentGetRoute } from "./consumer/commitment/get/route";
+import { commitmentListRoute } from "./consumer/commitment/list/route";
+import { commitmentReportRoute } from "./consumer/commitment/report/route";
+import { commitmentResendInvitationRoute } from "./consumer/commitment/resend-invitation/route";
+import { commitmentUpdateRoute } from "./consumer/commitment/update/route";
+import { paymentCompleteSetupRoute } from "./consumer/payment/complete-setup/route";
+import { paymentListMethodsRoute } from "./consumer/payment/list-methods/route";
+import { paymentStartSetupRoute } from "./consumer/payment/start-setup/route";
+import { profileDeleteAvatarRoute } from "./consumer/profile/delete-avatar/route";
+import { profileGetAvatarRoute } from "./consumer/profile/get-avatar/route";
+import { profileUploadAvatarRoute } from "./consumer/profile/upload-avatar/route";
 
 export const appRouter = router({
-  healthCheck: publicProcedure.query(() => {
-    return "OK";
+  consumer: router({
+    commitment: router({
+      list: commitmentListRoute,
+      get: commitmentGetRoute,
+      create: commitmentCreateRoute,
+      update: commitmentUpdateRoute,
+      resendInvitation: commitmentResendInvitationRoute,
+      report: commitmentReportRoute,
+    }),
+    payment: router({
+      listMethods: paymentListMethodsRoute,
+      startSetup: paymentStartSetupRoute,
+      completeSetup: paymentCompleteSetupRoute,
+    }),
   }),
-  privateData: protectedProcedure.query(({ ctx }) => {
-    return {
-      message: "This is private",
-      user: ctx.session.user,
-    };
-  }),
-  commitment: commitmentRouter,
-  payment: paymentRouter,
 });
+
 export type AppRouter = typeof appRouter;
+
+// tRPC に載せない、素の HTTP のルート
+export const httpRoutes: HttpRoute[] = [
+  profileUploadAvatarRoute,
+  profileDeleteAvatarRoute,
+  profileGetAvatarRoute,
+];

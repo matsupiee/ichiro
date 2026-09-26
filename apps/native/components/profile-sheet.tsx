@@ -116,7 +116,7 @@ function NameModal({
 
 // Stripe に登録した支払い方法。罰金はここから引き落とされる
 function PaymentInfo() {
-  const { data: methods } = useQuery(trpc.payment.methods.queryOptions());
+  const { data: methods } = useQuery(trpc.consumer.payment.listMethods.queryOptions());
   const { add, adding } = useAddPaymentMethod();
 
   return (

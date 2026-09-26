@@ -40,4 +40,4 @@
 
 ## 対応するテスト
 
-- `packages/api/src/routers/commitment.test.ts` の「コミットメントの詳細を見て、途中で設定を変えられる」
+- 詳細は `packages/api/src/routers/consumer/commitment/get/handler.integration.test.ts`、設定の変更は `packages/api/src/routers/consumer/commitment/update/handler.integration.test.ts`

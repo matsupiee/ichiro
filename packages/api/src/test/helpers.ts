@@ -7,9 +7,11 @@ import { eq } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/libsql";
 import { migrate } from "drizzle-orm/libsql/migrator";
 
-import type { Mailer, MailMessage } from "../lib/mailer";
-import { appRouter } from "../routers/index";
+import { createHttpApp } from "../http";
+import { appRouter, httpRoutes } from "../routers/index";
+import type { Mailer, MailMessage } from "../third-party-lib/mailer";
 import { createFakeStripe, type FakeStripe } from "./fake-stripe";
+import { memoryAvatarStorage } from "./memory-avatar-storage";
 
 const migrationsFolder = new URL("../../../db/src/migrations", import.meta.url).pathname;
 
@@ -64,15 +66,47 @@ export function createTestMailer() {
   return mailer;
 }
 
+type TestServices = {
+  mailer?: ReturnType<typeof createTestMailer>;
+  stripe?: FakeStripe;
+  avatars?: ReturnType<typeof memoryAvatarStorage>;
+};
+
 export function callerFor(
   db: Database,
   session: Session | null,
   {
     mailer = createTestMailer(),
     stripe = createFakeStripe(),
-  }: { mailer?: ReturnType<typeof createTestMailer>; stripe?: FakeStripe } = {},
+    avatars = memoryAvatarStorage(),
+  }: TestServices = {},
 ) {
-  return appRouter.createCaller({ db, session, mailer, stripe: stripe.client });
+  return appRouter.createCaller({
+    db,
+    session,
+    mailer,
+    stripe: stripe.client,
+    avatarStorage: avatars.storage,
+  });
+}
+
+// 素の HTTP のルートをまとめたアプリ。Cookie ヘッダーの値で sessions からログイン中のユーザーを選ぶ
+export function httpAppFor(
+  db: Database,
+  sessions: Map<string, Session>,
+  {
+    mailer = createTestMailer(),
+    stripe = createFakeStripe(),
+    avatars = memoryAvatarStorage(),
+  }: TestServices = {},
+) {
+  return createHttpApp(httpRoutes, async (c, { readSession }) => ({
+    db,
+    session: readSession ? (sessions.get(c.req.header("Cookie") ?? "") ?? null) : null,
+    mailer,
+    stripe: stripe.client,
+    avatarStorage: avatars.storage,
+  }));
 }
 
 export async function setupDemo() {
@@ -82,6 +116,7 @@ export async function setupDemo() {
   const session = await sessionFor(db, "demo@ichiro.app");
   const mailer = createTestMailer();
   const stripe = createFakeStripe();
+  const avatars = memoryAvatarStorage();
   return {
     db,
     today,
@@ -89,6 +124,7 @@ export async function setupDemo() {
     seeded,
     mailer,
     stripe,
-    caller: callerFor(db, session, { mailer, stripe }),
+    avatars,
+    caller: callerFor(db, session, { mailer, stripe, avatars }),
   };
 }

@@ -40,7 +40,7 @@ export default function NewCommitmentScreen() {
   const today = localToday();
   const [values, setValues] = useState(() => blank(today));
   const [error, setError] = useState<string | null>(null);
-  const create = useMutation(trpc.commitment.create.mutationOptions());
+  const create = useMutation(trpc.consumer.commitment.create.mutationOptions());
 
   const submit = () => {
     const invalid = validate(values);
@@ -54,7 +54,7 @@ export default function NewCommitmentScreen() {
       {
         onError: (e) => setError(e.message),
         onSuccess: (c) => {
-          queryClient.invalidateQueries(trpc.commitment.pathFilter());
+          queryClient.invalidateQueries(trpc.consumer.commitment.pathFilter());
           router.back();
           celebrate({
             title: "宣言したワン！",

@@ -1,8 +1,9 @@
 import { trpcServer } from "@hono/trpc-server";
-import { avatarRoutes } from "@ichiro/api/avatar";
-import { runPenaltyJob } from "@ichiro/api/lib/penalty";
-import { handleStripeEvent, stripeGateway, verifyStripeEvent } from "@ichiro/api/lib/stripe";
-import { appRouter } from "@ichiro/api/routers/index";
+import { createHttpApp } from "@ichiro/api/http";
+import { appRouter, httpRoutes } from "@ichiro/api/routers/index";
+import { handleStripeEvent } from "@ichiro/api/shared/payment/handle-stripe-event";
+import { runPenaltyJob } from "@ichiro/api/shared/penalty/run-penalty-job";
+import { verifyStripeEvent } from "@ichiro/api/third-party-lib/stripe";
 import { Hono } from "hono";
 import { cors } from "hono/cors";
 import { logger } from "hono/logger";
@@ -26,26 +27,14 @@ app.use(
 
 app.on(["POST", "GET"], "/api/auth/*", async (c) => (await createAuth()).handler(c.req.raw));
 
-app.route(
-  "/",
-  avatarRoutes(async () => {
-    const db = getDb();
-    const auth = await createAuth(db);
-    return {
-      db,
-      storage: ENV.AVATARS,
-      getSession: (headers) => auth.api.getSession({ headers }),
-    };
-  }),
-);
+// プロフィール写真のように、tRPC に載せない素の HTTP のルート
+app.route("/", createHttpApp(httpRoutes, createContext));
 
 app.use(
   "/trpc/*",
   trpcServer({
     router: appRouter,
-    createContext: (_opts, context) => {
-      return createContext({ context });
-    },
+    createContext: (_opts, context) => createContext(context),
   }),
 );
 
@@ -78,8 +67,8 @@ export default {
   // 1時間ごとの cron。締め切りを過ぎた未報告の日を精算し、罰金を Stripe で引き落とす
   scheduled(controller, _env, ctx) {
     ctx.waitUntil(
-      runPenaltyJob(getDb(), stripeGateway(getStripe()), new Date(controller.scheduledTime)).then(
-        (r) => console.log("penalty job", r),
+      runPenaltyJob(getDb(), getStripe(), new Date(controller.scheduledTime)).then((r) =>
+        console.log("penalty job", r),
       ),
     );
   },
