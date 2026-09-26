@@ -12,7 +12,7 @@ import { drizzle as drizzleLibsql } from "drizzle-orm/libsql";
 import { migrate } from "drizzle-orm/libsql/migrator";
 import { drizzle as drizzleProxy } from "drizzle-orm/sqlite-proxy";
 
-import { DEMO_USER, localToday, seedDemo, type SeedDatabase } from "./index";
+import { DEMO_USER, FRIEND_USER, localToday, seedDemo, type SeedDatabase } from "./index";
 
 const { values } = parseArgs({
   options: {
@@ -64,3 +64,4 @@ await seedDemo(db, today);
 console.log(`デモデータを投入しました（今日 = ${today}）`);
 console.log(`  メールアドレス: ${DEMO_USER.email}`);
 console.log(`  パスワード:     ${DEMO_USER.password}`);
+console.log(`  友達（登録ずみ）: ${FRIEND_USER.email} / ${FRIEND_USER.password}`);
