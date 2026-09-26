@@ -1,6 +1,7 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "expo-router";
 import { useState } from "react";
+import { Alert } from "react-native";
 import { KeyboardAwareScrollView } from "react-native-keyboard-controller";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
@@ -65,6 +66,12 @@ export default function NewCommitmentScreen() {
                 : { label: "チェック", value: c.checker === "friend" ? "友達" : "自分" },
             ],
           });
+          if (c.invitation?.status === "failed") {
+            Alert.alert(
+              "招待メールを送れませんでした",
+              "コミットメントは作成されています。詳細ページから再送できます。",
+            );
+          }
         },
       },
     );

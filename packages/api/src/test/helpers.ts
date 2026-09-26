@@ -7,6 +7,7 @@ import { eq } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/libsql";
 import { migrate } from "drizzle-orm/libsql/migrator";
 
+import type { Mailer, MailMessage } from "../lib/mailer";
 import { appRouter } from "../routers/index";
 import { createFakeStripe, type FakeStripe } from "./fake-stripe";
 
@@ -48,12 +49,30 @@ export async function createUser(db: Database, email: string, name = "friend") {
   return sessionFor(db, email);
 }
 
+// 送ったメールを outbox にためるだけの Mailer。failing を true にすると送信に失敗する
+export function createTestMailer() {
+  const outbox: MailMessage[] = [];
+  const mailer: Mailer & { outbox: MailMessage[]; failing: boolean } = {
+    outbox,
+    failing: false,
+    async send(message) {
+      if (mailer.failing) throw new Error("mail server is down");
+      outbox.push(message);
+      return { id: `test-${outbox.length}` };
+    },
+  };
+  return mailer;
+}
+
 export function callerFor(
   db: Database,
   session: Session | null,
-  stripe: FakeStripe = createFakeStripe(),
+  {
+    mailer = createTestMailer(),
+    stripe = createFakeStripe(),
+  }: { mailer?: ReturnType<typeof createTestMailer>; stripe?: FakeStripe } = {},
 ) {
-  return appRouter.createCaller({ db, session, stripe: stripe.client });
+  return appRouter.createCaller({ db, session, mailer, stripe: stripe.client });
 }
 
 export async function setupDemo() {
@@ -61,6 +80,15 @@ export async function setupDemo() {
   const today = testToday();
   const seeded = await seedDemo(db as never, today, "UTC");
   const session = await sessionFor(db, "demo@ichiro.app");
+  const mailer = createTestMailer();
   const stripe = createFakeStripe();
-  return { db, today, session, seeded, stripe, caller: callerFor(db, session, stripe) };
+  return {
+    db,
+    today,
+    session,
+    seeded,
+    mailer,
+    stripe,
+    caller: callerFor(db, session, { mailer, stripe }),
+  };
 }

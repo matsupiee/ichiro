@@ -5,6 +5,7 @@ import type { SQLiteAsyncDatabase } from "drizzle-orm/sqlite-core";
 
 import { account, user } from "../schema/auth";
 import { commitment } from "../schema/commitment";
+import { invitation } from "../schema/invitation";
 import { paymentCustomer } from "../schema/payment-customer";
 import { paymentMethod } from "../schema/payment-method";
 import { penalty } from "../schema/penalty";
@@ -19,6 +20,40 @@ export const DEMO_USER = {
   email: "demo@ichiro.app",
   password: "password123",
 } as const;
+
+// 「体づくり」のチェック役。ichiro に登録ずみの友達
+export const FRIEND_USER = {
+  name: "matsukiyo",
+  email: "matsukiyo@example.com",
+  password: "password123",
+} as const;
+
+// 「禁煙」のチェック役。まだ ichiro に登録していない友達
+export const UNREGISTERED_FRIEND_EMAIL = "mom@example.com";
+
+async function createUser(
+  db: SeedDatabase,
+  u: { name: string; email: string; password: string },
+): Promise<string> {
+  await db.delete(user).where(eq(user.email, u.email));
+  const userId = createId();
+  await db.insert(user).values({
+    id: userId,
+    name: u.name,
+    email: u.email,
+    emailVerified: true,
+    updatedAt: new Date(),
+  });
+  await db.insert(account).values({
+    id: createId(),
+    accountId: userId,
+    providerId: "credential",
+    userId,
+    password: await hashPassword(u.password),
+    updatedAt: new Date(),
+  });
+  return userId;
+}
 
 function addDays(date: string, days: number): string {
   const d = new Date(`${date}T00:00:00Z`);
@@ -40,7 +75,7 @@ export function localTimeZone(): string {
 }
 
 // デモユーザーと、メインページに並ぶ3件のコミットメントを作る。
-// 何度実行しても同じ状態になるよう、既存のデモユーザーは消してから作り直す。
+// 何度実行しても同じ状態になるよう、既存のデモユーザーと友達は消してから作り直す。
 // 罰金は昨日の分まで精算ずみにする。timeZone は today と同じ日付になるものを渡す。
 // stripe を渡すと、1つめの支払い方法をその Stripe テスト環境の Customer・PaymentMethod にする。
 export async function seedDemo(
@@ -49,25 +84,9 @@ export async function seedDemo(
   timeZone: string = localTimeZone(),
   stripe?: { customerId: string; paymentMethodId: string },
 ) {
-  await db.delete(user).where(eq(user.email, DEMO_USER.email));
+  const userId = await createUser(db, DEMO_USER);
+  await createUser(db, FRIEND_USER);
   const settled = { timeZone, settledThrough: addDays(today, -1) };
-
-  const userId = createId();
-  await db.insert(user).values({
-    id: userId,
-    name: DEMO_USER.name,
-    email: DEMO_USER.email,
-    emailVerified: true,
-    updatedAt: new Date(),
-  });
-  await db.insert(account).values({
-    id: createId(),
-    accountId: userId,
-    providerId: "credential",
-    userId,
-    password: await hashPassword(DEMO_USER.password),
-    updatedAt: new Date(),
-  });
 
   // Stripe に登録ずみの支払い方法のつもりのデータ。stripe を渡さないときの ID は Stripe に
   // 実在しないので、引き落とそうとすると失敗する
@@ -111,7 +130,7 @@ export async function seedDemo(
       penaltyAmount: 3000,
       paymentMethodId: applePay!.id,
       checker: "friend",
-      friendEmail: "mom@example.com",
+      friendEmail: UNREGISTERED_FRIEND_EMAIL,
       ...settled,
     })
     .returning();
@@ -131,7 +150,7 @@ export async function seedDemo(
       penaltyAmount: 1000,
       paymentMethodId: card!.id,
       checker: "friend",
-      friendEmail: "matsukiyo@example.com",
+      friendEmail: FRIEND_USER.email,
       ...settled,
     })
     .returning();
@@ -172,6 +191,24 @@ export async function seedDemo(
   for (let i = 0; i < reports.length; i += 20) {
     await db.insert(report).values(reports.slice(i, i + 20));
   }
+
+  // 友達にチェックしてもらう2件は、作成したときに招待メールを送ってある
+  await db.insert(invitation).values([
+    {
+      commitmentId: smoking!.id,
+      email: UNREGISTERED_FRIEND_EMAIL,
+      kind: "sign_up",
+      status: "sent",
+      messageId: "seed-smoking",
+    },
+    {
+      commitmentId: gym!.id,
+      email: FRIEND_USER.email,
+      kind: "registered",
+      status: "sent",
+      messageId: "seed-gym",
+    },
+  ]);
 
   await db.insert(penalty).values(
     [-15, -8].map((d) => ({

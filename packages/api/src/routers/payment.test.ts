@@ -24,7 +24,7 @@ describe("支払い方法を Stripe に登録できる", () => {
   test("PaymentSheet で登録すると、カードの種類と下4桁が保存される", async () => {
     const { db } = await setupDemo();
     const stripe = createFakeStripe();
-    const caller = callerFor(db, await createUser(db, "new@example.com"), stripe);
+    const caller = callerFor(db, await createUser(db, "new@example.com"), { stripe });
 
     const setup = await caller.payment.startSetup();
     expect(setup.customerId).toStartWith("cus_");
@@ -49,7 +49,7 @@ describe("支払い方法を Stripe に登録できる", () => {
   test("Stripe の Customer はユーザーごとに1つだけ作る", async () => {
     const { db } = await setupDemo();
     const stripe = createFakeStripe();
-    const caller = callerFor(db, await createUser(db, "new@example.com"), stripe);
+    const caller = callerFor(db, await createUser(db, "new@example.com"), { stripe });
 
     const first = await caller.payment.startSetup();
     const second = await caller.payment.startSetup();
@@ -61,8 +61,8 @@ describe("支払い方法を Stripe に登録できる", () => {
   test("登録が終わっていない SetupIntent や、ほかのユーザーの SetupIntent では保存しない", async () => {
     const { db } = await setupDemo();
     const stripe = createFakeStripe();
-    const alice = callerFor(db, await createUser(db, "alice@example.com"), stripe);
-    const bob = callerFor(db, await createUser(db, "bob@example.com"), stripe);
+    const alice = callerFor(db, await createUser(db, "alice@example.com"), { stripe });
+    const bob = callerFor(db, await createUser(db, "bob@example.com"), { stripe });
 
     const setup = await alice.payment.startSetup();
     await expect(
@@ -157,7 +157,7 @@ describe("Stripe の Webhook で結果を反映する", () => {
     const { db } = await setupDemo();
     const stripe = createFakeStripe();
     const session = await createUser(db, "new@example.com");
-    const caller = callerFor(db, session, stripe);
+    const caller = callerFor(db, session, { stripe });
     const setup = await caller.payment.startSetup();
     const setupIntentId = setup.setupIntentClientSecret.split("_secret_")[0]!;
     const pmId = stripe.completeSetup(setupIntentId, { brand: "visa", last4: "1881" });

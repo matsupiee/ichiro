@@ -4,8 +4,9 @@ import { TRPCError } from "@trpc/server";
 import { and, desc, eq, inArray, sql } from "drizzle-orm";
 import z from "zod";
 
-import type { Context } from "../context";
+import type { AuthedContext, Context } from "../context";
 import { protectedProcedure, router } from "../index";
+import { latestInvitation, RESEND_COOLDOWN_MS, sendInvitation } from "../lib/invite";
 import { isValidTimeZone, settleCommitment, todayIn } from "../lib/penalty";
 import {
   addDays,
@@ -74,13 +75,25 @@ function normalize(v: Fields) {
     weekdays: [...new Set(v.weekdays)].sort(),
     monthDays: [...new Set(v.monthDays)].sort((a, b) => a - b),
     paymentMethodId: hasPenalty ? v.paymentMethodId : null,
-    friendEmail: v.checker === "friend" ? v.friendEmail : null,
+    friendEmail: v.checker === "friend" ? v.friendEmail!.toLowerCase() : null,
   };
+}
+
+function assertNotSelf(ctx: AuthedContext, v: Fields) {
+  if (
+    v.checker === "friend" &&
+    v.friendEmail?.toLowerCase() === ctx.session.user.email.toLowerCase()
+  ) {
+    throw new TRPCError({
+      code: "BAD_REQUEST",
+      message: "自分のメールアドレスは指定できません",
+    });
+  }
 }
 
 type Row = typeof commitment.$inferSelect;
 
-async function findOwned(ctx: Context & { session: NonNullable<Context["session"]> }, id: string) {
+async function findOwned(ctx: AuthedContext, id: string) {
   const [row] = await ctx.db
     .select()
     .from(commitment)
@@ -173,6 +186,7 @@ export const commitmentRouter = router({
         ...summarize({ ...row, settledThrough }, reported, input.today),
         week: weekOf(reported, input.today),
         ...(await penaltiesOf(ctx.db, row.id)),
+        invitation: await latestInvitation(ctx.db, row),
       };
     }),
 
@@ -185,8 +199,8 @@ export const commitmentRouter = router({
           message: "終了日は今日以降にしてください",
         });
       }
+      assertNotSelf(ctx, input.values);
       await assertOwnPaymentMethod(ctx, input.values);
-      // 友達への招待メール送信は未実装。メールアドレスだけを保存する。
       const [row] = await ctx.db
         .insert(commitment)
         .values({
@@ -198,7 +212,8 @@ export const commitmentRouter = router({
           settledThrough: addDays(input.today, -1),
         })
         .returning();
-      return row!;
+      const invitation = row!.checker === "friend" ? await sendInvitation(ctx, row!) : null;
+      return { ...row!, invitation };
     }),
 
   update: protectedProcedure
@@ -211,6 +226,7 @@ export const commitmentRouter = router({
           message: "終了日は開始日以降にしてください",
         });
       }
+      assertNotSelf(ctx, input.values);
       await assertOwnPaymentMethod(ctx, input.values);
       // 締め切りを過ぎた分は変更前の設定で精算し、新しい設定は今日の分から使う。
       // 金額を上げたり終了日を延ばしたりしても、過去の分にはさかのぼらない
@@ -230,7 +246,35 @@ export const commitmentRouter = router({
         })
         .where(eq(commitment.id, current.id))
         .returning();
-      return row!;
+      // チェック役が新しく友達になったか、友達のメールアドレスが変わったときだけ送る
+      const friendChanged =
+        row!.checker === "friend" &&
+        (current.checker !== "friend" || current.friendEmail !== row!.friendEmail);
+      const invitation = friendChanged ? await sendInvitation(ctx, row!) : null;
+      return { ...row!, invitation };
+    }),
+
+  resendInvitation: protectedProcedure
+    .input(z.object({ id: z.string() }))
+    .mutation(async ({ ctx, input }) => {
+      const row = await findOwned(ctx, input.id);
+      if (row.checker !== "friend" || !row.friendEmail) {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: "友達にチェックしてもらう設定になっていません",
+        });
+      }
+      const latest = await latestInvitation(ctx.db, row);
+      if (
+        latest?.status === "sent" &&
+        Date.now() - latest.createdAt.getTime() < RESEND_COOLDOWN_MS
+      ) {
+        throw new TRPCError({
+          code: "TOO_MANY_REQUESTS",
+          message: "少し時間をおいてから再送してください",
+        });
+      }
+      return sendInvitation(ctx, row);
     }),
 
   report: protectedProcedure

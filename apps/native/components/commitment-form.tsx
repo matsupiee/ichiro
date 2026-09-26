@@ -212,6 +212,8 @@ type Props = {
   editing?: boolean;
   minimumDate: string;
   header?: ReactNode;
+  // 友達のメールアドレスの下に出すもの（詳細ページの招待メールの送信状況）
+  friendFooter?: ReactNode;
   cta: string;
   submitting: boolean;
   error: string | null;
@@ -226,6 +228,7 @@ export function CommitmentForm({
   editing = false,
   minimumDate,
   header,
+  friendFooter,
   cta,
   submitting,
   error,
@@ -427,6 +430,7 @@ export function CommitmentForm({
           <NoteText>
             招待メールを送ります。まだ ichiro を使っていない友達には、会員登録のお願いが届きます。
           </NoteText>
+          {friendFooter}
         </>
       ) : null}
 
