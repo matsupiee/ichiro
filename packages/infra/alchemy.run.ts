@@ -14,11 +14,15 @@ export const server = Cloudflare.Worker("server", {
   compatibility: {
     flags: ["nodejs_compat"],
   },
+  // 罰金の精算と徴収（apps/server/src/index.ts の scheduled）
+  crons: ["5 * * * *"],
   env: {
     DB: db,
     CORS_ORIGIN: Config.String("CORS_ORIGIN"),
     BETTER_AUTH_SECRET: Config.Redacted("BETTER_AUTH_SECRET"),
     BETTER_AUTH_URL: Cloudflare.Worker.URL,
+    STRIPE_SECRET_KEY: Config.Redacted("STRIPE_SECRET_KEY"),
+    STRIPE_WEBHOOK_SECRET: Config.Redacted("STRIPE_WEBHOOK_SECRET"),
     // 空のときは招待メールを送らず、Worker のログに出す
     RESEND_API_KEY: Config.Redacted("RESEND_API_KEY").pipe(Config.withDefault(Redacted.make(""))),
     MAIL_FROM: Config.String("MAIL_FROM").pipe(

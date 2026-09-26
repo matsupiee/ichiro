@@ -6,6 +6,9 @@ import type { SQLiteAsyncDatabase } from "drizzle-orm/sqlite-core";
 import { account, user } from "../schema/auth";
 import { commitment } from "../schema/commitment";
 import { invitation } from "../schema/invitation";
+import { paymentCustomer } from "../schema/payment-customer";
+import { paymentMethod } from "../schema/payment-method";
+import { penalty } from "../schema/penalty";
 import { report } from "../schema/report";
 
 // D1・libsql・テスト用 DB のどれにも流せるよう、非同期 SQLite の共通型で受ける。
@@ -67,11 +70,49 @@ export function localToday(now: Date = new Date()): string {
   return new Date(now.getTime() - offset).toISOString().slice(0, 10);
 }
 
+export function localTimeZone(): string {
+  return Intl.DateTimeFormat().resolvedOptions().timeZone;
+}
+
 // デモユーザーと、メインページに並ぶ3件のコミットメントを作る。
 // 何度実行しても同じ状態になるよう、既存のデモユーザーと友達は消してから作り直す。
-export async function seedDemo(db: SeedDatabase, today: string = localToday()) {
+// 罰金は昨日の分まで精算ずみにする。timeZone は today と同じ日付になるものを渡す。
+// stripe を渡すと、1つめの支払い方法をその Stripe テスト環境の Customer・PaymentMethod にする。
+export async function seedDemo(
+  db: SeedDatabase,
+  today: string = localToday(),
+  timeZone: string = localTimeZone(),
+  stripe?: { customerId: string; paymentMethodId: string },
+) {
   const userId = await createUser(db, DEMO_USER);
   await createUser(db, FRIEND_USER);
+  const settled = { timeZone, settledThrough: addDays(today, -1) };
+
+  // Stripe に登録ずみの支払い方法のつもりのデータ。stripe を渡さないときの ID は Stripe に
+  // 実在しないので、引き落とそうとすると失敗する
+  await db
+    .insert(paymentCustomer)
+    .values({ userId, stripeCustomerId: stripe?.customerId ?? `cus_demo_${userId}` });
+  const [applePay] = await db
+    .insert(paymentMethod)
+    .values({
+      userId,
+      stripePaymentMethodId: stripe?.paymentMethodId ?? `pm_demo_apple_pay_${userId}`,
+      brand: "visa",
+      last4: "4242",
+      wallet: stripe ? null : "apple_pay",
+    })
+    .returning();
+  const [card] = await db
+    .insert(paymentMethod)
+    .values({
+      userId,
+      stripePaymentMethodId: `pm_demo_card_${userId}`,
+      brand: "mastercard",
+      last4: "4444",
+      wallet: null,
+    })
+    .returning();
 
   // 一覧は新しい順に並ぶので、デザインと同じ並び（広東語→体づくり→禁煙）になるよう逆順に作る
   // 1. 毎日。今日まで42日連続で達成ずみ
@@ -87,9 +128,10 @@ export async function seedDemo(db: SeedDatabase, today: string = localToday()) {
       startDate: addDays(today, -41),
       untilDate: addDays(today, 186),
       penaltyAmount: 3000,
-      paymentMethod: "apple_pay",
+      paymentMethodId: applePay!.id,
       checker: "friend",
       friendEmail: UNREGISTERED_FRIEND_EMAIL,
+      ...settled,
     })
     .returning();
 
@@ -106,13 +148,15 @@ export async function seedDemo(db: SeedDatabase, today: string = localToday()) {
       startDate: addDays(today, -19),
       untilDate: addDays(today, 65),
       penaltyAmount: 1000,
-      paymentMethod: "card",
+      paymentMethodId: card!.id,
       checker: "friend",
       friendEmail: FRIEND_USER.email,
+      ...settled,
     })
     .returning();
 
-  // 3. 毎日。昨日まで7日連続で達成、今日はまだ報告していない
+  // 3. 毎日。昨日まで7日連続で達成、今日はまだ報告していない。
+  //    8日前と15日前は報告できず、罰金を500円ずつ徴収ずみ
   const [cantonese] = await db
     .insert(commitment)
     .values({
@@ -125,9 +169,10 @@ export async function seedDemo(db: SeedDatabase, today: string = localToday()) {
       startDate: addDays(today, -25),
       untilDate: addDays(today, 96),
       penaltyAmount: 500,
-      paymentMethod: "apple_pay",
+      paymentMethodId: applePay!.id,
       checker: "self",
       friendEmail: null,
+      ...settled,
     })
     .returning();
 
@@ -136,7 +181,9 @@ export async function seedDemo(db: SeedDatabase, today: string = localToday()) {
     .filter((d) => [1, 3, 5].includes(new Date(`${d}T00:00:00Z`).getUTCDay()));
 
   const reports = [
-    ...range(-7, -1).map((d) => ({ commitmentId: cantonese!.id, reportDate: addDays(today, d) })),
+    ...range(-25, -1)
+      .filter((d) => d !== -8 && d !== -15)
+      .map((d) => ({ commitmentId: cantonese!.id, reportDate: addDays(today, d) })),
     ...gymDays.map((d) => ({ commitmentId: gym!.id, reportDate: d })),
     ...range(-41, 0).map((d) => ({ commitmentId: smoking!.id, reportDate: addDays(today, d) })),
   ];
@@ -163,5 +210,23 @@ export async function seedDemo(db: SeedDatabase, today: string = localToday()) {
     },
   ]);
 
-  return { userId, commitmentIds: [cantonese!.id, gym!.id, smoking!.id] };
+  await db.insert(penalty).values(
+    [-15, -8].map((d) => ({
+      userId,
+      commitmentId: cantonese!.id,
+      dueDate: addDays(today, d),
+      amount: 500,
+      paymentMethodId: applePay!.id,
+      status: "paid" as const,
+      attempts: 1,
+      chargeReference: `seed_${d}`,
+      paidAt: new Date(`${addDays(today, d + 1)}T01:05:00Z`),
+    })),
+  );
+
+  return {
+    userId,
+    commitmentIds: [cantonese!.id, gym!.id, smoking!.id],
+    paymentMethodIds: [applePay!.id, card!.id],
+  };
 }

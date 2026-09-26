@@ -16,6 +16,7 @@
     "@trpc/server": "catalog:",
     "drizzle-orm": "catalog:",
     "resend": "^6.30.0",
+    "stripe": "22.6.2",
     "zod": "catalog:"
   },
   "devDependencies": {

@@ -45,6 +45,13 @@
         {
           "photosPermission": "プロフィール写真を選ぶために写真へのアクセスを許可してください"
         }
+      ],
+      [
+        "@stripe/stripe-react-native",
+        {
+          "merchantIdentifier": "merchant.com.anonymous.ichiro",
+          "enableGooglePay": false
+        }
       ]
     ],
     "experiments": {
