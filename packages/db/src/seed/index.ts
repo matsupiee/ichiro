@@ -5,6 +5,7 @@ import type { SQLiteAsyncDatabase } from "drizzle-orm/sqlite-core";
 
 import { account, user } from "../schema/auth";
 import { commitment } from "../schema/commitment";
+import { invitation } from "../schema/invitation";
 import { report } from "../schema/report";
 
 // D1・libsql・テスト用 DB のどれにも流せるよう、非同期 SQLite の共通型で受ける。
@@ -16,6 +17,40 @@ export const DEMO_USER = {
   email: "demo@ichiro.app",
   password: "password123",
 } as const;
+
+// 「体づくり」のチェック役。ichiro に登録ずみの友達
+export const FRIEND_USER = {
+  name: "matsukiyo",
+  email: "matsukiyo@example.com",
+  password: "password123",
+} as const;
+
+// 「禁煙」のチェック役。まだ ichiro に登録していない友達
+export const UNREGISTERED_FRIEND_EMAIL = "mom@example.com";
+
+async function createUser(
+  db: SeedDatabase,
+  u: { name: string; email: string; password: string },
+): Promise<string> {
+  await db.delete(user).where(eq(user.email, u.email));
+  const userId = createId();
+  await db.insert(user).values({
+    id: userId,
+    name: u.name,
+    email: u.email,
+    emailVerified: true,
+    updatedAt: new Date(),
+  });
+  await db.insert(account).values({
+    id: createId(),
+    accountId: userId,
+    providerId: "credential",
+    userId,
+    password: await hashPassword(u.password),
+    updatedAt: new Date(),
+  });
+  return userId;
+}
 
 function addDays(date: string, days: number): string {
   const d = new Date(`${date}T00:00:00Z`);
@@ -33,26 +68,10 @@ export function localToday(now: Date = new Date()): string {
 }
 
 // デモユーザーと、メインページに並ぶ3件のコミットメントを作る。
-// 何度実行しても同じ状態になるよう、既存のデモユーザーは消してから作り直す。
+// 何度実行しても同じ状態になるよう、既存のデモユーザーと友達は消してから作り直す。
 export async function seedDemo(db: SeedDatabase, today: string = localToday()) {
-  await db.delete(user).where(eq(user.email, DEMO_USER.email));
-
-  const userId = createId();
-  await db.insert(user).values({
-    id: userId,
-    name: DEMO_USER.name,
-    email: DEMO_USER.email,
-    emailVerified: true,
-    updatedAt: new Date(),
-  });
-  await db.insert(account).values({
-    id: createId(),
-    accountId: userId,
-    providerId: "credential",
-    userId,
-    password: await hashPassword(DEMO_USER.password),
-    updatedAt: new Date(),
-  });
+  const userId = await createUser(db, DEMO_USER);
+  await createUser(db, FRIEND_USER);
 
   // 一覧は新しい順に並ぶので、デザインと同じ並び（広東語→体づくり→禁煙）になるよう逆順に作る
   // 1. 毎日。今日まで42日連続で達成ずみ
@@ -70,7 +89,7 @@ export async function seedDemo(db: SeedDatabase, today: string = localToday()) {
       penaltyAmount: 3000,
       paymentMethod: "apple_pay",
       checker: "friend",
-      friendEmail: "mom@example.com",
+      friendEmail: UNREGISTERED_FRIEND_EMAIL,
     })
     .returning();
 
@@ -89,7 +108,7 @@ export async function seedDemo(db: SeedDatabase, today: string = localToday()) {
       penaltyAmount: 1000,
       paymentMethod: "card",
       checker: "friend",
-      friendEmail: "matsukiyo@example.com",
+      friendEmail: FRIEND_USER.email,
     })
     .returning();
 
@@ -125,6 +144,24 @@ export async function seedDemo(db: SeedDatabase, today: string = localToday()) {
   for (let i = 0; i < reports.length; i += 20) {
     await db.insert(report).values(reports.slice(i, i + 20));
   }
+
+  // 友達にチェックしてもらう2件は、作成したときに招待メールを送ってある
+  await db.insert(invitation).values([
+    {
+      commitmentId: smoking!.id,
+      email: UNREGISTERED_FRIEND_EMAIL,
+      kind: "sign_up",
+      status: "sent",
+      messageId: "seed-smoking",
+    },
+    {
+      commitmentId: gym!.id,
+      email: FRIEND_USER.email,
+      kind: "registered",
+      status: "sent",
+      messageId: "seed-gym",
+    },
+  ]);
 
   return { userId, commitmentIds: [cantonese!.id, gym!.id, smoking!.id] };
 }

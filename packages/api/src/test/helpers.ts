@@ -7,6 +7,7 @@ import { eq } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/libsql";
 import { migrate } from "drizzle-orm/libsql/migrator";
 
+import type { Mailer, MailMessage } from "../lib/mailer";
 import { appRouter } from "../routers/index";
 
 const migrationsFolder = new URL("../../../db/src/migrations", import.meta.url).pathname;
@@ -47,8 +48,23 @@ export async function createUser(db: Database, email: string, name = "friend") {
   return sessionFor(db, email);
 }
 
-export function callerFor(db: Database, session: Session | null) {
-  return appRouter.createCaller({ db, session });
+// 送ったメールを outbox にためるだけの Mailer。failing を true にすると送信に失敗する
+export function createTestMailer() {
+  const outbox: MailMessage[] = [];
+  const mailer: Mailer & { outbox: MailMessage[]; failing: boolean } = {
+    outbox,
+    failing: false,
+    async send(message) {
+      if (mailer.failing) throw new Error("mail server is down");
+      outbox.push(message);
+      return { id: `test-${outbox.length}` };
+    },
+  };
+  return mailer;
+}
+
+export function callerFor(db: Database, session: Session | null, mailer = createTestMailer()) {
+  return appRouter.createCaller({ db, session, mailer });
 }
 
 export async function setupDemo() {
@@ -56,5 +72,6 @@ export async function setupDemo() {
   const today = testToday();
   const seeded = await seedDemo(db as never, today);
   const session = await sessionFor(db, "demo@ichiro.app");
-  return { db, today, session, seeded, caller: callerFor(db, session) };
+  const mailer = createTestMailer();
+  return { db, today, session, seeded, mailer, caller: callerFor(db, session, mailer) };
 }
