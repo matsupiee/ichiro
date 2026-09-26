@@ -9,6 +9,9 @@ export const db = Cloudflare.D1.Database("database", {
   migrations: "../../packages/db/src/migrations",
 });
 
+// プロフィール写真の置き場所。配信は Worker の /avatars/* から行うので、バケットは公開しない
+export const avatars = Cloudflare.R2.Bucket("avatars");
+
 export const server = Cloudflare.Worker("server", {
   main: "../../apps/server/src/index.ts",
   compatibility: {
@@ -18,6 +21,7 @@ export const server = Cloudflare.Worker("server", {
   crons: ["5 * * * *"],
   env: {
     DB: db,
+    AVATARS: avatars,
     CORS_ORIGIN: Config.String("CORS_ORIGIN"),
     BETTER_AUTH_SECRET: Config.Redacted("BETTER_AUTH_SECRET"),
     BETTER_AUTH_URL: Cloudflare.Worker.URL,

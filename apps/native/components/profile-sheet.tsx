@@ -205,9 +205,15 @@ export const ProfileSheet = forwardRef<BottomSheetModal, Props>(function Profile
         <View style={{ zIndex: 5 }}>
           <Pressable
             onPress={() => setPhotoMenu((v) => !v)}
+            disabled={avatar.busy}
             className="mx-[30px] min-h-16 flex-row items-center justify-between rounded-[36px] bg-field py-3 pl-[26px] pr-[22px]"
           >
-            <Avatar uri={avatar.uri} size={44} placeholderColor={colors.line} />
+            <Avatar
+              uri={avatar.uri}
+              size={44}
+              placeholderColor={colors.line}
+              loading={avatar.busy}
+            />
             <Chevron />
           </Pressable>
           {photoMenu ? (

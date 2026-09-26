@@ -1,70 +1,120 @@
+import { ImageManipulator, SaveFormat } from "expo-image-manipulator";
 import * as ImagePicker from "expo-image-picker";
-import * as SecureStore from "expo-secure-store";
-import { useCallback, useEffect, useSyncExternalStore } from "react";
-import { Platform } from "react-native";
+import { useCallback, useState } from "react";
+import { Alert, Image, Platform } from "react-native";
 
-// プロフィール写真はまだサーバーに上げず、この端末にだけ保存する。
-// 画像のアップロード先ができたら user.image に置き換える。
+import { authClient } from "@/lib/auth-client";
 
-const key = (userId: string) => `ichiro.avatar.${userId}`;
+import { ENV } from "../src/env";
 
-let current: string | null = null;
-let loadedFor: string | null = null;
-const listeners = new Set<() => void>();
+// プロフィール写真はサーバー（Cloudflare R2）に上げて、user.image にそのパスを入れる。
+// 表示サイズは最大でも数十ピクセルなので、上げる前に 512px 四方の JPEG に縮める。
+const UPLOAD_SIZE = 512;
 
-function emit(uri: string | null) {
-  current = uri;
-  listeners.forEach((l) => l());
+// user.image はサーバーからの相対パス。外部の URL ならそのまま使う
+export function avatarUrl(image: string | null | undefined) {
+  if (!image) return null;
+  if (/^https?:\/\//.test(image)) return image;
+  return `${ENV.EXPO_PUBLIC_SERVER_URL.replace(/\/$/, "")}${image}`;
 }
 
-async function read(userId: string) {
-  if (Platform.OS === "web") return null;
-  return SecureStore.getItemAsync(key(userId)).catch(() => null);
+async function request(method: "PUT" | "DELETE", body?: Blob) {
+  const headers: Record<string, string> = {};
+  if (body) headers["Content-Type"] = "image/jpeg";
+  if (Platform.OS !== "web") {
+    // Better Auth Expo はネイティブではセッションの Cookie を手で付ける
+    const cookie = await authClient.getCookie();
+    if (cookie) headers.Cookie = cookie;
+  }
+  const res = await fetch(`${ENV.EXPO_PUBLIC_SERVER_URL}/api/profile/avatar`, {
+    method,
+    body,
+    headers,
+    credentials: Platform.OS === "web" ? "include" : "omit",
+  }).catch(() => {
+    throw new Error("通信できませんでした");
+  });
+  const data = (await res.json().catch(() => null)) as {
+    image?: string | null;
+    message?: string;
+  } | null;
+  if (!res.ok) throw new Error(data?.message ?? "通信に失敗しました");
+  return data?.image ?? null;
 }
 
-async function write(userId: string, uri: string | null) {
-  if (Platform.OS === "web") return;
-  if (uri) await SecureStore.setItemAsync(key(userId), uri);
-  else await SecureStore.deleteItemAsync(key(userId));
+function showError(title: string, e: unknown) {
+  const message = e instanceof Error ? e.message : undefined;
+  // react-native-web の Alert は何も表示しない
+  if (Platform.OS === "web") window.alert(message ? `${title}\n${message}` : title);
+  else Alert.alert(title, message);
 }
 
-export function useAvatar(userId: string | undefined) {
-  const uri = useSyncExternalStore(
-    (l) => {
-      listeners.add(l);
-      return () => listeners.delete(l);
-    },
-    () => current,
-  );
+// 切り抜き画面がない環境（Web など）でも正方形になるよう、中央を切り抜いてから縮める
+async function shrink({ uri, width, height }: ImagePicker.ImagePickerAsset) {
+  const side = Math.min(width, height);
+  const size = Math.min(side, UPLOAD_SIZE);
+  const rendered = await ImageManipulator.manipulate(uri)
+    .crop({
+      originX: Math.floor((width - side) / 2),
+      originY: Math.floor((height - side) / 2),
+      width: side,
+      height: side,
+    })
+    .resize({ width: size, height: size })
+    .renderAsync();
+  const saved = await rendered.saveAsync({ format: SaveFormat.JPEG, compress: 0.85 });
+  return saved.uri;
+}
 
-  useEffect(() => {
-    if (!userId || loadedFor === userId) return;
-    loadedFor = userId;
-    emit(null);
-    read(userId).then((v) => {
-      if (loadedFor === userId) emit(v);
-    });
-  }, [userId]);
+export function useAvatar() {
+  const { data: session, refetch } = authClient.useSession();
+  // アップロード中は選んだ写真をすぐに見せる
+  const [preview, setPreview] = useState<string | null>(null);
+  const [busy, setBusy] = useState(false);
+
+  const uri = preview ?? avatarUrl(session?.user.image);
 
   const pick = useCallback(async () => {
-    if (!userId) return;
+    if (busy) return;
     const result = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ["images"],
       allowsEditing: true,
       aspect: [1, 1],
-      quality: 0.8,
+      quality: 1,
     });
     const asset = result.canceled ? null : result.assets[0];
     if (!asset) return;
-    emit(asset.uri);
-    await write(userId, asset.uri);
-  }, [userId]);
+
+    setBusy(true);
+    try {
+      const small = await shrink(asset);
+      setPreview(small);
+      const blob = await (await fetch(small)).blob();
+      const image = await request("PUT", blob);
+      // 読み込み済みにしてから差し替え、表示が一瞬消えないようにする
+      const url = avatarUrl(image);
+      if (url) await Image.prefetch(url).catch(() => {});
+      await refetch();
+    } catch (e) {
+      showError("写真を保存できませんでした", e);
+    } finally {
+      setPreview(null);
+      setBusy(false);
+    }
+  }, [busy, refetch]);
 
   const remove = useCallback(async () => {
-    if (!userId) return;
-    emit(null);
-    await write(userId, null);
-  }, [userId]);
+    if (busy || !session?.user.image) return;
+    setBusy(true);
+    try {
+      await request("DELETE");
+      await refetch();
+    } catch (e) {
+      showError("写真を削除できませんでした", e);
+    } finally {
+      setBusy(false);
+    }
+  }, [busy, refetch, session?.user.image]);
 
-  return { uri, pick, remove };
+  return { uri, busy, pick, remove };
 }

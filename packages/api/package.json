@@ -12,9 +12,11 @@
   "dependencies": {
     "@ichiro/auth": "workspace:*",
     "@ichiro/db": "workspace:*",
+    "@paralleldrive/cuid2": "^3.3.0",
     "@trpc/client": "catalog:",
     "@trpc/server": "catalog:",
     "drizzle-orm": "catalog:",
+    "hono": "^4.13.7",
     "resend": "^6.30.0",
     "stripe": "22.6.2",
     "zod": "catalog:"
