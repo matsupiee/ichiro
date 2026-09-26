@@ -1,6 +1,7 @@
 {
   "extends": "@ichiro/config/tsconfig.base.json",
   "compilerOptions": {
-    "noEmit": true
+    "noEmit": true,
+    "types": ["node", "@cloudflare/workers-types", "bun"]
   }
 }

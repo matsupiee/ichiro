@@ -8,10 +8,13 @@
   "scripts": {
     "check-types": "tsc --noEmit",
     "db:generate": "drizzle-kit generate",
-    "db:migrate:deploy": "drizzle-kit migrate"
+    "db:migrate:deploy": "drizzle-kit migrate",
+    "db:seed": "bun run src/seed/run.ts"
   },
   "dependencies": {
     "@libsql/client": "0.18.0",
+    "@paralleldrive/cuid2": "^3.3.0",
+    "better-auth": "catalog:",
     "drizzle-orm": "catalog:",
     "libsql": "0.5.29",
     "zod": "catalog:"

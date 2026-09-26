@@ -13,6 +13,9 @@
     "check-types": {
       "dependsOn": ["^check-types"]
     },
+    "test": {
+      "dependsOn": ["^test"]
+    },
     "dev": {
       "cache": false,
       "persistent": true
@@ -20,6 +23,9 @@
     "db:generate": {
       "cache": false,
       "interactive": true
+    },
+    "db:seed": {
+      "cache": false
     },
     "deploy": {
       "cache": false,
