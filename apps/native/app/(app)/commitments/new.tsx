@@ -12,7 +12,7 @@ import {
   validate,
 } from "@/components/commitment-form";
 import { ScreenHeader } from "@/components/ui";
-import { addDays, formatMonthDay, formatYen, localToday } from "@/lib/date";
+import { addDays, formatMonthDay, formatYen, localTimeZone, localToday } from "@/lib/date";
 import { trpc } from "@/utils/trpc";
 
 function blank(today: string): FormValues {
@@ -49,7 +49,7 @@ export default function NewCommitmentScreen() {
     }
     setError(null);
     create.mutate(
-      { today, values: toApiValues(values) },
+      { today, timeZone: localTimeZone(), values: toApiValues(values) },
       {
         onError: (e) => setError(e.message),
         onSuccess: (c) => {

@@ -17,6 +17,11 @@ export function localToday(): string {
   return toDateString(new Date());
 }
 
+// 端末のタイムゾーン（IANA 名）。罰金の締め切りの判定に使う
+export function localTimeZone(): string {
+  return Intl.DateTimeFormat().resolvedOptions().timeZone ?? "Asia/Tokyo";
+}
+
 export function addDays(date: string, days: number): string {
   const d = fromDateString(date);
   d.setDate(d.getDate() + days);

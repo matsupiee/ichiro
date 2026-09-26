@@ -1,4 +1,4 @@
-import { commitment, report } from "@ichiro/db/schema/index";
+import { commitment, penalty, report } from "@ichiro/db/schema/index";
 import { checkers, commitmentFrequencies, paymentMethods } from "@ichiro/db/schema/commitment";
 import { TRPCError } from "@trpc/server";
 import { and, desc, eq, inArray, sql } from "drizzle-orm";
@@ -6,12 +6,22 @@ import z from "zod";
 
 import type { Context } from "../context";
 import { protectedProcedure, router } from "../index";
-import { computeStreak, isPlausibleToday, isScheduled, isValidDate, weekOf } from "../lib/schedule";
+import { isValidTimeZone, settleCommitment, todayIn } from "../lib/penalty";
+import {
+  addDays,
+  computeStreak,
+  isPlausibleToday,
+  isScheduled,
+  isValidDate,
+  weekOf,
+} from "../lib/schedule";
 
 export const MIN_PENALTY = 100;
 
 const date = z.string().refine(isValidDate, "日付の形式が正しくありません");
 const today = date.refine((d) => isPlausibleToday(d), "今日の日付が正しくありません");
+// 端末のタイムゾーン（IANA 名）。罰金の締め切りの判定に使う
+const timeZone = z.string().refine(isValidTimeZone, "タイムゾーンが正しくありません");
 
 const fields = z
   .object({
@@ -91,6 +101,24 @@ async function reportedDates(db: Context["db"], ids: string[]) {
   return byId;
 }
 
+async function penaltiesOf(db: Context["db"], id: string) {
+  const rows = await db
+    .select({
+      id: penalty.id,
+      dueDate: penalty.dueDate,
+      amount: penalty.amount,
+      paymentMethod: penalty.paymentMethod,
+      status: penalty.status,
+      paidAt: penalty.paidAt,
+    })
+    .from(penalty)
+    .where(eq(penalty.commitmentId, id))
+    .orderBy(desc(penalty.dueDate));
+  // 徴収できなかったもの（failed）も、支払うべき罰金として合計に入れる
+  const total = rows.reduce((sum, p) => sum + p.amount, 0);
+  return { penalties: rows, penaltyTotal: total };
+}
+
 function summarize(row: Row, reported: Set<string>, today: string) {
   const dueToday = isScheduled(row, today);
   return {
@@ -120,12 +148,18 @@ export const commitmentRouter = router({
     .input(z.object({ id: z.string(), today }))
     .query(async ({ ctx, input }) => {
       const row = await findOwned(ctx, input.id);
+      // cron を待たずに、締め切りを過ぎた分の罰金を履歴に出す
+      const { settledThrough } = await settleCommitment(ctx.db, row);
       const reported = (await reportedDates(ctx.db, [row.id])).get(row.id)!;
-      return { ...summarize(row, reported, input.today), week: weekOf(reported, input.today) };
+      return {
+        ...summarize({ ...row, settledThrough }, reported, input.today),
+        week: weekOf(reported, input.today),
+        ...(await penaltiesOf(ctx.db, row.id)),
+      };
     }),
 
   create: protectedProcedure
-    .input(z.object({ today, values: fields }))
+    .input(z.object({ today, timeZone: timeZone.optional(), values: fields }))
     .mutation(async ({ ctx, input }) => {
       if (input.values.untilDate < input.today) {
         throw new TRPCError({
@@ -140,13 +174,16 @@ export const commitmentRouter = router({
           ...normalize(input.values),
           userId: ctx.session.user.id,
           startDate: input.today,
+          timeZone: input.timeZone,
+          // 今日の分から精算の対象にする
+          settledThrough: addDays(input.today, -1),
         })
         .returning();
       return row!;
     }),
 
   update: protectedProcedure
-    .input(z.object({ id: z.string(), values: fields }))
+    .input(z.object({ id: z.string(), timeZone: timeZone.optional(), values: fields }))
     .mutation(async ({ ctx, input }) => {
       const current = await findOwned(ctx, input.id);
       if (input.values.untilDate < current.startDate) {
@@ -155,9 +192,22 @@ export const commitmentRouter = router({
           message: "終了日は開始日以降にしてください",
         });
       }
+      // 締め切りを過ぎた分は変更前の設定で精算し、新しい設定は今日の分から使う。
+      // 金額を上げたり終了日を延ばしたりしても、過去の分にはさかのぼらない
+      const settled = await settleCommitment(ctx.db, current);
+      const now = new Date();
+      const zone = input.timeZone ?? current.timeZone;
+      const yesterday = addDays(todayIn(zone, now), -1);
       const [row] = await ctx.db
         .update(commitment)
-        .set(normalize(input.values))
+        .set({
+          ...normalize(input.values),
+          timeZone: zone,
+          settledThrough:
+            settled.settledThrough !== null && settled.settledThrough > yesterday
+              ? settled.settledThrough
+              : yesterday,
+        })
         .where(eq(commitment.id, current.id))
         .returning();
       return row!;
@@ -169,6 +219,14 @@ export const commitmentRouter = router({
       const row = await findOwned(ctx, input.id);
       if (!isScheduled(row, input.today)) {
         throw new TRPCError({ code: "BAD_REQUEST", message: "今日は報告日ではありません" });
+      }
+      // 精算ずみの日は締め切りを過ぎている。あとから報告して罰金を逃れることはできない
+      const { settledThrough } = await settleCommitment(ctx.db, row);
+      if (settledThrough !== null && input.today <= settledThrough) {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: "締め切りを過ぎたため報告できません",
+        });
       }
       const inserted = await ctx.db
         .insert(report)

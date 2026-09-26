@@ -36,6 +36,11 @@ export const commitment = sqliteTable(
     paymentMethod: text("payment_method", { enum: paymentMethods }),
     checker: text("checker", { enum: checkers }).notNull(),
     friendEmail: text("friend_email"),
+    // 締め切り（報告日の 23:59:59）を判定するタイムゾーン。IANA 名
+    timeZone: text("time_zone").notNull().default("Asia/Tokyo"),
+    // 罰金の精算がどの報告日まで終わったか（YYYY-MM-DD）。
+    // null は未精算。この機能より前に作られた行も null になり、過去の分はさかのぼって徴収しない
+    settledThrough: text("settled_through"),
     createdAt: integer("created_at", { mode: "timestamp_ms" })
       .default(sql`(cast(unixepoch('subsecond') * 1000 as integer))`)
       .notNull(),

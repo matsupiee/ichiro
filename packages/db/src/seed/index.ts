@@ -5,6 +5,7 @@ import type { SQLiteAsyncDatabase } from "drizzle-orm/sqlite-core";
 
 import { account, user } from "../schema/auth";
 import { commitment } from "../schema/commitment";
+import { penalty } from "../schema/penalty";
 import { report } from "../schema/report";
 
 // D1・libsql・テスト用 DB のどれにも流せるよう、非同期 SQLite の共通型で受ける。
@@ -32,10 +33,20 @@ export function localToday(now: Date = new Date()): string {
   return new Date(now.getTime() - offset).toISOString().slice(0, 10);
 }
 
+export function localTimeZone(): string {
+  return Intl.DateTimeFormat().resolvedOptions().timeZone;
+}
+
 // デモユーザーと、メインページに並ぶ3件のコミットメントを作る。
 // 何度実行しても同じ状態になるよう、既存のデモユーザーは消してから作り直す。
-export async function seedDemo(db: SeedDatabase, today: string = localToday()) {
+// 罰金は昨日の分まで精算ずみにする。timeZone は today と同じ日付になるものを渡す。
+export async function seedDemo(
+  db: SeedDatabase,
+  today: string = localToday(),
+  timeZone: string = localTimeZone(),
+) {
   await db.delete(user).where(eq(user.email, DEMO_USER.email));
+  const settled = { timeZone, settledThrough: addDays(today, -1) };
 
   const userId = createId();
   await db.insert(user).values({
@@ -71,6 +82,7 @@ export async function seedDemo(db: SeedDatabase, today: string = localToday()) {
       paymentMethod: "apple_pay",
       checker: "friend",
       friendEmail: "mom@example.com",
+      ...settled,
     })
     .returning();
 
@@ -90,10 +102,12 @@ export async function seedDemo(db: SeedDatabase, today: string = localToday()) {
       paymentMethod: "card",
       checker: "friend",
       friendEmail: "matsukiyo@example.com",
+      ...settled,
     })
     .returning();
 
-  // 3. 毎日。昨日まで7日連続で達成、今日はまだ報告していない
+  // 3. 毎日。昨日まで7日連続で達成、今日はまだ報告していない。
+  //    8日前と15日前は報告できず、罰金を500円ずつ徴収ずみ
   const [cantonese] = await db
     .insert(commitment)
     .values({
@@ -109,6 +123,7 @@ export async function seedDemo(db: SeedDatabase, today: string = localToday()) {
       paymentMethod: "apple_pay",
       checker: "self",
       friendEmail: null,
+      ...settled,
     })
     .returning();
 
@@ -117,7 +132,9 @@ export async function seedDemo(db: SeedDatabase, today: string = localToday()) {
     .filter((d) => [1, 3, 5].includes(new Date(`${d}T00:00:00Z`).getUTCDay()));
 
   const reports = [
-    ...range(-7, -1).map((d) => ({ commitmentId: cantonese!.id, reportDate: addDays(today, d) })),
+    ...range(-25, -1)
+      .filter((d) => d !== -8 && d !== -15)
+      .map((d) => ({ commitmentId: cantonese!.id, reportDate: addDays(today, d) })),
     ...gymDays.map((d) => ({ commitmentId: gym!.id, reportDate: d })),
     ...range(-41, 0).map((d) => ({ commitmentId: smoking!.id, reportDate: addDays(today, d) })),
   ];
@@ -125,6 +142,20 @@ export async function seedDemo(db: SeedDatabase, today: string = localToday()) {
   for (let i = 0; i < reports.length; i += 20) {
     await db.insert(report).values(reports.slice(i, i + 20));
   }
+
+  await db.insert(penalty).values(
+    [-15, -8].map((d) => ({
+      userId,
+      commitmentId: cantonese!.id,
+      dueDate: addDays(today, d),
+      amount: 500,
+      paymentMethod: "apple_pay" as const,
+      status: "paid" as const,
+      attempts: 1,
+      chargeReference: `seed_${d}`,
+      paidAt: new Date(`${addDays(today, d + 1)}T01:05:00Z`),
+    })),
+  );
 
   return { userId, commitmentIds: [cantonese!.id, gym!.id, smoking!.id] };
 }

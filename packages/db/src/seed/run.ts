@@ -5,6 +5,8 @@
 //
 // D1 に投入するときは CLOUDFLARE_ACCOUNT_ID・CLOUDFLARE_DATABASE_ID・CLOUDFLARE_D1_TOKEN が必要。
 // --today YYYY-MM-DD で「今日」を固定できる（省略時はこのマシンの現地日付）。
+// 昨日の日付を渡すと、昨日の分が未精算のまま残るので、罰金が発生するところを確かめられる。
+// コミットメントのタイムゾーンはこのマシンのもの（TZ で変えられる）。
 import { parseArgs } from "node:util";
 
 import { createClient } from "@libsql/client";

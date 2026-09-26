@@ -210,6 +210,8 @@ type Props = {
   values: FormValues;
   onChange: (v: FormValues) => void;
   showSuggestions: boolean;
+  // 詳細ページで既存のコミットメントを変更しているとき
+  editing?: boolean;
   minimumDate: string;
   header?: ReactNode;
   cta: string;
@@ -223,6 +225,7 @@ export function CommitmentForm({
   values: v,
   onChange,
   showSuggestions,
+  editing = false,
   minimumDate,
   header,
   cta,
@@ -384,6 +387,7 @@ export function CommitmentForm({
           </View>
           <NoteText>
             結果報告日の23:59:59までに完了できなかったら、この金額が徴収されます。最低100円。
+            {editing ? "変更した金額と支払い方法は、今日の報告分から使われます。" : ""}
           </NoteText>
 
           <FieldLabel>支払い方法</FieldLabel>

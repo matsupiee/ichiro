@@ -54,7 +54,7 @@ export function callerFor(db: Database, session: Session | null) {
 export async function setupDemo() {
   const db = await createTestDb();
   const today = testToday();
-  const seeded = await seedDemo(db as never, today);
+  const seeded = await seedDemo(db as never, today, "UTC");
   const session = await sessionFor(db, "demo@ichiro.app");
   return { db, today, session, seeded, caller: callerFor(db, session) };
 }

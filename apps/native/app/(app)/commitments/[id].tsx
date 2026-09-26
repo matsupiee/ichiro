@@ -11,9 +11,10 @@ import {
   toApiValues,
   validate,
 } from "@/components/commitment-form";
+import { PenaltyHistory } from "@/components/penalty-history";
 import { PrimaryButton, ScreenHeader } from "@/components/ui";
 import { useReport } from "@/lib/commitments";
-import { localToday } from "@/lib/date";
+import { localTimeZone, localToday } from "@/lib/date";
 import { colors } from "@/lib/theme";
 import { trpc } from "@/utils/trpc";
 
@@ -98,7 +99,7 @@ export default function CommitmentDetailScreen() {
     }
     setError(null);
     update.mutate(
-      { id, values: toApiValues(values) },
+      { id, timeZone: localTimeZone(), values: toApiValues(values) },
       {
         onError: (e) => setError(e.message),
         onSuccess: () => {
@@ -123,7 +124,13 @@ export default function CommitmentDetailScreen() {
           onChange={setValues}
           showSuggestions={false}
           minimumDate={data.startDate}
-          header={<StreakCard {...data} onReport={() => report(data)} />}
+          header={
+            <>
+              <StreakCard {...data} onReport={() => report(data)} />
+              <PenaltyHistory {...data} />
+            </>
+          }
+          editing
           cta="変更を保存"
           submitting={update.isPending}
           error={error}

@@ -13,6 +13,8 @@ export const server = Cloudflare.Worker("server", {
   compatibility: {
     flags: ["nodejs_compat"],
   },
+  // 罰金の精算と徴収（apps/server/src/index.ts の scheduled）
+  crons: ["5 * * * *"],
   env: {
     DB: db,
     CORS_ORIGIN: Config.String("CORS_ORIGIN"),
