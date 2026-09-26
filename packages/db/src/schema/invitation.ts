@@ -19,6 +19,13 @@ export const invitation = sqliteTable(
     id: text("id")
       .$defaultFn(() => createId())
       .primaryKey(),
+    createdAt: integer("created_at", { mode: "timestamp_ms" })
+      .default(sql`(cast(unixepoch('subsecond') * 1000 as integer))`)
+      .notNull(),
+    updatedAt: integer("updated_at", { mode: "timestamp_ms" })
+      .default(sql`(cast(unixepoch('subsecond') * 1000 as integer))`)
+      .$onUpdate(() => new Date())
+      .notNull(),
     commitmentId: text("commitment_id")
       .notNull()
       .references(() => commitment.id, { onDelete: "cascade" }),
@@ -27,9 +34,6 @@ export const invitation = sqliteTable(
     status: text("status", { enum: invitationStatuses }).notNull(),
     // Resend が返すメールの ID。送れなかったときは null
     messageId: text("message_id"),
-    createdAt: integer("created_at", { mode: "timestamp_ms" })
-      .default(sql`(cast(unixepoch('subsecond') * 1000 as integer))`)
-      .notNull(),
   },
   (table) => [index("invitation_commitmentId_idx").on(table.commitmentId)],
 );

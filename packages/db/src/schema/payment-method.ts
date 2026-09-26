@@ -14,6 +14,13 @@ export const paymentMethod = sqliteTable(
     id: text("id")
       .$defaultFn(() => createId())
       .primaryKey(),
+    createdAt: integer("created_at", { mode: "timestamp_ms" })
+      .default(sql`(cast(unixepoch('subsecond') * 1000 as integer))`)
+      .notNull(),
+    updatedAt: integer("updated_at", { mode: "timestamp_ms" })
+      .default(sql`(cast(unixepoch('subsecond') * 1000 as integer))`)
+      .$onUpdate(() => new Date())
+      .notNull(),
     userId: text("user_id")
       .notNull()
       .references(() => user.id, { onDelete: "cascade" }),
@@ -23,9 +30,6 @@ export const paymentMethod = sqliteTable(
     last4: text("last4").notNull(),
     // Apple Pay などのウォレット経由で登録したとき
     wallet: text("wallet", { enum: paymentWallets }),
-    createdAt: integer("created_at", { mode: "timestamp_ms" })
-      .default(sql`(cast(unixepoch('subsecond') * 1000 as integer))`)
-      .notNull(),
   },
   (table) => [index("payment_method_userId_idx").on(table.userId)],
 );

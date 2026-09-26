@@ -10,14 +10,18 @@ export const report = sqliteTable(
     id: text("id")
       .$defaultFn(() => createId())
       .primaryKey(),
+    createdAt: integer("created_at", { mode: "timestamp_ms" })
+      .default(sql`(cast(unixepoch('subsecond') * 1000 as integer))`)
+      .notNull(),
+    updatedAt: integer("updated_at", { mode: "timestamp_ms" })
+      .default(sql`(cast(unixepoch('subsecond') * 1000 as integer))`)
+      .$onUpdate(() => new Date())
+      .notNull(),
     commitmentId: text("commitment_id")
       .notNull()
       .references(() => commitment.id, { onDelete: "cascade" }),
     // 達成した日（ユーザーの現地日付 YYYY-MM-DD）
     reportDate: text("report_date").notNull(),
-    createdAt: integer("created_at", { mode: "timestamp_ms" })
-      .default(sql`(cast(unixepoch('subsecond') * 1000 as integer))`)
-      .notNull(),
   },
   (table) => [
     // 同じ日に同じコミットメントを二重に報告できない
