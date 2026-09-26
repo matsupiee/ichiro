@@ -1,22 +1,45 @@
 import "@/global.css";
+import { DelaGothicOne_400Regular, useFonts } from "@expo-google-fonts/dela-gothic-one";
+import { BottomSheetModalProvider } from "@gorhom/bottom-sheet";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { Stack } from "expo-router";
+import * as SplashScreen from "expo-splash-screen";
+import { StatusBar } from "expo-status-bar";
 import { HeroUINativeProvider } from "heroui-native";
+import { useEffect } from "react";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { KeyboardProvider } from "react-native-keyboard-controller";
+import { Uniwind } from "uniwind";
 
-import { AppThemeProvider } from "@/contexts/app-theme-context";
+import { CelebrationProvider } from "@/components/celebration/celebration";
+import { authClient } from "@/lib/auth-client";
+import { colors } from "@/lib/theme";
 import { queryClient } from "@/utils/trpc";
 
-export const unstable_settings = {
-  initialRouteName: "(drawer)",
-};
+// デザインはライトテーマのみ
+Uniwind.setTheme("light");
+SplashScreen.preventAutoHideAsync().catch(() => {});
 
-function StackLayout() {
+function RootNavigator() {
+  const { data: session, isPending } = authClient.useSession();
+  const [fontsLoaded] = useFonts({ DelaGothicOne_400Regular });
+  const ready = !isPending && fontsLoaded;
+
+  useEffect(() => {
+    if (ready) SplashScreen.hideAsync().catch(() => {});
+  }, [ready]);
+
+  if (!ready) return null;
+  const signedIn = !!session?.user;
+
   return (
-    <Stack screenOptions={{}}>
-      <Stack.Screen name="(drawer)" options={{ headerShown: false }} />
-      <Stack.Screen name="modal" options={{ title: "Modal", presentation: "modal" }} />
+    <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: colors.canvas } }}>
+      <Stack.Protected guard={!signedIn}>
+        <Stack.Screen name="(auth)" />
+      </Stack.Protected>
+      <Stack.Protected guard={signedIn}>
+        <Stack.Screen name="(app)" />
+      </Stack.Protected>
     </Stack>
   );
 }
@@ -26,11 +49,14 @@ export default function Layout() {
     <QueryClientProvider client={queryClient}>
       <GestureHandlerRootView style={{ flex: 1 }}>
         <KeyboardProvider>
-          <AppThemeProvider>
-            <HeroUINativeProvider>
-              <StackLayout />
-            </HeroUINativeProvider>
-          </AppThemeProvider>
+          <HeroUINativeProvider>
+            <BottomSheetModalProvider>
+              <CelebrationProvider>
+                <StatusBar style="dark" />
+                <RootNavigator />
+              </CelebrationProvider>
+            </BottomSheetModalProvider>
+          </HeroUINativeProvider>
         </KeyboardProvider>
       </GestureHandlerRootView>
     </QueryClientProvider>

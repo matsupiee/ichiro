@@ -6,17 +6,21 @@
     "./*": "./src/*.ts"
   },
   "scripts": {
-    "check-types": "tsc --noEmit"
+    "check-types": "tsc --noEmit",
+    "test": "bun test"
   },
   "dependencies": {
     "@ichiro/auth": "workspace:*",
     "@ichiro/db": "workspace:*",
     "@trpc/client": "catalog:",
     "@trpc/server": "catalog:",
+    "drizzle-orm": "catalog:",
     "zod": "catalog:"
   },
   "devDependencies": {
     "@ichiro/config": "workspace:*",
+    "@libsql/client": "0.18.0",
+    "@types/bun": "^1.4.2",
     "typescript": "^6.0.3"
   }
 }
