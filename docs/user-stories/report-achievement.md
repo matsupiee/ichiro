@@ -46,5 +46,5 @@
 
 ## 対応するテスト
 
-- `packages/api/src/routers/commitment.test.ts` の「今日の達成を報告できる」
-- 連続達成と報告日の計算は `packages/api/src/lib/schedule.test.ts`
+- `packages/api/src/routers/consumer/commitment/report/handler.integration.test.ts`
+- 連続達成と報告日の計算は `packages/api/src/shared/schedule/schedule.test.ts`

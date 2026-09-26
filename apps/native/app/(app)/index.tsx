@@ -23,7 +23,9 @@ export default function MainScreen() {
   const avatar = useAvatar();
   const report = useReport();
   const today = localToday();
-  const { data: items, isPending } = useQuery(trpc.commitment.list.queryOptions({ today }));
+  const { data: items, isPending } = useQuery(
+    trpc.consumer.commitment.list.queryOptions({ today }),
+  );
 
   const remaining = (items ?? []).filter((c) => c.dueToday && !c.reportedToday).length;
 

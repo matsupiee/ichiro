@@ -37,5 +37,5 @@
 
 ## 対応するテスト
 
-- `packages/api/src/routers/commitment.test.ts` の「メインページでコミットメントを一覧できる」
-- 報告日と連続達成の計算は `packages/api/src/lib/schedule.test.ts`
+- `packages/api/src/routers/consumer/commitment/list/handler.integration.test.ts`
+- 報告日と連続達成の計算は `packages/api/src/shared/schedule/schedule.test.ts`

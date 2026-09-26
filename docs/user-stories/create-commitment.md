@@ -59,4 +59,4 @@
 
 ## 対応するテスト
 
-- `packages/api/src/routers/commitment.test.ts` の「コミットメントを作成できる」
+- `packages/api/src/routers/consumer/commitment/create/handler.integration.test.ts`

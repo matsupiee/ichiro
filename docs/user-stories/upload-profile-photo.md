@@ -44,4 +44,6 @@
 
 ## 対応するテスト
 
-- `packages/api/src/avatar.test.ts` の「プロフィール写真をアップロードできる」「プロフィール写真を削除できる」「プロフィール写真を配信する」
+- アップロードは `packages/api/src/routers/consumer/profile/upload-avatar/handler.integration.test.ts`
+- 削除は `packages/api/src/routers/consumer/profile/delete-avatar/handler.integration.test.ts`
+- 配信は `packages/api/src/routers/consumer/profile/get-avatar/handler.integration.test.ts`

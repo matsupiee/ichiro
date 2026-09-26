@@ -37,12 +37,12 @@
 ## データの持ち方
 
 - 名前は `user.name`。Better Auth の `updateUser` で書きかえる。
-- 支払い情報は `payment_method` テーブル。`payment.methods` で自分の分だけを返す。
+- 支払い情報は `payment_method` テーブル。`consumer.payment.listMethods` で自分の分だけを返す。
 - プロフィール写真は `user.image`。写真の本体は Cloudflare R2 に置く。
   - → [プロフィール写真をアップロードできる](./upload-profile-photo.md)
 
 ## 対応するテスト
 
 - 名前の変更とログアウトは Better Auth に任せており、API のテストはない。
-- プロフィール写真は `packages/api/src/avatar.test.ts`。
-- 支払い情報は `packages/api/src/routers/payment.test.ts` の「支払い方法を Stripe に登録できる」
+- プロフィール写真は `packages/api/src/routers/consumer/profile/` 配下の各 `handler.integration.test.ts`。
+- 支払い情報は `packages/api/src/routers/consumer/payment/list-methods/handler.integration.test.ts`

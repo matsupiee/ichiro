@@ -64,7 +64,7 @@ bun run db:seed -- --url file:./local.db --today <昨日の日付> --stripe-cust
   - アプリが作成・変更のたびに端末のタイムゾーンを送る。送られなかったときは `Asia/Tokyo`。
 - 精算と徴収は Cloudflare Workers の cron（`packages/infra/alchemy.run.ts` の `crons`）で1時間ごとに動く。
   - 精算は詳細ページを開いたとき・設定を変えたとき・報告したときにも、そのコミットメントについて行う。
-- 引き落としは Stripe の PaymentIntent で行う（`packages/api/src/lib/stripe.ts` の `stripeGateway`）。
+- 引き落としは Stripe の PaymentIntent で行う（`packages/api/src/shared/payment/charge-penalty.ts`）。
   - ユーザーがアプリを開いていないときの決済なので、登録ずみの支払い方法に `off_session: true`・`confirm: true` で請求する。通貨は円（`jpy`）。
   - 冪等キーは `penalty:<罰金のID>:<何回目か>`。cron が重なっても同じ試行で二重に請求しない。試し直すときはキーを変える。
   - PaymentIntent の ID を `charge_reference` に、罰金の ID を PaymentIntent の `metadata.penalty_id` に持つ。
@@ -72,6 +72,7 @@ bun run db:seed -- --url file:./local.db --today <昨日の日付> --stripe-cust
 
 ## 対応するテスト
 
-- `packages/api/src/routers/commitment.test.ts` の「報告できなかった日は罰金が徴収される」（Stripe は偽物に差し替える）
-- Webhook での反映は `packages/api/src/routers/payment.test.ts` の「Stripe の Webhook で結果を反映する」
-- 締め切りの判定と、罰金の対象になる日の計算は `packages/api/src/lib/penalty.test.ts`
+- `packages/api/src/shared/penalty/run-penalty-job.integration.test.ts`（Stripe は偽物に差し替える）
+- 設定を変えたときの扱いは `packages/api/src/routers/consumer/commitment/update/handler.integration.test.ts` の「設定を変えても、過去の分の罰金は変わらない」
+- Webhook での反映は `packages/api/src/shared/payment/handle-stripe-event.integration.test.ts`
+- 締め切りの判定と、罰金の対象になる日の計算は `packages/api/src/shared/penalty/penalty.test.ts`

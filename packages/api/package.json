@@ -2,12 +2,12 @@
   "name": "@ichiro/api",
   "type": "module",
   "exports": {
-    ".": "./src/index.ts",
     "./*": "./src/*.ts"
   },
   "scripts": {
     "check-types": "tsc --noEmit",
-    "test": "bun test"
+    "test": "bun test",
+    "check:patterns": "bun run scripts/check-patterns.ts"
   },
   "dependencies": {
     "@ichiro/auth": "workspace:*",

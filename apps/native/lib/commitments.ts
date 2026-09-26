@@ -11,7 +11,7 @@ type Reportable = { id: string; goal: string; streak: number };
 export function useReport() {
   const celebrate = useCelebrate();
   const queryClient = useQueryClient();
-  const mutation = useMutation(trpc.commitment.report.mutationOptions());
+  const mutation = useMutation(trpc.consumer.commitment.report.mutationOptions());
 
   return (c: Reportable) => {
     const today = localToday();
@@ -19,14 +19,14 @@ export function useReport() {
       message: `「${c.goal}」今日も達成！`,
       tiles: [{ label: "連続達成", value: `${c.streak + 1}日` }],
     });
-    queryClient.setQueryData(trpc.commitment.list.queryKey({ today }), (list) =>
+    queryClient.setQueryData(trpc.consumer.commitment.list.queryKey({ today }), (list) =>
       list?.map((x) => (x.id === c.id ? { ...x, reportedToday: true, streak: x.streak + 1 } : x)),
     );
     mutation.mutate(
       { id: c.id, today },
       {
         onError: (e) => Alert.alert("報告できませんでした", e.message),
-        onSettled: () => queryClient.invalidateQueries(trpc.commitment.pathFilter()),
+        onSettled: () => queryClient.invalidateQueries(trpc.consumer.commitment.pathFilter()),
       },
     );
   };

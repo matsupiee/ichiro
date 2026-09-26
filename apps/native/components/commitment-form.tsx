@@ -20,7 +20,7 @@ export type FormValues = {
   untilDate: string;
   penalty: boolean;
   amount: number;
-  // payment.methods の ID。罰金ありのときに使う
+  // consumer.payment.listMethods の ID。罰金ありのときに使う
   paymentMethodId: string | null;
   checker: Checker;
   friendEmail: string;

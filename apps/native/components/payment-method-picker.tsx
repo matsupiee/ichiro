@@ -29,7 +29,7 @@ type Props = {
 
 // 罰金を引き落とす支払い方法を、Stripe に登録ずみのものから選ぶ。その場で追加もできる
 export function PaymentMethodPicker({ value, onChange }: Props) {
-  const { data: methods, isPending } = useQuery(trpc.payment.methods.queryOptions());
+  const { data: methods, isPending } = useQuery(trpc.consumer.payment.listMethods.queryOptions());
   const { add, adding } = useAddPaymentMethod();
 
   // まだ選んでいなければ、最初に登録した支払い方法を選んでおく

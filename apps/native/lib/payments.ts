@@ -34,8 +34,8 @@ export function paymentMethodLabel(m: PaymentMethodSummary): string {
 export function useAddPaymentMethod() {
   const queryClient = useQueryClient();
   const presentSheet = usePaymentSheet();
-  const start = useMutation(trpc.payment.startSetup.mutationOptions());
-  const complete = useMutation(trpc.payment.completeSetup.mutationOptions());
+  const start = useMutation(trpc.consumer.payment.startSetup.mutationOptions());
+  const complete = useMutation(trpc.consumer.payment.completeSetup.mutationOptions());
   const [adding, setAdding] = useState(false);
 
   const add = async (): Promise<PaymentMethodSummary | null> => {
@@ -51,7 +51,7 @@ export function useAddPaymentMethod() {
       const method = await complete.mutateAsync({
         setupIntentClientSecret: session.setupIntentClientSecret,
       });
-      await queryClient.invalidateQueries(trpc.payment.methods.pathFilter());
+      await queryClient.invalidateQueries(trpc.consumer.payment.listMethods.pathFilter());
       return method;
     } catch (e) {
       Alert.alert("支払い方法を登録できませんでした", e instanceof Error ? e.message : String(e));
