@@ -9,6 +9,7 @@ import { migrate } from "drizzle-orm/libsql/migrator";
 
 import type { Mailer, MailMessage } from "../lib/mailer";
 import { appRouter } from "../routers/index";
+import { createFakeStripe, type FakeStripe } from "./fake-stripe";
 
 const migrationsFolder = new URL("../../../db/src/migrations", import.meta.url).pathname;
 
@@ -63,15 +64,31 @@ export function createTestMailer() {
   return mailer;
 }
 
-export function callerFor(db: Database, session: Session | null, mailer = createTestMailer()) {
-  return appRouter.createCaller({ db, session, mailer });
+export function callerFor(
+  db: Database,
+  session: Session | null,
+  {
+    mailer = createTestMailer(),
+    stripe = createFakeStripe(),
+  }: { mailer?: ReturnType<typeof createTestMailer>; stripe?: FakeStripe } = {},
+) {
+  return appRouter.createCaller({ db, session, mailer, stripe: stripe.client });
 }
 
 export async function setupDemo() {
   const db = await createTestDb();
   const today = testToday();
-  const seeded = await seedDemo(db as never, today);
+  const seeded = await seedDemo(db as never, today, "UTC");
   const session = await sessionFor(db, "demo@ichiro.app");
   const mailer = createTestMailer();
-  return { db, today, session, seeded, mailer, caller: callerFor(db, session, mailer) };
+  const stripe = createFakeStripe();
+  return {
+    db,
+    today,
+    session,
+    seeded,
+    mailer,
+    stripe,
+    caller: callerFor(db, session, { mailer, stripe }),
+  };
 }

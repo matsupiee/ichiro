@@ -12,6 +12,7 @@ import { KeyboardProvider } from "react-native-keyboard-controller";
 import { Uniwind } from "uniwind";
 
 import { CelebrationProvider } from "@/components/celebration/celebration";
+import { StripeProvider } from "@/components/stripe-provider";
 import { authClient } from "@/lib/auth-client";
 import { colors } from "@/lib/theme";
 import { queryClient } from "@/utils/trpc";
@@ -51,10 +52,12 @@ export default function Layout() {
         <KeyboardProvider>
           <HeroUINativeProvider>
             <BottomSheetModalProvider>
-              <CelebrationProvider>
-                <StatusBar style="dark" />
-                <RootNavigator />
-              </CelebrationProvider>
+              <StripeProvider>
+                <CelebrationProvider>
+                  <StatusBar style="dark" />
+                  <RootNavigator />
+                </CelebrationProvider>
+              </StripeProvider>
             </BottomSheetModalProvider>
           </HeroUINativeProvider>
         </KeyboardProvider>

@@ -15,7 +15,7 @@ const values = {
   monthDays: [1],
   untilDate: "2099-12-31",
   penaltyAmount: null,
-  paymentMethod: null,
+  paymentMethodId: null,
   checker: "friend" as const,
   friendEmail: "new-friend@example.com",
 };
@@ -41,14 +41,14 @@ describe("友達に招待メールを送れる", () => {
   });
 
   test("登録ずみの友達には、チェック役のお願いが届く", async () => {
-    const { caller, today, mailer } = await setupDemo();
+    const { caller, today, seeded, mailer } = await setupDemo();
     const created = await caller.commitment.create({
       today,
       values: {
         ...values,
         friendEmail: "Matsukiyo@Example.com",
         penaltyAmount: 1000,
-        paymentMethod: "card",
+        paymentMethodId: seeded.paymentMethodIds[1]!,
       },
     });
 
@@ -115,7 +115,7 @@ describe("設定を変えると、新しい友達に招待メールが届く", (
     monthDays,
     untilDate: "2099-12-31",
     penaltyAmount: null,
-    paymentMethod: null,
+    paymentMethodId: null,
   };
 
   test("自分から友達に変えると送る", async () => {

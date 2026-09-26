@@ -1,7 +1,7 @@
 import type { Context as ApiContext } from "@ichiro/api/context";
 import type { Context as HonoContext } from "hono";
 
-import { createAuth, getDb, getMailer } from "./services";
+import { createAuth, getDb, getMailer, getStripe } from "./services";
 
 export type CreateContextOptions = {
   context: HonoContext;
@@ -17,6 +17,7 @@ export async function createContext({ context }: CreateContextOptions): Promise<
   return {
     db,
     session,
+    stripe: getStripe(),
     mailer: getMailer(),
   };
 }

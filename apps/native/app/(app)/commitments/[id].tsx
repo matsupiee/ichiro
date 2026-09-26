@@ -11,9 +11,10 @@ import {
   toApiValues,
   validate,
 } from "@/components/commitment-form";
+import { PenaltyHistory } from "@/components/penalty-history";
 import { PrimaryButton, ScreenHeader } from "@/components/ui";
 import { useReport } from "@/lib/commitments";
-import { formatMonthDay, localToday, toDateString } from "@/lib/date";
+import { formatMonthDay, localTimeZone, localToday, toDateString } from "@/lib/date";
 import { colors } from "@/lib/theme";
 import { trpc } from "@/utils/trpc";
 
@@ -129,7 +130,7 @@ export default function CommitmentDetailScreen() {
       untilDate: data.untilDate,
       penalty: data.penaltyAmount !== null,
       amount: data.penaltyAmount ?? 500,
-      paymentMethod: data.paymentMethod ?? "apple_pay",
+      paymentMethodId: data.paymentMethodId,
       checker: data.checker,
       friendEmail: data.friendEmail ?? "",
     });
@@ -144,7 +145,7 @@ export default function CommitmentDetailScreen() {
     }
     setError(null);
     update.mutate(
-      { id, values: toApiValues(values) },
+      { id, timeZone: localTimeZone(), values: toApiValues(values) },
       {
         onError: (e) => setError(e.message),
         onSuccess: (c) => {
@@ -198,7 +199,13 @@ export default function CommitmentDetailScreen() {
           onChange={setValues}
           showSuggestions={false}
           minimumDate={data.startDate}
-          header={<StreakCard {...data} onReport={() => report(data)} />}
+          header={
+            <>
+              <StreakCard {...data} onReport={() => report(data)} />
+              <PenaltyHistory {...data} />
+            </>
+          }
+          editing
           friendFooter={
             invitation ? (
               <InvitationStatus

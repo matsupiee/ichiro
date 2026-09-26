@@ -4,9 +4,10 @@ import {
   BottomSheetModal,
   BottomSheetScrollView,
 } from "@gorhom/bottom-sheet";
+import { useQuery } from "@tanstack/react-query";
 import Constants from "expo-constants";
 import { forwardRef, useCallback, useState } from "react";
-import { Modal, Pressable, Text, TextInput, View } from "react-native";
+import { ActivityIndicator, Modal, Pressable, Text, TextInput, View } from "react-native";
 import Animated, { ZoomIn } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
@@ -14,8 +15,9 @@ import { Avatar } from "@/components/avatar";
 import { Chevron, ErrorText, RowButton } from "@/components/ui";
 import { authClient } from "@/lib/auth-client";
 import type { useAvatar } from "@/lib/avatar";
+import { paymentMethodLabel, useAddPaymentMethod } from "@/lib/payments";
 import { colors, shadows } from "@/lib/theme";
-import { queryClient } from "@/utils/trpc";
+import { queryClient, trpc } from "@/utils/trpc";
 
 const MENU = ["利用規約", "プライバシーポリシー", "問い合わせ・報告"];
 
@@ -109,6 +111,39 @@ function NameModal({
         </View>
       </Animated.View>
     </Modal>
+  );
+}
+
+// Stripe に登録した支払い方法。罰金はここから引き落とされる
+function PaymentInfo() {
+  const { data: methods } = useQuery(trpc.payment.methods.queryOptions());
+  const { add, adding } = useAddPaymentMethod();
+
+  return (
+    <View className="gap-2.5">
+      {methods?.length === 0 ? (
+        <View className="mx-[30px] min-h-16 justify-center rounded-[36px] bg-field pl-[26px] pr-[22px]">
+          <Text className="text-[17px] text-mute">未登録</Text>
+        </View>
+      ) : null}
+      {methods?.map((m) => (
+        <View
+          key={m.id}
+          className="mx-[30px] min-h-16 justify-center rounded-[36px] bg-field pl-[26px] pr-[22px]"
+        >
+          <Text className="text-[17px] text-ink" numberOfLines={1}>
+            {paymentMethodLabel(m)}
+          </Text>
+        </View>
+      ))}
+      <RowButton onPress={adding ? undefined : add}>
+        {adding ? (
+          <ActivityIndicator color={colors.pink} />
+        ) : (
+          <Text className="text-[17px] text-ink">支払い方法を追加</Text>
+        )}
+      </RowButton>
+    </View>
   );
 }
 
@@ -216,9 +251,7 @@ export const ProfileSheet = forwardRef<BottomSheetModal, Props>(function Profile
         </RowButton>
 
         <SectionLabel>支払い情報</SectionLabel>
-        <RowButton>
-          <Text className="text-[17px] text-ink">Visa •••• 4242</Text>
-        </RowButton>
+        <PaymentInfo />
 
         <View className="gap-2.5 pt-8">
           {MENU.map((m) => (
