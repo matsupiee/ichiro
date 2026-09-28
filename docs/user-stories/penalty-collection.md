@@ -50,6 +50,7 @@ bun run db:seed -- --url file:./local.db --today <昨日の日付> --stripe-cust
 ## データの持ち方
 
 - `penalty` テーブルに、報告できなかった報告日1日につき1行を持つ。
+  - `user_id` と `commitment_id` は `ON DELETE RESTRICT` とし、罰金から参照されるユーザーとコミットメントの削除を防ぐ。
   - 同じコミットメント・同じ日の罰金は1件だけ（`commitment_id` と `due_date` のユニーク制約）。cron が重なっても二重に徴収しない。
   - `amount` と `payment_method_id` は、精算した時点のコミットメントの設定を写す。あとで設定を変えても、過去の罰金の金額と引き落とし先は変わらない。
   - `status` は `pending`（徴収待ち）・`processing`（Stripe で処理中）・`paid`（徴収ずみ）・`failed`（徴収できなかった）のどれか。
@@ -72,6 +73,7 @@ bun run db:seed -- --url file:./local.db --today <昨日の日付> --stripe-cust
 
 ## 対応するテスト
 
+- 削除による履歴の消失を防ぐ制約は `packages/api/src/shared/penalty/penalty-deletion.integration.test.ts`。既存のデモ seed を使って確認する。
 - `packages/api/src/shared/penalty/run-penalty-job.integration.test.ts`（Stripe は偽物に差し替える）
 - 設定を変えたときの扱いは `packages/api/src/routers/consumer/commitment/update/handler.integration.test.ts` の「設定を変えても、過去の分の罰金は変わらない」
 - Webhook での反映は `packages/api/src/shared/payment/handle-stripe-event.integration.test.ts`

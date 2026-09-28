@@ -41,14 +41,14 @@ export const commitment = sqliteTable(
     penaltyAmount: integer("penalty_amount"),
     // 罰金を引き落とす支払い方法。罰金ありのときだけ入る
     paymentMethodId: text("payment_method_id").references(() => paymentMethod.id, {
-      onDelete: "set null",
+      onDelete: "restrict",
     }),
     checker: text("checker", { enum: checkers }).notNull(),
     friendEmail: text("friend_email"),
     // 締め切り（報告日の 23:59:59）を判定するタイムゾーン。IANA 名
     timeZone: text("time_zone").notNull().default("Asia/Tokyo"),
     // 罰金の精算がどの報告日まで終わったか（YYYY-MM-DD）。
-    // null は未精算。この機能より前に作られた行も null になり、過去の分はさかのぼって徴収しない
+    // null は未精算
     settledThrough: text("settled_through"),
   },
   (table) => [index("commitment_userId_idx").on(table.userId)],

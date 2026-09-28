@@ -43,9 +43,11 @@ Stripe のネイティブ SDK を使うので、iOS シミュレーターか実�
   - アプリが PaymentSheet を開き、ユーザーが登録を終えたら `consumer.payment.completeSetup` を呼ぶ。サーバーは SetupIntent が自分の Customer のもので、登録が終わっていることを Stripe に確かめてから保存する。
   - アプリからの `completeSetup` が届かなかったときのため、Webhook の `setup_intent.succeeded` でも保存する。
 - `commitment.payment_method_id` に、罰金を引き落とす支払い方法を持つ。自分が登録したものしか選べない。
+  - 外部キーの `ON DELETE RESTRICT` により、コミットメントが参照している支払い方法は削除できない。参照されていない支払い方法は削除できる。
 
 ## 対応するテスト
 
+- 削除制約は `packages/api/src/shared/payment/payment-method-deletion.integration.test.ts`。`packages/db/src/seed/run.ts` の既存デモデータを使って確かめる。
 - `packages/api/src/routers/consumer/payment/start-setup/handler.integration.test.ts` と `packages/api/src/routers/consumer/payment/complete-setup/handler.integration.test.ts`
 - Webhook での保存は `packages/api/src/shared/payment/handle-stripe-event.integration.test.ts`
 - Stripe は `packages/api/src/test/fake-stripe.ts` の偽物に差し替えて確かめる。PaymentSheet の画面そのものは自動テストしていない。

@@ -26,10 +26,10 @@ export const penalty = sqliteTable(
       .notNull(),
     userId: text("user_id")
       .notNull()
-      .references(() => user.id, { onDelete: "cascade" }),
+      .references(() => user.id, { onDelete: "restrict" }),
     commitmentId: text("commitment_id")
       .notNull()
-      .references(() => commitment.id, { onDelete: "cascade" }),
+      .references(() => commitment.id, { onDelete: "restrict" }),
     // 報告できなかった報告日（ユーザーの現地日付 YYYY-MM-DD）
     dueDate: text("due_date").notNull(),
     // 精算した時点のコミットメントの金額と支払い方法を写しておく
