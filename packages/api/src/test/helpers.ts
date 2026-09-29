@@ -1,6 +1,7 @@
 import { createClient } from "@libsql/client";
 import type { Session } from "@ichiro/auth";
 import type { Database } from "@ichiro/db";
+import { relations } from "@ichiro/db/relations";
 import { user } from "@ichiro/db/schema/index";
 import { seedDemo } from "@ichiro/db/seed/index";
 import { eq } from "drizzle-orm";
@@ -18,7 +19,7 @@ const migrationsFolder = new URL("../../../db/src/migrations", import.meta.url).
 // テストでは D1 の代わりにメモリ上の SQLite を使う。
 // クエリビルダーの API は同じなので、D1 用の Database 型として扱う。
 export async function createTestDb() {
-  const db = drizzle({ client: createClient({ url: ":memory:" }) });
+  const db = drizzle({ client: createClient({ url: ":memory:" }), relations });
   await migrate(db, { migrationsFolder });
   return db as unknown as Database;
 }

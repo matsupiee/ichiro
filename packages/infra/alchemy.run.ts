@@ -1,7 +1,9 @@
 import * as Alchemy from "alchemy";
 import * as Cloudflare from "alchemy/Cloudflare";
+import { localState } from "alchemy/State";
 import * as Config from "effect/Config";
 import * as Effect from "effect/Effect";
+import * as Layer from "effect/Layer";
 import * as Redacted from "effect/Redacted";
 import "varlock/auto-load";
 
@@ -44,7 +46,9 @@ export default Alchemy.Stack(
   "ichiro",
   {
     providers: Cloudflare.providers(),
-    state: Cloudflare.state(),
+    state: Layer.unwrap(
+      Effect.map(Alchemy.AlchemyContext, ({ dev }) => (dev ? localState() : Cloudflare.state())),
+    ),
   },
   Effect.gen(function* () {
     const serverWorker = yield* server;

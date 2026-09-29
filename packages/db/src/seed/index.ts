@@ -16,15 +16,15 @@ import { report } from "../schema/report";
 export type SeedDatabase = SQLiteAsyncDatabase<"async", any, any>;
 
 export const DEMO_USER = {
-  name: "hiromu",
+  name: "taro",
   email: "demo@ichiro.app",
   password: "password123",
 } as const;
 
 // 「体づくり」のチェック役。ichiro に登録ずみの友達
 export const FRIEND_USER = {
-  name: "matsukiyo",
-  email: "matsukiyo@example.com",
+  name: "tanaka",
+  email: "tanaka@example.com",
   password: "password123",
 } as const;
 

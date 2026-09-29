@@ -33,7 +33,7 @@ describe("コミットメントの詳細を見られる", () => {
     const [cantonese, gym, smoking] = seeded.commitmentIds;
 
     expect((await caller.consumer.commitment.get({ id: gym!, today })).invitation).toMatchObject({
-      email: "matsukiyo@example.com",
+      email: "tanaka@example.com",
       kind: "registered",
       status: "sent",
     });

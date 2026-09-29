@@ -56,12 +56,17 @@ export function AuthForm({ mode }: { mode: Mode }) {
       },
     };
     // 成功するとセッションが変わり、ルートのガードがメインページへ切り替える
-    if (mode === "sign-up") {
-      await authClient.signUp.email({ name, email, password }, handlers);
-    } else {
-      await authClient.signIn.email({ email, password }, handlers);
+    try {
+      if (mode === "sign-up") {
+        await authClient.signUp.email({ name, email, password }, handlers);
+      } else {
+        await authClient.signIn.email({ email, password }, handlers);
+      }
+    } catch {
+      setError("サーバーに接続できませんでした。通信環境を確認して、もう一度お試しください");
+    } finally {
+      setSubmitting(false);
     }
-    setSubmitting(false);
   };
 
   const c = copy[mode];
@@ -86,7 +91,7 @@ export function AuthForm({ mode }: { mode: Mode }) {
           <Field
             value={values.name}
             onChangeText={set("name")}
-            placeholder="hiromu"
+            placeholder="ラッシー"
             autoComplete="name"
             textContentType="name"
             returnKeyType="next"

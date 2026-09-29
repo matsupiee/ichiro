@@ -88,7 +88,6 @@ export default function NewCommitmentScreen() {
       <CommitmentForm
         values={values}
         onChange={setValues}
-        showSuggestions
         minimumDate={today}
         cta="宣言する"
         submitting={create.isPending}

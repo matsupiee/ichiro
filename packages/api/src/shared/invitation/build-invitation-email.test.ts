@@ -5,7 +5,7 @@ import { buildInvitationEmail } from "./build-invitation-email";
 
 const base = {
   to: "friend@example.com",
-  inviter: { name: "<b>hiromu</b>", email: "demo@ichiro.app" },
+  inviter: { name: "<b>taro</b>", email: "demo@ichiro.app" },
   commitment: {
     goal: "体づくり & 筋トレ",
     content: "週3でジム",
@@ -37,9 +37,9 @@ describe("招待メールの本文", () => {
 
   test("HTML では名前や目標をエスケープする", () => {
     const mail = buildInvitationEmail({ ...base, kind: "sign_up" });
-    expect(mail.html).toContain("&lt;b&gt;hiromu&lt;/b&gt;");
+    expect(mail.html).toContain("&lt;b&gt;taro&lt;/b&gt;");
     expect(mail.html).toContain("体づくり &amp; 筋トレ");
-    expect(mail.html).not.toContain("<b>hiromu</b>");
+    expect(mail.html).not.toContain("<b>taro</b>");
   });
 
   test("API キーがないときはログに出すだけにする", async () => {

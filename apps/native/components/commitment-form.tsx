@@ -34,7 +34,6 @@ const FREQUENCIES: [Frequency, string][] = [
   ["monthly", "月の特定の日"],
   ["once", "1回だけ"],
 ];
-const SUGGESTIONS = ["毎日30分広東語を練習する", "週3でジムに行く", "禁煙する"];
 const QUICK_AMOUNTS = [500, 1000, 3000];
 const CHECKERS: [Checker, string][] = [
   ["self", "自分"],
@@ -207,7 +206,6 @@ function PenaltySwitch({ on }: { on: boolean }) {
 type Props = {
   values: FormValues;
   onChange: (v: FormValues) => void;
-  showSuggestions: boolean;
   // 詳細ページで既存のコミットメントを変更しているとき
   editing?: boolean;
   minimumDate: string;
@@ -224,7 +222,6 @@ type Props = {
 export function CommitmentForm({
   values: v,
   onChange,
-  showSuggestions,
   editing = false,
   minimumDate,
   header,
@@ -255,20 +252,12 @@ export function CommitmentForm({
         value={v.content}
         onChangeText={(t) => set("content", t)}
         placeholder="毎日30分広東語を練習する"
+        accessibilityLabel="コミット内容"
+        multiline
+        submitBehavior="newline"
+        textAlignVertical="top"
+        style={{ height: 144, lineHeight: 24 }}
       />
-      {showSuggestions ? (
-        <View className="flex-row flex-wrap gap-2 px-[38px] pt-3">
-          {SUGGESTIONS.map((s) => (
-            <Pressable
-              key={s}
-              onPress={() => set("content", s)}
-              className="rounded-[18px] border border-card-line bg-white px-3.5 py-[9px] active:bg-pink-soft"
-            >
-              <Text className="text-[14px] text-ink-2">{s}</Text>
-            </Pressable>
-          ))}
-        </View>
-      ) : null}
 
       <FieldLabel>結果報告の頻度</FieldLabel>
       <View className="mx-[30px] gap-3.5 rounded-[32px] bg-field p-3.5">

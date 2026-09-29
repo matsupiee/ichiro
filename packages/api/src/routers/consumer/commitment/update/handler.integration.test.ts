@@ -168,7 +168,7 @@ describe("設定を変えると、新しい友達に招待メールが届く", (
         ...values,
         goal: "体づくり2",
         checker: "friend",
-        friendEmail: "matsukiyo@example.com",
+        friendEmail: "tanaka@example.com",
       },
     });
     expect(updated.invitation).toBeNull();

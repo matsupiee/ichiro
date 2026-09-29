@@ -15,7 +15,7 @@ describe("招待メールを再送できる", () => {
 
     const resent = await caller.consumer.commitment.resendInvitation({ id });
     expect(resent).toMatchObject({
-      email: "matsukiyo@example.com",
+      email: "tanaka@example.com",
       kind: "registered",
       status: "sent",
     });

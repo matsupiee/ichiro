@@ -139,8 +139,8 @@ describe("友達にチェックしてもらうなら、作成したときに招�
     expect(mailer.outbox).toHaveLength(1);
     const mail = mailer.outbox[0]!;
     expect(mail.to).toBe("new-friend@example.com");
-    expect(mail.subject).toBe("hiromuさんから、ichiro への招待が届きました");
-    expect(mail.text).toContain("hiromuさん（demo@ichiro.app）");
+    expect(mail.subject).toBe("taroさんから、ichiro への招待が届きました");
+    expect(mail.text).toContain("taroさん（demo@ichiro.app）");
     expect(mail.text).toContain("目標: 読書");
     expect(mail.text).toContain("コミット内容: 毎日10ページ読む");
     expect(mail.text).toContain("このメールアドレス（new-friend@example.com）で会員登録");
@@ -152,16 +152,16 @@ describe("友達にチェックしてもらうなら、作成したときに招�
       today,
       values: {
         ...friendValues,
-        friendEmail: "Matsukiyo@Example.com",
+        friendEmail: "tanaka@Example.com",
         penaltyAmount: 1000,
         paymentMethodId: seeded.paymentMethodIds[1]!,
       },
     });
 
-    expect(created.friendEmail).toBe("matsukiyo@example.com");
+    expect(created.friendEmail).toBe("tanaka@example.com");
     expect(created.invitation).toMatchObject({ kind: "registered", status: "sent" });
     const mail = mailer.outbox[0]!;
-    expect(mail.subject).toBe("hiromuさんから、チェック役のお願いが届きました");
+    expect(mail.subject).toBe("taroさんから、チェック役のお願いが届きました");
     expect(mail.text).toContain("罰金: ¥1,000");
     expect(mail.text).not.toContain("会員登録");
   });

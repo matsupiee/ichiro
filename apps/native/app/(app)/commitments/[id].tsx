@@ -197,7 +197,6 @@ export default function CommitmentDetailScreen() {
         <CommitmentForm
           values={values}
           onChange={setValues}
-          showSuggestions={false}
           minimumDate={data.startDate}
           header={
             <>

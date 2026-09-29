@@ -9,6 +9,14 @@
 
 ## 動作確認の手順
 
+ローカルでは `bun run dev:server` と `bun run dev:native` を起動する（両方まとめる場合は `bun run dev`）。
+アプリの `EXPO_PUBLIC_SERVER_URL` は `http://localhost:3000` にする。
+API・D1・R2 の定義は `packages/infra/alchemy.run.ts` にまとめ、`alchemy dev` でローカル実行する。起動時にマイグレーションを適用する。
+初回は `packages/infra` で `bunx alchemy profile edit --add Cloudflare` を実行して認証する。
+開発時の状態は `.alchemy` 配下に保存し、デプロイ時は Cloudflare の状態ストアを使う。
+`apps/server/.env` に認証用の環境変数と Stripe のテストキーを設定する。認証画面だけを確認する場合は、Stripe キーに `sk_test_local_unconfigured`・`whsec_local_unconfigured` を入れて起動できるが、決済は利用できない。
+デモデータの作成コマンドは `packages/db/src/seed/run.ts` にある。新規登録の確認はデータが空の状態でも行える。
+
 1. 未ログインの状態でアプリを開く。
    - オンボーディング画面（ワンちゃん + ロゴ + 説明 + 「アカウントを作る」「ログイン」ボタン）が表示される。
    - メインページ・コミットメントの画面のいずれにも到達できない。
@@ -27,6 +35,7 @@
    - オンボーディング画面に戻る。
 6. 登録またはログインする。
    - メインページに遷移する。
+   - 通信に失敗した場合はエラーが表示され、サーバーの復旧後に再送信できる。
    - → [メインページでコミットメントを一覧できる](./commitment-list.md)
 7. 右上のプロフィールアイコンを押してシートを開き、「ログアウト」を押す。
    - オンボーディング画面に戻る。
@@ -39,5 +48,5 @@
 
 ## 対応するテスト
 
-- 認証そのものは Better Auth に任せており、API のテストはない。
+- `packages/api/src/test/auth.integration.test.ts` で、新規登録・セッション取得・ログアウト・再ログインと不正なパスワードの拒否を確認する。
 - ログインしていないと API を呼べないことは `packages/api/src/routers/consumer/commitment/list/handler.integration.test.ts` の「ログインしていないと一覧できない」で確かめる。
