@@ -44,7 +44,9 @@ export const commitment = sqliteTable(
       onDelete: "restrict",
     }),
     checker: text("checker", { enum: checkers }).notNull(),
-    friendEmail: text("friend_email"),
+    // 未承認の依頼リンク。承認・チェック者の変更時に無効にする
+    shareToken: text("share_token").unique(),
+    checkerUserId: text("checker_user_id").references(() => user.id, { onDelete: "set null" }),
     // 締め切り（報告日の 23:59:59）を判定するタイムゾーン。IANA 名
     timeZone: text("time_zone").notNull().default("Asia/Tokyo"),
     // 罰金の精算がどの報告日まで終わったか（YYYY-MM-DD）。

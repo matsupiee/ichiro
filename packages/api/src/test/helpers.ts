@@ -10,7 +10,6 @@ import { migrate } from "drizzle-orm/libsql/migrator";
 
 import { createHttpApp } from "../http";
 import { appRouter, httpRoutes } from "../routers/index";
-import type { Mailer, MailMessage } from "../third-party-lib/mailer";
 import { createFakeStripe, type FakeStripe } from "./fake-stripe";
 import { memoryAvatarStorage } from "./memory-avatar-storage";
 
@@ -52,23 +51,7 @@ export async function createUser(db: Database, email: string, name = "friend") {
   return sessionFor(db, email);
 }
 
-// 送ったメールを outbox にためるだけの Mailer。failing を true にすると送信に失敗する
-export function createTestMailer() {
-  const outbox: MailMessage[] = [];
-  const mailer: Mailer & { outbox: MailMessage[]; failing: boolean } = {
-    outbox,
-    failing: false,
-    async send(message) {
-      if (mailer.failing) throw new Error("mail server is down");
-      outbox.push(message);
-      return { id: `test-${outbox.length}` };
-    },
-  };
-  return mailer;
-}
-
 type TestServices = {
-  mailer?: ReturnType<typeof createTestMailer>;
   stripe?: FakeStripe;
   avatars?: ReturnType<typeof memoryAvatarStorage>;
 };
@@ -76,16 +59,11 @@ type TestServices = {
 export function callerFor(
   db: Database,
   session: Session | null,
-  {
-    mailer = createTestMailer(),
-    stripe = createFakeStripe(),
-    avatars = memoryAvatarStorage(),
-  }: TestServices = {},
+  { stripe = createFakeStripe(), avatars = memoryAvatarStorage() }: TestServices = {},
 ) {
   return appRouter.createCaller({
     db,
     session,
-    mailer,
     stripe: stripe.client,
     avatarStorage: avatars.storage,
   });
@@ -95,16 +73,11 @@ export function callerFor(
 export function httpAppFor(
   db: Database,
   sessions: Map<string, Session>,
-  {
-    mailer = createTestMailer(),
-    stripe = createFakeStripe(),
-    avatars = memoryAvatarStorage(),
-  }: TestServices = {},
+  { stripe = createFakeStripe(), avatars = memoryAvatarStorage() }: TestServices = {},
 ) {
   return createHttpApp(httpRoutes, async (c, { readSession }) => ({
     db,
     session: readSession ? (sessions.get(c.req.header("Cookie") ?? "") ?? null) : null,
-    mailer,
     stripe: stripe.client,
     avatarStorage: avatars.storage,
   }));
@@ -115,7 +88,6 @@ export async function setupDemo() {
   const today = testToday();
   const seeded = await seedDemo(db as never, today, "UTC");
   const session = await sessionFor(db, "demo@ichiro.app");
-  const mailer = createTestMailer();
   const stripe = createFakeStripe();
   const avatars = memoryAvatarStorage();
   return {
@@ -123,9 +95,8 @@ export async function setupDemo() {
     today,
     session,
     seeded,
-    mailer,
     stripe,
     avatars,
-    caller: callerFor(db, session, { mailer, stripe, avatars }),
+    caller: callerFor(db, session, { stripe, avatars }),
   };
 }

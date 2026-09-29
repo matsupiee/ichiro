@@ -11,9 +11,6 @@ export async function assertCommitmentValuesAllowed(
   v: CommitmentValues,
 ) {
   const me = context.session.user;
-  if (v.checker === "friend" && v.friendEmail?.toLowerCase() === me.email.toLowerCase()) {
-    throw new TRPCError({ code: "BAD_REQUEST", message: "自分のメールアドレスは指定できません" });
-  }
   // 罰金を引き落とす支払い方法は、自分が登録したものだけを選べる
   if (v.penaltyAmount === null || v.paymentMethodId === null) return;
   const [row] = await context.db

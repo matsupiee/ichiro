@@ -25,8 +25,6 @@ test("stg と prod の Stripe キーを取り違えると停止する", () => {
       ...valid,
       APP_ENV: "prod",
       STRIPE_SECRET_KEY: "sk_live_fixture",
-      RESEND_API_KEY: "re_fixture",
-      MAIL_FROM: "ichiro <mail@example.com>",
     }),
   ).not.toThrow();
 });
@@ -45,7 +43,7 @@ test("暗黙の stage、環境不一致、未設定の秘密情報を拒否す�
   );
   expect(() =>
     validateDeployment("prod", { ...valid, APP_ENV: "prod", STRIPE_SECRET_KEY: "sk_live_fixture" }),
-  ).toThrow("MAIL_FROM");
+  ).not.toThrow();
 });
 
 const temporary: string[] = [];
@@ -96,8 +94,6 @@ test("CI の環境変数から prod を読み込み、ローカル設定より�
     ...valid,
     APP_ENV: "prod",
     STRIPE_SECRET_KEY: "sk_live_ci",
-    RESEND_API_KEY: "re_ci",
-    MAIL_FROM: "ichiro <mail@example.com>",
   };
   expect((await loadDeployment("prod", env, join(root, "packages/infra"))).STRIPE_SECRET_KEY).toBe(
     "sk_live_ci",

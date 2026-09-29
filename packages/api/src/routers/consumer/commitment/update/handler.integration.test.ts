@@ -16,7 +16,6 @@ const values = {
   penaltyAmount: null,
   paymentMethodId: null,
   checker: "self" as const,
-  friendEmail: null,
 };
 
 describe("途中で設定を変えられる", () => {
@@ -132,46 +131,5 @@ describe("設定を変えても、過去の分の罰金は変わらない", () =
     const detail = await caller.consumer.commitment.get({ id: created.id, today });
     expect(detail.penalties).toEqual([]);
     expect(detail.settledThrough).toBe(addDays(today, -1));
-  });
-});
-
-describe("設定を変えると、新しい友達に招待メールが届く", () => {
-  test("自分から友達に変えると送る", async () => {
-    const { caller, today, seeded, mailer } = await setupDemo();
-    const id = seeded.commitmentIds[0]!;
-    const updated = await caller.consumer.commitment.update({
-      id,
-      values: { ...values, checker: "friend", friendEmail: "new-friend@example.com" },
-    });
-    expect(updated.invitation).toMatchObject({ kind: "sign_up", status: "sent" });
-    expect(mailer.outbox.map((m) => m.to)).toEqual(["new-friend@example.com"]);
-    expect((await caller.consumer.commitment.get({ id, today })).invitation).toMatchObject({
-      email: "new-friend@example.com",
-    });
-  });
-
-  test("友達のメールアドレスを変えると、新しいアドレスに送る", async () => {
-    const { caller, seeded, mailer } = await setupDemo();
-    const updated = await caller.consumer.commitment.update({
-      id: seeded.commitmentIds[1]!,
-      values: { ...values, checker: "friend", friendEmail: "another@example.com" },
-    });
-    expect(updated.invitation).toMatchObject({ email: "another@example.com" });
-    expect(mailer.outbox.map((m) => m.to)).toEqual(["another@example.com"]);
-  });
-
-  test("同じ友達のまま、ほかの設定だけ変えたときは送らない", async () => {
-    const { caller, seeded, mailer } = await setupDemo();
-    const updated = await caller.consumer.commitment.update({
-      id: seeded.commitmentIds[1]!,
-      values: {
-        ...values,
-        goal: "体づくり2",
-        checker: "friend",
-        friendEmail: "tanaka@example.com",
-      },
-    });
-    expect(updated.invitation).toBeNull();
-    expect(mailer.outbox).toHaveLength(0);
   });
 });

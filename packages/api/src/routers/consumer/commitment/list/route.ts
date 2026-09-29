@@ -23,7 +23,6 @@ export const commitmentListOutputSchema = z.array(
     penaltyAmount: z.number().nullable(),
     paymentMethodId: z.string().nullable(),
     checker: z.enum(checkers),
-    friendEmail: z.string().nullable(),
     dueToday: z.boolean(),
     reportedToday: z.boolean(),
     streak: z.number(),

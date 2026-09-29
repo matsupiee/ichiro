@@ -28,21 +28,6 @@ describe("コミットメントの詳細を見られる", () => {
     expect(detail.penaltyTotal).toBe(1000);
   });
 
-  test("詳細には、いまの友達に最後に送った招待が入る", async () => {
-    const { caller, today, seeded } = await setupDemo();
-    const [cantonese, gym, smoking] = seeded.commitmentIds;
-
-    expect((await caller.consumer.commitment.get({ id: gym!, today })).invitation).toMatchObject({
-      email: "tanaka@example.com",
-      kind: "registered",
-      status: "sent",
-    });
-    expect(
-      (await caller.consumer.commitment.get({ id: smoking!, today })).invitation,
-    ).toMatchObject({ email: "mom@example.com", kind: "sign_up" });
-    expect((await caller.consumer.commitment.get({ id: cantonese!, today })).invitation).toBeNull();
-  });
-
   test("ほかのユーザーのコミットメントは見られない", async () => {
     const { db, today, seeded } = await setupDemo();
     const other = callerFor(db, await createUser(db, "other@example.com"));

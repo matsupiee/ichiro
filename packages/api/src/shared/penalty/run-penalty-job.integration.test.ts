@@ -29,7 +29,6 @@ const values = {
   penaltyAmount: null,
   paymentMethodId: null,
   checker: "self" as const,
-  friendEmail: null,
 };
 
 describe("報告できなかった日は罰金が徴収される", () => {

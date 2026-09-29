@@ -1,6 +1,6 @@
 import DateTimePicker, { DateTimePickerAndroid } from "@react-native-community/datetimepicker";
 import { type ReactNode, useEffect, useState } from "react";
-import { Platform, Pressable, Text, TextInput, View } from "react-native";
+import { Platform, Pressable, Text, View } from "react-native";
 import Animated, { useAnimatedStyle, useSharedValue, withTiming } from "react-native-reanimated";
 
 import { PaymentMethodPicker } from "@/components/payment-method-picker";
@@ -9,7 +9,6 @@ import { formatFullDate, formatYen, fromDateString, toDateString } from "@/lib/d
 import { colors, shadows } from "@/lib/theme";
 
 export type Frequency = "daily" | "weekly" | "monthly" | "once";
-export type Checker = "self" | "friend";
 
 export type FormValues = {
   goal: string;
@@ -22,8 +21,6 @@ export type FormValues = {
   amount: number;
   // consumer.payment.listMethods の ID。罰金ありのときに使う
   paymentMethodId: string | null;
-  checker: Checker;
-  friendEmail: string;
 };
 
 export const MIN_PENALTY = 100;
@@ -35,10 +32,6 @@ const FREQUENCIES: [Frequency, string][] = [
   ["once", "1回だけ"],
 ];
 const QUICK_AMOUNTS = [500, 1000, 3000];
-const CHECKERS: [Checker, string][] = [
-  ["self", "自分"],
-  ["friend", "友達"],
-];
 
 export function toApiValues(v: FormValues) {
   return {
@@ -50,8 +43,6 @@ export function toApiValues(v: FormValues) {
     untilDate: v.untilDate,
     penaltyAmount: v.penalty ? v.amount : null,
     paymentMethodId: v.penalty ? v.paymentMethodId : null,
-    checker: v.checker,
-    friendEmail: v.checker === "friend" ? v.friendEmail.trim() : null,
   };
 }
 
@@ -63,9 +54,6 @@ export function validate(v: FormValues): string | null {
   if (v.frequency === "monthly" && v.monthDays.length === 0) return "日付を選んでください";
   if (v.penalty && v.amount < MIN_PENALTY) return `罰金は${MIN_PENALTY}円以上にしてください`;
   if (v.penalty && !v.paymentMethodId) return "支払い方法を選んでください";
-  if (v.checker === "friend" && !/^\S+@\S+\.\S+$/.test(v.friendEmail.trim())) {
-    return "友達のメールアドレスを入力してください";
-  }
   return null;
 }
 
@@ -210,8 +198,8 @@ type Props = {
   editing?: boolean;
   minimumDate: string;
   header?: ReactNode;
-  // 友達のメールアドレスの下に出すもの（詳細ページの招待メールの送信状況）
-  friendFooter?: ReactNode;
+  // 編集シートだけに表示するチェック者の欄
+  checkerField?: ReactNode;
   cta: string;
   submitting: boolean;
   error: string | null;
@@ -225,7 +213,7 @@ export function CommitmentForm({
   editing = false,
   minimumDate,
   header,
-  friendFooter,
+  checkerField,
   cta,
   submitting,
   error,
@@ -388,40 +376,7 @@ export function CommitmentForm({
         </>
       ) : null}
 
-      <FieldLabel>誰にチェックしてもらう？</FieldLabel>
-      <View className="mx-[30px] flex-row gap-2.5 rounded-[32px] bg-field p-2.5">
-        {CHECKERS.map(([k, label]) => (
-          <Pressable
-            key={k}
-            onPress={() => set("checker", k)}
-            className="h-12 flex-1 items-center justify-center rounded-3xl"
-            style={{ backgroundColor: v.checker === k ? "#fff" : "transparent" }}
-          >
-            <Text className="text-[16px] font-semibold text-ink">{label}</Text>
-          </Pressable>
-        ))}
-      </View>
-      {v.checker === "friend" ? (
-        <>
-          <View className="mt-3 mx-[30px] min-h-[62px] flex-row items-center rounded-[31px] bg-field px-[26px]">
-            <TextInput
-              value={v.friendEmail}
-              onChangeText={(t) => set("friendEmail", t)}
-              placeholder="友達のメールアドレス"
-              placeholderTextColor={colors.faint}
-              selectionColor={colors.pink}
-              keyboardType="email-address"
-              autoCapitalize="none"
-              autoComplete="email"
-              style={{ flex: 1, fontSize: 17, color: colors.ink, paddingVertical: 18 }}
-            />
-          </View>
-          <NoteText>
-            招待メールを送ります。まだ ichiro を使っていない友達には、会員登録のお願いが届きます。
-          </NoteText>
-          {friendFooter}
-        </>
-      ) : null}
+      {checkerField}
 
       <ErrorText message={error} />
       <View className="px-[30px] pt-9">

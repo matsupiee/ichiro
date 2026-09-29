@@ -11,7 +11,7 @@ export default function AppLayout() {
     <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: colors.canvas } }}>
       <Stack.Screen name="index" options={{ animation: "fade" }} />
       <Stack.Screen name="commitments/new" />
-      <Stack.Screen name="commitments/[id]" />
+      <Stack.Screen name="commitments/[id]" options={{ presentation: "modal" }} />
     </Stack>
   );
 }

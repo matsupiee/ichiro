@@ -1,11 +1,10 @@
-import { penalty, report } from "@ichiro/db/schema/index";
+import { penalty, report, user } from "@ichiro/db/schema/index";
 import { desc, eq } from "drizzle-orm";
 import type z from "zod";
 
 import type { AuthedContext } from "../../../../context";
 import { findOwnCommitment } from "../../../../shared/commitment/find-own-commitment";
 import { addDays } from "../../../../shared/date/add-days";
-import { findLatestInvitation } from "../../../../shared/invitation/find-latest-invitation";
 import { settleCommitment } from "../../../../shared/penalty/settle-commitment";
 import { computeStreak } from "../../../../shared/schedule/compute-streak";
 import { isScheduled } from "../../../../shared/schedule/is-scheduled";
@@ -41,8 +40,15 @@ export async function handler({
     .where(eq(penalty.commitmentId, row.id))
     .orderBy(desc(penalty.dueDate));
 
+  const [checkerUser] = row.checkerUserId
+    ? await ctx.db
+        .select({ id: user.id, name: user.name, image: user.image })
+        .from(user)
+        .where(eq(user.id, row.checkerUserId))
+    : [];
   return {
     ...row,
+    checkerUser: checkerUser ?? null,
     settledThrough,
     dueToday: isScheduled(row, input.today),
     reportedToday: reported.has(input.today),
@@ -51,7 +57,6 @@ export async function handler({
     penalties,
     // 徴収できなかったもの（failed）も、支払うべき罰金として合計に入れる
     penaltyTotal: penalties.reduce((sum, p) => sum + p.amount, 0),
-    invitation: await findLatestInvitation(ctx.db, row),
   };
 }
 

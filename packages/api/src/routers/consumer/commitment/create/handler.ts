@@ -6,7 +6,6 @@ import type { AuthedContext } from "../../../../context";
 import { assertCommitmentValuesAllowed } from "../../../../shared/commitment/assert-commitment-values-allowed";
 import { normalizeCommitmentValues } from "../../../../shared/commitment/normalize-commitment-values";
 import { addDays } from "../../../../shared/date/add-days";
-import { sendInvitation } from "../../../../shared/invitation/send-invitation";
 import type { commitmentCreateInputSchema } from "./route";
 
 export async function handler({
@@ -26,12 +25,12 @@ export async function handler({
     .values({
       ...normalizeCommitmentValues(input.values),
       userId: ctx.session.user.id,
+      checker: "self",
       startDate: input.today,
       timeZone: input.timeZone,
       // 今日の分から精算の対象にする
       settledThrough: addDays(input.today, -1),
     })
     .returning();
-  const invitation = row!.checker === "friend" ? await sendInvitation(ctx, row!) : null;
-  return { ...row!, invitation };
+  return row!;
 }

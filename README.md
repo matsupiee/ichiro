@@ -74,14 +74,12 @@ Bun's automatic env loading is disabled in `bunfig.toml`; the framework integrat
 
 Run standalone Node/Bun tools that use Varlock from the owning app directory so they load that app's schema and env files. `env:generate` only generates TypeScript files; it does not initialize environment values in a subsequent command.
 
-## Email (Resend)
+## Requesting a checker
 
-友達への招待メールは [Resend](https://resend.com) で送る。サーバーの環境変数で設定する。
-
-- `RESEND_API_KEY`: Resend の API キー。空のときはメールを送らず、サーバーのログに本文を出す。
-- `MAIL_FROM`: 送信元。既定は `ichiro <onboarding@resend.dev>`。`onboarding@resend.dev` は Resend アカウントのメールアドレスにしか届かないので、本番では Resend で認証したドメインのアドレスにする。
-
-デプロイ時は `packages/infra` から Worker の環境変数として渡される。
+作成時は自分で判定する設定です。「宣言したワン！」画面の「チェックを友達に依頼する」を押すと、依頼方法を選べます。
+「依頼リンクを共有」は iPhone の共有シートを開きます。リンクは ichiro アプリ内で開き、受取人がログインして引き受けるとチェック者になります。
+「友達から選ぶ」は、別のコミットメントで依頼済みの友達を選べます。編集シートの「チェック者」からも変更できます。
+Web版は作成・検証せず、iOS Simulator または実機のネイティブアプリで確認します。
 
 ## Deployment
 

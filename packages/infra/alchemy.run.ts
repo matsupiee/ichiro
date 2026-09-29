@@ -4,7 +4,6 @@ import { localState } from "alchemy/State";
 import * as Config from "effect/Config";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
-import * as Redacted from "effect/Redacted";
 import "varlock/auto-load";
 import { validateDeployment } from "./scripts/deployment-settings";
 
@@ -30,11 +29,6 @@ export const server = Cloudflare.Worker("server", {
     BETTER_AUTH_URL: Cloudflare.Worker.URL,
     STRIPE_SECRET_KEY: Config.Redacted("STRIPE_SECRET_KEY"),
     STRIPE_WEBHOOK_SECRET: Config.Redacted("STRIPE_WEBHOOK_SECRET"),
-    // 空のときは招待メールを送らず、Worker のログに出す
-    RESEND_API_KEY: Config.Redacted("RESEND_API_KEY").pipe(Config.withDefault(Redacted.make(""))),
-    MAIL_FROM: Config.String("MAIL_FROM").pipe(
-      Config.withDefault("ichiro <onboarding@resend.dev>"),
-    ),
   },
   dev: {
     port: Number(process.env.ICHIRO_DEV_PORT ?? 3000),

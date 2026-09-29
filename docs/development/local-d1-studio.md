@@ -14,7 +14,7 @@ Bun とプロジェクトの依存パッケージをインストールし、開�
 3. 表示された接続先が `packages/infra/.alchemy/local/d1` 内にあることを確認する。
 4. https://local.drizzle.studio を開き、`user`・`commitment`・`report` などのテーブルを確認する。
    - ブラウザがローカルネットワークへのアクセス許可を求めたら許可する。画面が空のままの場合は、サイトの権限設定を確認して再読み込みする。
-5. 必要なら、既存の `packages/db/src/seed/run.ts` でデモデータを作る。表示された SQLite の絶対パスを使い、ルートで `bun run db:seed -- --url file:/絶対パス/対象.sqlite` を実行する。この操作はデモデータを書き込む。
+5. 必要なら、既存の `packages/db/src/seed/run.ts` でデモデータを作る。表示された SQLite の絶対パスを使い、ルートで `bun run db:seed -- --url file:/絶対パス/対象.sqlite --skip-migrations` を実行する。この操作はデモデータを書き込む。
 6. Studio を再読み込みしてデモデータを確認する。終了するときはターミナルで Ctrl+C を押す。
 
 ## 接続先の選択

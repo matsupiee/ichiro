@@ -1,4 +1,3 @@
-import { createMailer } from "@ichiro/api/third-party-lib/mailer";
 import { createAuth as createConfiguredAuth } from "@ichiro/auth";
 import { createStripe } from "@ichiro/api/third-party-lib/stripe";
 import { type Database, createDb } from "@ichiro/db";
@@ -13,8 +12,4 @@ export function getStripe() {
 }
 export async function createAuth(database?: Database) {
   return createConfiguredAuth(ENV, database ?? (await getDb()));
-}
-
-export function getMailer() {
-  return createMailer(ENV);
 }

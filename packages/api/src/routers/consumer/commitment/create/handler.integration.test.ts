@@ -13,7 +13,6 @@ const values = {
   penaltyAmount: null,
   paymentMethodId: null,
   checker: "self" as const,
-  friendEmail: null,
 };
 
 describe("コミットメントを作成できる", () => {
@@ -109,92 +108,5 @@ describe("コミットメントを作成できる", () => {
     await expect(callerFor(db, null).consumer.commitment.create({ today, values })).rejects.toThrow(
       "Authentication required",
     );
-  });
-});
-
-describe("友達にチェックしてもらうなら、作成したときに招待メールを送る", () => {
-  const friendValues = {
-    ...values,
-    checker: "friend" as const,
-    friendEmail: "new-friend@example.com",
-  };
-
-  test("友達にチェックしてもらうならメールアドレスが必要", async () => {
-    const { caller, today } = await setupDemo();
-    await expect(
-      caller.consumer.commitment.create({ today, values: { ...values, checker: "friend" } }),
-    ).rejects.toThrow("友達のメールアドレスを入力してください");
-  });
-
-  test("まだ登録していない友達には、会員登録のお願いが届く", async () => {
-    const { caller, today, mailer } = await setupDemo();
-    const created = await caller.consumer.commitment.create({ today, values: friendValues });
-
-    expect(created.friendEmail).toBe("new-friend@example.com");
-    expect(created.invitation).toMatchObject({
-      email: "new-friend@example.com",
-      kind: "sign_up",
-      status: "sent",
-    });
-    expect(mailer.outbox).toHaveLength(1);
-    const mail = mailer.outbox[0]!;
-    expect(mail.to).toBe("new-friend@example.com");
-    expect(mail.subject).toBe("taroさんから、ichiro への招待が届きました");
-    expect(mail.text).toContain("taroさん（demo@ichiro.app）");
-    expect(mail.text).toContain("目標: 読書");
-    expect(mail.text).toContain("コミット内容: 毎日10ページ読む");
-    expect(mail.text).toContain("このメールアドレス（new-friend@example.com）で会員登録");
-  });
-
-  test("登録ずみの友達には、チェック役のお願いが届く", async () => {
-    const { caller, today, seeded, mailer } = await setupDemo();
-    const created = await caller.consumer.commitment.create({
-      today,
-      values: {
-        ...friendValues,
-        friendEmail: "tanaka@Example.com",
-        penaltyAmount: 1000,
-        paymentMethodId: seeded.paymentMethodIds[1]!,
-      },
-    });
-
-    expect(created.friendEmail).toBe("tanaka@example.com");
-    expect(created.invitation).toMatchObject({ kind: "registered", status: "sent" });
-    const mail = mailer.outbox[0]!;
-    expect(mail.subject).toBe("taroさんから、チェック役のお願いが届きました");
-    expect(mail.text).toContain("罰金: ¥1,000");
-    expect(mail.text).not.toContain("会員登録");
-  });
-
-  test("自分でチェックするときは送らず、友達のメールアドレスも保存しない", async () => {
-    const { caller, today, mailer } = await setupDemo();
-    const created = await caller.consumer.commitment.create({
-      today,
-      values: { ...friendValues, checker: "self" },
-    });
-    expect(created.invitation).toBeNull();
-    expect(created.friendEmail).toBeNull();
-    expect(mailer.outbox).toHaveLength(0);
-  });
-
-  test("自分のメールアドレスは友達に指定できない", async () => {
-    const { caller, today, mailer } = await setupDemo();
-    await expect(
-      caller.consumer.commitment.create({
-        today,
-        values: { ...friendValues, friendEmail: "DEMO@ichiro.app" },
-      }),
-    ).rejects.toThrow("自分のメールアドレスは指定できません");
-    expect(mailer.outbox).toHaveLength(0);
-  });
-
-  test("送れなくてもコミットメントは作られ、失敗として残る", async () => {
-    const { caller, today, mailer } = await setupDemo();
-    mailer.failing = true;
-    const created = await caller.consumer.commitment.create({ today, values: friendValues });
-
-    expect(created.invitation).toMatchObject({ status: "failed" });
-    const detail = await caller.consumer.commitment.get({ id: created.id, today });
-    expect(detail.invitation).toMatchObject({ status: "failed" });
   });
 });

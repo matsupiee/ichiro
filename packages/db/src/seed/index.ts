@@ -5,7 +5,6 @@ import type { SQLiteAsyncDatabase } from "drizzle-orm/sqlite-core";
 
 import { account, user } from "../schema/auth";
 import { commitment } from "../schema/commitment";
-import { invitation } from "../schema/invitation";
 import { paymentCustomer } from "../schema/payment-customer";
 import { paymentMethod } from "../schema/payment-method";
 import { penalty } from "../schema/penalty";
@@ -28,13 +27,16 @@ export const FRIEND_USER = {
   password: "password123",
 } as const;
 
-// 「禁煙」のチェック役。まだ ichiro に登録していない友達
-export const UNREGISTERED_FRIEND_EMAIL = "mom@example.com";
-
 async function createUser(
   db: SeedDatabase,
   u: { name: string; email: string; password: string },
 ): Promise<string> {
+  const [existing] = await db.select({ id: user.id }).from(user).where(eq(user.email, u.email));
+  if (existing) {
+    // 罰金は本来削除を制限しているため、デモの作り直し時だけ先に削除する
+    await db.delete(penalty).where(eq(penalty.userId, existing.id));
+    await db.delete(commitment).where(eq(commitment.userId, existing.id));
+  }
   await db.delete(user).where(eq(user.email, u.email));
   const userId = createId();
   await db.insert(user).values({
@@ -85,7 +87,7 @@ export async function seedDemo(
   stripe?: { customerId: string; paymentMethodId: string },
 ) {
   const userId = await createUser(db, DEMO_USER);
-  await createUser(db, FRIEND_USER);
+  const friendId = await createUser(db, FRIEND_USER);
   const settled = { timeZone, settledThrough: addDays(today, -1) };
 
   // Stripe に登録ずみの支払い方法のつもりのデータ。stripe を渡さないときの ID は Stripe に
@@ -129,8 +131,8 @@ export async function seedDemo(
       untilDate: addDays(today, 186),
       penaltyAmount: 3000,
       paymentMethodId: applePay!.id,
-      checker: "friend",
-      friendEmail: UNREGISTERED_FRIEND_EMAIL,
+      checker: "self",
+      shareToken: crypto.randomUUID(),
       ...settled,
     })
     .returning();
@@ -150,7 +152,7 @@ export async function seedDemo(
       penaltyAmount: 1000,
       paymentMethodId: card!.id,
       checker: "friend",
-      friendEmail: FRIEND_USER.email,
+      checkerUserId: friendId,
       ...settled,
     })
     .returning();
@@ -171,7 +173,7 @@ export async function seedDemo(
       penaltyAmount: 500,
       paymentMethodId: applePay!.id,
       checker: "self",
-      friendEmail: null,
+      shareToken: null,
       ...settled,
     })
     .returning();
@@ -191,24 +193,6 @@ export async function seedDemo(
   for (let i = 0; i < reports.length; i += 20) {
     await db.insert(report).values(reports.slice(i, i + 20));
   }
-
-  // 友達にチェックしてもらう2件は、作成したときに招待メールを送ってある
-  await db.insert(invitation).values([
-    {
-      commitmentId: smoking!.id,
-      email: UNREGISTERED_FRIEND_EMAIL,
-      kind: "sign_up",
-      status: "sent",
-      messageId: "seed-smoking",
-    },
-    {
-      commitmentId: gym!.id,
-      email: FRIEND_USER.email,
-      kind: "registered",
-      status: "sent",
-      messageId: "seed-gym",
-    },
-  ]);
 
   await db.insert(penalty).values(
     [-15, -8].map((d) => ({

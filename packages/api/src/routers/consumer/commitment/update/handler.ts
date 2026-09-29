@@ -9,7 +9,6 @@ import { findOwnCommitment } from "../../../../shared/commitment/find-own-commit
 import { normalizeCommitmentValues } from "../../../../shared/commitment/normalize-commitment-values";
 import { addDays } from "../../../../shared/date/add-days";
 import { todayIn } from "../../../../shared/date/today-in";
-import { sendInvitation } from "../../../../shared/invitation/send-invitation";
 import { settleCommitment } from "../../../../shared/penalty/settle-commitment";
 import type { commitmentUpdateInputSchema } from "./route";
 
@@ -44,9 +43,5 @@ export async function handler({
     .where(eq(commitment.id, current.id))
     .returning();
 
-  const friendChanged =
-    row!.checker === "friend" &&
-    (current.checker !== "friend" || current.friendEmail !== row!.friendEmail);
-  const invitation = friendChanged ? await sendInvitation(ctx, row!) : null;
-  return { ...row!, invitation };
+  return row!;
 }

@@ -21,7 +21,8 @@ import Animated, {
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { Dog } from "@/components/dog/dog";
-import { PrimaryButton } from "@/components/ui";
+import { CheckerModal } from "@/components/checker-modal";
+import { PrimaryButton, SecondaryButton } from "@/components/ui";
 import { haptics } from "@/lib/haptics";
 import { colors, fonts } from "@/lib/theme";
 
@@ -34,6 +35,7 @@ import { Rays } from "./rays";
 export type Tile = { label: string; value: string };
 
 export type CelebrationInput = {
+  commitmentId?: string;
   title?: string;
   message: string;
   tiles: [Tile] | [Tile, Tile];
@@ -107,6 +109,7 @@ function TileCard({ tile, index }: { tile: Tile; index: number }) {
 
 function CelebrationOverlay({ cel, onClose }: { cel: CelebrationState; onClose: () => void }) {
   const insets = useSafeAreaInsets();
+  const [checkerOpen, setCheckerOpen] = useState(false);
 
   useEffect(() => haptics.celebrate(), []);
 
@@ -204,17 +207,41 @@ function CelebrationOverlay({ cel, onClose }: { cel: CelebrationState; onClose: 
           ))}
         </View>
         <View style={{ flex: 1 }} />
-        <Animated.View style={[{ width: "100%" }, buttonRise]}>
-          <PrimaryButton
-            label="つづける"
-            onPress={() => {
-              haptics.select();
-              onClose();
-            }}
-          />
+        <Animated.View style={[{ width: "100%", gap: 14 }, buttonRise]}>
+          {cel.commitmentId ? (
+            <>
+              <PrimaryButton
+                label="チェックを友達に依頼する"
+                fontSize={18}
+                onPress={() => setCheckerOpen(true)}
+              />
+              <SecondaryButton
+                label="ホームに戻る"
+                onPress={() => {
+                  haptics.select();
+                  onClose();
+                }}
+              />
+            </>
+          ) : (
+            <PrimaryButton
+              label="つづける"
+              onPress={() => {
+                haptics.select();
+                onClose();
+              }}
+            />
+          )}
         </Animated.View>
       </Animated.View>
       <Confetti count={60} />
+      {cel.commitmentId ? (
+        <CheckerModal
+          id={cel.commitmentId}
+          visible={checkerOpen}
+          onClose={() => setCheckerOpen(false)}
+        />
+      ) : null}
     </Animated.View>
   );
 }

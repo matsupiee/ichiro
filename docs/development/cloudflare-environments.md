@@ -13,14 +13,12 @@ Varlock の `APP_ENV` で設定ファイルを選ぶ。サーバーの `NODE_ENV
 1. `packages/infra` で `bunx alchemy profile edit --add Cloudflare` を実行し、対象アカウントを設定する。
 2. `apps/server/.env.stg.local` と `.env.prod.local` に次の値を設定する。
 
-| 変数 | stg | prod |
-| --- | --- | --- |
-| `BETTER_AUTH_SECRET` | stg 専用の32文字以上のランダム値 | prod 専用の別の値 |
-| `CORS_ORIGIN` | 許可する HTTPS origin | 許可する HTTPS origin |
-| `STRIPE_SECRET_KEY` | `sk_test_...` | `sk_live_...` |
-| `STRIPE_WEBHOOK_SECRET` | stg の Webhook の `whsec_...` | prod の Webhook の `whsec_...` |
-| `RESEND_API_KEY` | 空ならメール本文をログに出す | 本番用キー必須 |
-| `MAIL_FROM` | テスト用の送信元 | Resend で認証済みドメインの送信元 |
+| 変数                    | stg                              | prod                           |
+| ----------------------- | -------------------------------- | ------------------------------ |
+| `BETTER_AUTH_SECRET`    | stg 専用の32文字以上のランダム値 | prod 専用の別の値              |
+| `CORS_ORIGIN`           | 許可する HTTPS origin            | 許可する HTTPS origin          |
+| `STRIPE_SECRET_KEY`     | `sk_test_...`                    | `sk_live_...`                  |
+| `STRIPE_WEBHOOK_SECRET` | stg の Webhook の `whsec_...`    | prod の Webhook の `whsec_...` |
 
 `BETTER_AUTH_URL` は Alchemy が Worker の URL を設定するので指定不要。ネイティブの認証では既存の `ichiro://` scheme を使う。
 
@@ -74,8 +72,8 @@ Expo のビルドでも `APP_ENV=stg` または `APP_ENV=prod` と `EXPO_NO_DOTE
 
 GitHub Environments に `stg` と `prod` を作成し、それぞれに設定する。
 
-- Variables: `CLOUDFLARE_ACCOUNT_ID`、`CORS_ORIGIN`、`MAIL_FROM`
-- Secrets: `CLOUDFLARE_API_TOKEN`、`BETTER_AUTH_SECRET`、`STRIPE_SECRET_KEY`、`STRIPE_WEBHOOK_SECRET`、`RESEND_API_KEY`
+- Variables: `CLOUDFLARE_ACCOUNT_ID`、`CORS_ORIGIN`
+- Secrets: `CLOUDFLARE_API_TOKEN`、`BETTER_AUTH_SECRET`、`STRIPE_SECRET_KEY`、`STRIPE_WEBHOOK_SECRET`
 
 Cloudflare のトークンには Worker・D1・R2 と Alchemy の状態ストアを管理する権限が必要。初回はローカルで状態ストアを作成し、CI から使えることを確認する。prod Environment には必要に応じて承認者・ブランチ制限を設定する。
 

@@ -1,4 +1,4 @@
-import type { Checker, CommitmentFrequency } from "@ichiro/db/schema/commitment";
+import type { CommitmentFrequency } from "@ichiro/db/schema/commitment";
 
 export type CommitmentValues = {
   goal: string;
@@ -9,8 +9,6 @@ export type CommitmentValues = {
   untilDate: string;
   penaltyAmount: number | null;
   paymentMethodId: string | null;
-  checker: Checker;
-  friendEmail: string | null;
 };
 
 const MIN_PENALTY = 100;
@@ -36,9 +34,6 @@ export function validateCommitmentValues(v: CommitmentValues) {
   }
   if (v.penaltyAmount !== null && v.paymentMethodId === null) {
     issues.push({ path: "paymentMethodId", message: "支払い方法を選んでください" });
-  }
-  if (v.checker === "friend" && !v.friendEmail) {
-    issues.push({ path: "friendEmail", message: "友達のメールアドレスを入力してください" });
   }
   return issues;
 }

@@ -36,8 +36,6 @@ describe("今日の達成を報告できる", () => {
         untilDate: addDays(today, 7),
         penaltyAmount: null,
         paymentMethodId: null,
-        checker: "self",
-        friendEmail: null,
       },
     });
     await expect(caller.consumer.commitment.report({ id: created.id, today })).rejects.toThrow(

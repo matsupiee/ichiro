@@ -2,6 +2,8 @@
 //
 //   bun run db:seed -- --url file:./local.db   libsql / SQLite ファイルに投入（マイグレーションも適用）
 //   bun run db:seed                            Cloudflare D1 に HTTP 経由で投入
+// --commitment-log を付けると、罰金設定を2回変更した履歴も作る。
+// --skip-migrations は Alchemy が移行済みのローカル D1 に --url で投入するときだけ使う。
 //
 // D1 に投入するときは CLOUDFLARE_ACCOUNT_ID・CLOUDFLARE_DATABASE_ID・CLOUDFLARE_D1_TOKEN が必要。
 // --today YYYY-MM-DD で「今日」を固定できる（省略時はこのマシンの現地日付）。
@@ -17,11 +19,14 @@ import { drizzle as drizzleLibsql } from "drizzle-orm/libsql";
 import { migrate } from "drizzle-orm/libsql/migrator";
 import { drizzle as drizzleProxy } from "drizzle-orm/sqlite-proxy";
 
+import { seedCommitmentLog } from "./commitment-log";
 import { DEMO_USER, FRIEND_USER, localToday, seedDemo, type SeedDatabase } from "./index";
 
 const { values } = parseArgs({
   options: {
     url: { type: "string" },
+    "commitment-log": { type: "boolean", default: false },
+    "skip-migrations": { type: "boolean", default: false },
     today: { type: "string" },
     "stripe-customer": { type: "string" },
     "stripe-payment-method": { type: "string" },
@@ -30,7 +35,9 @@ const { values } = parseArgs({
 
 async function libsqlDb(url: string): Promise<SeedDatabase> {
   const db = drizzleLibsql({ client: createClient({ url }) });
-  await migrate(db, { migrationsFolder: new URL("../migrations", import.meta.url).pathname });
+  if (!values["skip-migrations"]) {
+    await migrate(db, { migrationsFolder: new URL("../migrations", import.meta.url).pathname });
+  }
   return db;
 }
 
@@ -71,12 +78,16 @@ const paymentMethodId = values["stripe-payment-method"];
 if (!customerId !== !paymentMethodId) {
   throw new Error("--stripe-customer と --stripe-payment-method は両方指定してください");
 }
-await seedDemo(
+const seeded = await seedDemo(
   db,
   today,
   undefined,
   customerId && paymentMethodId ? { customerId, paymentMethodId } : undefined,
 );
+
+if (values["commitment-log"]) {
+  await seedCommitmentLog(db, seeded.commitmentIds[0]!, seeded.paymentMethodIds);
+}
 
 console.log(`デモデータを投入しました（今日 = ${today}）`);
 console.log(`  メールアドレス: ${DEMO_USER.email}`);

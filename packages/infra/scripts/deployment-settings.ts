@@ -18,10 +18,4 @@ export function validateDeployment(stage: string, env: Record<string, string | u
   if (!env.CORS_ORIGIN || new URL(env.CORS_ORIGIN).protocol !== "https:") {
     throw new Error("CORS_ORIGIN に HTTPS の URL を設定してください。");
   }
-  if (
-    stage === "prod" &&
-    (!env.RESEND_API_KEY || !env.MAIL_FROM || env.MAIL_FROM.includes("resend.dev"))
-  ) {
-    throw new Error("prod には RESEND_API_KEY と認証済みドメインの MAIL_FROM が必要です。");
-  }
 }
