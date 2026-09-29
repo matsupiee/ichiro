@@ -34,7 +34,8 @@
     "env:generate": "varlock codegen --path ./apps/server/ && varlock codegen --path ./apps/native/ && varlock codegen --path ./packages/db/",
     "postinstall": "varlock codegen --path ./apps/server/ && varlock codegen --path ./apps/native/ && varlock codegen --path ./packages/db/",
     "check": "oxlint && oxfmt --write",
-    "check:patterns": "bun run --cwd packages/api check:patterns"
+    "check:patterns": "bun run --cwd packages/api check:patterns",
+    "dev:stripe": "bun run packages/infra/scripts/dev-stripe.mjs"
   },
   "dependencies": {
     "zod": "catalog:"

@@ -36,7 +36,7 @@ export const server = Cloudflare.Worker("server", {
     ),
   },
   dev: {
-    port: 3000,
+    port: Number(process.env.ICHIRO_DEV_PORT ?? 3000),
   },
 });
 

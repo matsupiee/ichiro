@@ -48,6 +48,20 @@ bun run dev
 Use the Expo Go app to run the mobile application.
 The API is running at [http://localhost:3000](http://localhost:3000).
 
+## Local Stripe webhooks
+
+Run the API server and Stripe webhook forwarding together:
+
+```bash
+bun run dev:stripe
+```
+
+Install the Stripe CLI first, and set `STRIPE_SECRET_KEY=sk_test_...` in `apps/server/.env` or the process environment alongside the usual server configuration. The command authenticates the CLI with the same key, obtains the signing secret automatically, and passes it to the server without editing `.env`. No `stripe login` is needed. Press Ctrl+C to stop both processes.
+
+Use `bun run dev:stripe --port 3001` if port 3000 is occupied. Start the native app separately with `bun run dev:native`; when using a different port, update its `EXPO_PUBLIC_SERVER_URL` accordingly. Cloud Linux environments need the Linux Stripe CLI and outbound access to Stripe.
+
+See [the webhook development guide](docs/development/local-stripe-webhook.md) for setup, seed data, and verification.
+
 ## Environment Configuration
 
 Each app owns its environment schema in `.env.schema`. Varlock generates `src/env.ts` during installation; run `bun run env:generate` after changing a schema. Commit schemas, and keep secrets in ignored env files or your deployment platform.
@@ -109,6 +123,7 @@ ichiro/
 - `bun run dev`: Start all applications in development mode
 - `bun run build`: Build all applications
 - `bun run dev:server`: Start only the server
+- `bun run dev:stripe`: Start the server with Stripe webhook forwarding
 - `bun run check-types`: Check TypeScript types across all apps
 - `bun run dev:native`: Start the React Native/Expo development server
 - `bun run db:generate`: Generate database client/types
