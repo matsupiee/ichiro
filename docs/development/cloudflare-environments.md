@@ -48,6 +48,8 @@ D1 のマイグレーションは `packages/db/src/migrations` からデプロ�
 
 ## ネイティブアプリ
 
+実機向けのクラウドビルド・内部配布は [EAS Build の手順](./eas-build.md)を参照する。既存の `preview` プロファイルから stg に接続する。
+
 `apps/native/.env.stg.local` / `.env.prod.local` に次を設定する。
 
 ```dotenv
