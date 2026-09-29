@@ -7,7 +7,9 @@
     "dev": "alchemy dev",
     "deploy": "alchemy deploy",
     "destroy": "alchemy destroy",
-    "test": "bun test scripts"
+    "test": "bun test scripts",
+    "deploy:stg": "bun scripts/deploy.ts stg",
+    "deploy:prod": "bun scripts/deploy.ts prod"
   },
   "dependencies": {
     "zod": "catalog:"

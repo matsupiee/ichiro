@@ -11,7 +11,9 @@
     "prebuild": "expo prebuild",
     "web": "expo start --web",
     "check-types": "tsc --noEmit",
-    "env:generate": "varlock codegen"
+    "env:generate": "varlock codegen",
+    "dev:stg": "APP_ENV=stg EXPO_NO_DOTENV=1 expo start --clear",
+    "dev:prod": "APP_ENV=prod EXPO_NO_DOTENV=1 expo start --clear"
   },
   "dependencies": {
     "@better-auth/expo": "catalog:",

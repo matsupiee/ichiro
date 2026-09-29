@@ -18,7 +18,7 @@ export function avatarUrl(image: string | null | undefined) {
   return `${ENV.EXPO_PUBLIC_SERVER_URL.replace(/\/$/, "")}${image}`;
 }
 
-async function request(method: "PUT" | "DELETE", body?: Blob) {
+async function request(method: "PUT" | "DELETE", body?: ArrayBuffer) {
   const headers: Record<string, string> = {};
   if (body) headers["Content-Type"] = "image/jpeg";
   if (Platform.OS !== "web") {
@@ -89,8 +89,10 @@ export function useAvatar() {
     try {
       const small = await shrink(asset);
       setPreview(small);
-      const blob = await (await fetch(small)).blob();
-      const image = await request("PUT", blob);
+      // iOS の file:// 読み込みは MIME 型が空になることがある。
+      // Expo fetch は Blob.type で Content-Type を上書きするため、バイト列で送る。
+      const bytes = await (await fetch(small)).arrayBuffer();
+      const image = await request("PUT", bytes);
       // 読み込み済みにしてから差し替え、表示が一瞬消えないようにする
       const url = avatarUrl(image);
       if (url) await Image.prefetch(url).catch(() => {});

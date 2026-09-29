@@ -6,6 +6,7 @@ import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
 import * as Redacted from "effect/Redacted";
 import "varlock/auto-load";
+import { validateDeployment } from "./scripts/deployment-settings";
 
 export const db = Cloudflare.D1.Database("database", {
   migrations: "../../packages/db/src/migrations",
@@ -47,7 +48,13 @@ export default Alchemy.Stack(
   {
     providers: Cloudflare.providers(),
     state: Layer.unwrap(
-      Effect.map(Alchemy.AlchemyContext, ({ dev }) => (dev ? localState() : Cloudflare.state())),
+      Effect.gen(function* () {
+        const { dev } = yield* Alchemy.AlchemyContext;
+        if (dev) return localState();
+        const stage = yield* Alchemy.Stage;
+        validateDeployment(stage, process.env);
+        return Cloudflare.state();
+      }),
     ),
   },
   Effect.gen(function* () {

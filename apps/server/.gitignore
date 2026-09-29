@@ -56,3 +56,7 @@ next-env.d.ts
 
 !.env.schema
 /src/env.ts
+
+# Public environment templates (secrets belong in .local or CI)
+!.env.stg
+!.env.prod

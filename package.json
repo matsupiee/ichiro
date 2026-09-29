@@ -35,7 +35,13 @@
     "postinstall": "varlock codegen --path ./apps/server/ && varlock codegen --path ./apps/native/ && varlock codegen --path ./packages/db/",
     "check": "oxlint && oxfmt --write",
     "check:patterns": "bun run --cwd packages/api check:patterns",
-    "dev:stripe": "bun run packages/infra/scripts/dev-stripe.mjs"
+    "dev:stripe": "bun run packages/infra/scripts/dev-stripe.mjs",
+    "deploy:stg": "bun run --cwd packages/infra deploy:stg",
+    "deploy:prod": "bun run --cwd packages/infra deploy:prod",
+    "deploy:check:stg": "bun run --cwd packages/infra deploy:stg --check",
+    "deploy:check:prod": "bun run --cwd packages/infra deploy:prod --check",
+    "dev:native:stg": "bun run --cwd apps/native dev:stg",
+    "dev:native:prod": "bun run --cwd apps/native dev:prod"
   },
   "dependencies": {
     "zod": "catalog:"

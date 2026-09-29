@@ -32,6 +32,22 @@ async function setup() {
 }
 
 describe("プロフィール写真をアップロードできる", () => {
+  test("端末で JPEG に変換した写真をバイト列で送信すると JPEG として配信される", async () => {
+    const { app, upload, objects, session, imageOf } = await setup();
+    // ローカルファイルの読み込み結果に MIME がなくても、バイト列で送れば
+    // Blob の type で Content-Type が上書きされず image/jpeg が届く。
+    const file = new Blob([JPEG]);
+    const res = await upload(await file.arrayBuffer(), "image/jpeg");
+    expect(res.status).toBe(200);
+    const { image } = (await res.json()) as { image: string };
+    expect(image).toEndWith(".jpg");
+    expect(await imageOf(session.user.id)).toBe(image);
+    expect(objects.size).toBe(1);
+    const photo = await app.request(image);
+    expect(photo.headers.get("Content-Type")).toBe("image/jpeg");
+    expect(new Uint8Array(await photo.arrayBuffer())).toEqual(JPEG);
+  });
+
   test("アップロードすると保存され、user.image のパスから同じ写真を取得できる", async () => {
     const { app, session, upload, imageOf, objects } = await setup();
 

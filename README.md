@@ -95,11 +95,16 @@ Run standalone Node/Bun tools that use Varlock from the owning app directory so 
 
 `alchemy profile edit` stores the selected Axiom, Cloudflare, Neon, PlanetScale, and/or Prisma provider profiles under `~/.alchemy`; no provider-specific setup command is required by this scaffold.
 
-Deploys are staged and default to a personal `dev_<username>` stage. For production, run the deploy with an explicit stage from `packages/infra`:
+Deploy staging and production with explicit environment commands:
 
 ```bash
-cd packages/infra && bunx alchemy deploy --stage production
+bun run deploy:check:stg
+bun run deploy:stg
+bun run deploy:check:prod
+bun run deploy:prod
 ```
+
+Configure environment-specific secrets first. See [the Cloudflare environment guide](docs/development/cloudflare-environments.md) for setup, Stripe webhooks, native app configuration, and GitHub Actions.
 
 ## Git Hooks and Formatting
 

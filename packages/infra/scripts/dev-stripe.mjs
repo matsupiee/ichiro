@@ -15,6 +15,7 @@ export async function loadSettings(env = process.env) {
     overrideValues: {
       ...env,
       NODE_ENV: "development",
+      APP_ENV: "development",
       STRIPE_WEBHOOK_SECRET: "whsec_pending_listener",
     },
   });
@@ -83,6 +84,7 @@ export async function run({
   const childEnv = {
     ...env,
     NODE_ENV: "development",
+    APP_ENV: "development",
     STRIPE_API_KEY: env.STRIPE_SECRET_KEY,
     ICHIRO_DEV_PORT: String(port),
   };
