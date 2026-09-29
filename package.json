@@ -27,6 +27,7 @@
     "dev:native": "turbo run dev -F native --",
     "dev:server": "bun run --cwd packages/infra dev",
     "db:generate": "turbo run db:generate -F @ichiro/db --",
+    "db:studio": "bun run --cwd packages/db db:studio",
     "db:seed": "turbo run db:seed -F @ichiro/db --",
     "deploy": "turbo run deploy -F @ichiro/infra --",
     "destroy": "turbo run destroy -F @ichiro/infra --",
