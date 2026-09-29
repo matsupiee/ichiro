@@ -49,10 +49,16 @@ export default Alchemy.Stack(
     providers: Cloudflare.providers(),
     state: Layer.unwrap(
       Effect.gen(function* () {
+        // Alchemyの実行情報を受け取る
         const { dev } = yield* Alchemy.AlchemyContext;
+        // ローカル開発なら、状態をローカルに保存して終了
         if (dev) return localState();
+
+        // デプロイ先のstage（stg / prod）を受け取る
         const stage = yield* Alchemy.Stage;
+        // stageと環境変数の組み合わせを検証する
         validateDeployment(stage, process.env);
+        // デプロイ時は、状態をCloudflareに保存する
         return Cloudflare.state();
       }),
     ),
