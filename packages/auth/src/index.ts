@@ -6,7 +6,6 @@ import { betterAuth } from "better-auth";
 import { APIError, createAuthMiddleware } from "better-auth/api";
 import { emailOTP } from "better-auth/plugins";
 import { eq } from "drizzle-orm";
-import { createRateLimiter } from "./rate-limit";
 
 export type AuthConfig = {
   BETTER_AUTH_URL: string;
@@ -21,7 +20,6 @@ export type VerificationMail = {
 export type SendVerificationMail = (mail: VerificationMail) => Promise<void>;
 
 export function createAuth(env: AuthConfig, database: Database, sendMail: SendVerificationMail) {
-  const limiter = createRateLimiter(database, env.BETTER_AUTH_SECRET);
   return betterAuth({
     database: drizzleAdapter(database, { provider: "sqlite", schema }),
     trustedOrigins: [env.CORS_ORIGIN, "ichiro://", "exp://", "http://localhost:8081"],
@@ -47,7 +45,7 @@ export function createAuth(env: AuthConfig, database: Database, sendMail: SendVe
       enabled: true,
       window: 60,
       max: 100,
-      customStorage: { consume: (key, rule) => limiter.consume(`ip:${key}`, rule) },
+      storage: "database",
       customRules: {
         "/sign-in/email": { window: 60, max: 10 },
         "/sign-up/email": { window: 60, max: 5 },
@@ -99,32 +97,6 @@ export function createAuth(env: AuthConfig, database: Database, sendMail: SendVe
               code: "EMAIL_ALREADY_VERIFIED",
             });
         }
-        const sends = [
-          "/sign-up/email",
-          "/send-verification-email",
-          "/email-otp/send-verification-otp",
-          "/email-otp/request-email-change",
-        ];
-        if (sends.includes(path)) {
-          const email = String(ctx.body?.newEmail ?? ctx.body?.email ?? "")
-            .trim()
-            .toLowerCase();
-          if (!email) return;
-          // 発行前に判定することで、制限された再送では現在のコードを失効させない。
-          for (const [bucket, window, max] of [
-            ["minute", 60, 1],
-            ["hour", 3600, 5],
-          ] as const) {
-            const result = await limiter.consume(`mail:${bucket}:${email}`, { window, max });
-            if (!result.allowed) {
-              ctx.setHeader("Retry-After", String(result.retryAfter));
-              throw new APIError("TOO_MANY_REQUESTS", {
-                message: "時間をおいてから再送してください",
-                code: "OTP_SEND_LIMIT",
-              });
-            }
-          }
-        }
       }),
     },
     plugins: [
@@ -145,7 +117,7 @@ export function createAuth(env: AuthConfig, database: Database, sendMail: SendVe
         otpLength: 6,
         expiresIn: 300,
         allowedAttempts: 5,
-        storeOTP: { hash: (otp) => limiter.fingerprint(`otp:${otp}`) },
+        storeOTP: "hashed",
         resendStrategy: "rotate",
         disableSignUp: true,
         overrideDefaultEmailVerification: true,

@@ -1,8 +1,7 @@
 import { expect, test } from "bun:test";
 import { createAuth, type VerificationMail } from "@ichiro/auth";
-import { createRateLimiter } from "@ichiro/auth/rate-limit";
-import { authRateLimit, user, verification } from "@ichiro/db/schema/auth";
-import { eq } from "drizzle-orm";
+import { rateLimit, user, verification } from "@ichiro/db/schema/auth";
+import { sql } from "drizzle-orm";
 import { callerFor, createTestDb, httpAppFor, sessionFor } from "./helpers";
 
 const credentials = { email: "auth-test@example.com", password: "password123", name: "Auth Test" };
@@ -45,7 +44,7 @@ async function setup() {
   const register = () => request("sign-up/email", credentials);
   const verify = (otp = last().otp, ip?: string) =>
     request("email-otp/verify-email", { email: credentials.email, otp }, "", ip);
-  const clearLimits = () => db.delete(authRateLimit);
+  const clearLimits = () => db.delete(rateLimit);
   return {
     db,
     mails,
@@ -108,26 +107,29 @@ test("期限切れ・別アドレス・5回誤入力したコードを拒否す�
   expect((await t.request("sign-in/email", credentials)).status).toBe(403);
 });
 
-test("再送は全発行経路・別IP・再起動でも制限され、許可された再送で旧コードが使えなくなる", async () => {
+test("再送は標準DBで同じIPのAPIごとに制限され、拒否された再送はコードを失効させない", async () => {
   const t = await setup();
   await t.register();
   const old = t.last().otp;
+  const body = { email: credentials.email, type: "email-verification" };
+  for (let i = 0; i < 5; i++) {
+    // 標準OTPは createdAt 順で最新を選ぶため、メモリ上の再送も別ミリ秒にする。
+    await Bun.sleep(2);
+    expect((await t.request("email-otp/send-verification-otp", body)).status).toBe(200);
+  }
+  expect(t.mails).toHaveLength(6);
+  const latest = t.last().otp;
   t.restart();
-  const body = { email: credentials.email.toUpperCase(), type: "email-verification" };
-  expect((await t.request("email-otp/send-verification-otp", body, "", "192.0.2.99")).status).toBe(
-    429,
+  const denied = await t.request("email-otp/send-verification-otp", body);
+  expect(denied.status).toBe(429);
+  expect(Number(denied.headers.get("X-Retry-After"))).toBeGreaterThan(0);
+  expect(t.mails).toHaveLength(6);
+  if (old !== latest) expect((await t.verify(old)).status).toBe(400);
+  expect((await t.verify(latest)).status).toBe(200);
+  // メールアドレス単位の独自制限はなく、別IPは別の枠になる。
+  expect((await t.request("email-otp/send-verification-otp", body, "", "192.0.2.2")).status).toBe(
+    200,
   );
-  expect((await t.request("send-verification-email", { email: credentials.email })).status).toBe(
-    429,
-  );
-  expect((await t.register()).status).toBe(429);
-  expect(t.mails).toHaveLength(1);
-  await t.clearLimits();
-  expect((await t.request("email-otp/send-verification-otp", body)).status).toBe(200);
-  expect(t.mails).toHaveLength(2);
-  // 乱数が偶然一致する確率をテストの不安定性にしない。
-  if (old !== t.last().otp) expect((await t.verify(old)).status).toBe(400);
-  expect((await t.verify()).status).toBe(200);
 });
 
 test("同一コードの並列確認は一度だけ成功する", async () => {
@@ -187,7 +189,7 @@ test("送信失敗でも未認証のままで、再送して登録を再開で�
   expect(await response.text()).not.toContain("secret-provider-detail");
   const [u] = await db.select().from(user);
   expect(u!.emailVerified).toBe(false);
-  await db.delete(authRateLimit);
+  await db.delete(rateLimit);
   let code = "";
   const recovered = createAuth(config, db, async (mail) => {
     code = mail.otp;
@@ -261,15 +263,27 @@ test("メール変更には現在・変更先の両方のコードが必要で�
   expect((await t.request("sign-in/email", { ...credentials, email: newEmail })).status).toBe(200);
 });
 
-test("回数制限のDB更新は並列でも上限を守り、期限後に解除される", async () => {
-  const db = await createTestDb();
-  const limit = createRateLimiter(db, config.BETTER_AUTH_SECRET);
-  const results = await Promise.all(
-    Array.from({ length: 10 }, () => limit.consume("test", { window: 60, max: 3 })),
+test("標準DBの回数制限は並列リクエストでも上限を守り、待機後に解除される", async () => {
+  const t = await setup();
+  const send = () =>
+    t.request("email-otp/send-verification-otp", {
+      email: "missing@example.com",
+      type: "email-verification",
+    });
+  const results = await Promise.all(Array.from({ length: 12 }, send));
+  expect(results.filter((r) => r.status === 200)).toHaveLength(5);
+  expect(results.filter((r) => r.status === 429)).toHaveLength(7);
+  const [row] = await t.db.select().from(rateLimit);
+  expect(row).toMatchObject({ count: 5 });
+  expect(row!.id).toBeTruthy();
+  await t.db.update(rateLimit).set({ lastRequest: Date.now() - 61_000 });
+  expect((await send()).status).toBe(200);
+  expect((await t.db.select().from(rateLimit))[0]!.count).toBe(1);
+  const tables = await t.db.all<{ name: string }>(
+    sql`select name from sqlite_master where type = 'table'`,
   );
-  expect(results.filter((r) => r.allowed)).toHaveLength(3);
-  await db.update(authRateLimit).set({ expiresAt: Date.now() - 1 });
-  expect((await limit.consume("test", { window: 60, max: 3 })).allowed).toBe(true);
+  expect(tables.map((table) => table.name)).toContain("rate_limit");
+  expect(tables.map((table) => table.name)).not.toContain("auth_rate_limit");
 });
 
 test("別環境の DB と認証シークレットではセッションを共有しない", async () => {
@@ -287,41 +301,18 @@ test("別環境の DB と認証シークレットではセッションを共有�
   expect(await response.json()).toBeNull();
 });
 
-test("メールの時間上限とログインのIP上限を超えると429になる", async () => {
+test("ログインは標準DBで同じIPから60秒に10回までに制限する", async () => {
   const t = await setup();
   await t.register();
-  const limiter = createRateLimiter(t.db, config.BETTER_AUTH_SECRET);
-  const minuteKey = await limiter.fingerprint(`mail:minute:${credentials.email}`);
-  for (let i = 0; i < 4; i++) {
-    await t.db.delete(authRateLimit).where(eq(authRateLimit.key, minuteKey));
-    expect(
-      (
-        await t.request(
-          "email-otp/send-verification-otp",
-          { email: credentials.email, type: "email-verification" },
-          "",
-          `192.0.2.${20 + i}`,
-        )
-      ).status,
-    ).toBe(200);
-  }
-  await t.db.delete(authRateLimit).where(eq(authRateLimit.key, minuteKey));
-  expect(
-    (
-      await t.request(
-        "email-otp/send-verification-otp",
-        { email: credentials.email, type: "email-verification" },
-        "",
-        "192.0.2.80",
-      )
-    ).status,
-  ).toBe(429);
-  expect(t.mails).toHaveLength(5);
   await t.verify();
   await t.clearLimits();
   for (let i = 0; i < 10; i++)
-    await t.request("sign-in/email", { ...credentials, password: "wrong-password" });
+    expect(
+      (await t.request("sign-in/email", { ...credentials, password: "wrong-password" })).status,
+    ).toBe(401);
   t.restart();
   expect((await t.request("sign-in/email", credentials)).status).toBe(429);
   expect((await t.request("sign-in/email", credentials, "", "192.0.2.2")).status).toBe(200);
+  await t.db.update(rateLimit).set({ lastRequest: Date.now() - 61_000 });
+  expect((await t.request("sign-in/email", credentials)).status).toBe(200);
 });

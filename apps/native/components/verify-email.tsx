@@ -134,7 +134,7 @@ export function VerifyEmail({
         </Text>
       </Pressable>
       <Text className="px-[30px] text-[14px] leading-6 text-mute">
-        メールが届かない場合は、迷惑メールフォルダと入力したアドレスを確認してください。送信は60秒に1回、1時間に5回までです。
+        メールが届かない場合は、迷惑メールフォルダと入力したアドレスを確認してください。再送ボタンは送信から60秒後に使えます。短時間に操作を繰り返すと、一時的に制限されます。
       </Text>
       <Pressable disabled={busy} onPress={leave} className="py-6">
         <Text className="text-center text-[15px] text-mute">ログイン画面に戻る</Text>

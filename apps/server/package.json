@@ -18,8 +18,7 @@
     "better-auth": "catalog:",
     "hono": "^4.13.7",
     "varlock": "catalog:",
-    "zod": "catalog:",
-    "drizzle-orm": "catalog:"
+    "zod": "catalog:"
   },
   "devDependencies": {
     "@cloudflare/workers-types": "catalog:",

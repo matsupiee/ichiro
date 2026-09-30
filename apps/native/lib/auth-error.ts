@@ -1,6 +1,5 @@
 export function authErrorMessage(error: { code?: string; status?: number; message?: string }) {
-  if (error.status === 429 || error.code === "OTP_SEND_LIMIT")
-    return "操作が多すぎます。時間をおいてからもう一度お試しください";
+  if (error.status === 429) return "操作が多すぎます。時間をおいてからもう一度お試しください";
   switch (error.code) {
     case "INVALID_OTP":
       return "認証コードが違います。届いた最新の6桁コードを入力してください";

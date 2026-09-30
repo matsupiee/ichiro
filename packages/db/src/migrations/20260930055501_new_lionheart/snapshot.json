@@ -11,7 +11,7 @@
       "entityType": "tables"
     },
     {
-      "name": "auth_rate_limit",
+      "name": "rate_limit",
       "entityType": "tables"
     },
     {
@@ -186,9 +186,19 @@
       "autoincrement": false,
       "default": null,
       "generated": null,
+      "name": "id",
+      "entityType": "columns",
+      "table": "rate_limit"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
       "name": "key",
       "entityType": "columns",
-      "table": "auth_rate_limit"
+      "table": "rate_limit"
     },
     {
       "type": "integer",
@@ -198,7 +208,7 @@
       "generated": null,
       "name": "count",
       "entityType": "columns",
-      "table": "auth_rate_limit"
+      "table": "rate_limit"
     },
     {
       "type": "integer",
@@ -206,9 +216,9 @@
       "autoincrement": false,
       "default": null,
       "generated": null,
-      "name": "expires_at",
+      "name": "last_request",
       "entityType": "columns",
-      "table": "auth_rate_limit"
+      "table": "rate_limit"
     },
     {
       "type": "text",
@@ -1126,11 +1136,11 @@
     },
     {
       "columns": [
-        "key"
+        "id"
       ],
       "nameExplicit": false,
-      "name": "auth_rate_limit_pk",
-      "table": "auth_rate_limit",
+      "name": "rate_limit_pk",
+      "table": "rate_limit",
       "entityType": "pks"
     },
     {
@@ -1227,20 +1237,6 @@
       "name": "account_userId_idx",
       "entityType": "indexes",
       "table": "account"
-    },
-    {
-      "columns": [
-        {
-          "value": "expires_at",
-          "isExpression": false
-        }
-      ],
-      "isUnique": false,
-      "where": null,
-      "origin": "manual",
-      "name": "auth_rate_limit_expires_idx",
-      "entityType": "indexes",
-      "table": "auth_rate_limit"
     },
     {
       "columns": [
@@ -1379,6 +1375,15 @@
       "name": "commitment_log_commitmentId_id_idx",
       "entityType": "indexes",
       "table": "commitment_log"
+    },
+    {
+      "columns": [
+        "key"
+      ],
+      "nameExplicit": false,
+      "name": "rate_limit_key_unique",
+      "entityType": "uniques",
+      "table": "rate_limit"
     },
     {
       "columns": [
