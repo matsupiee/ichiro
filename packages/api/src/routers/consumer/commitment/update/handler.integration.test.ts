@@ -15,7 +15,6 @@ const values = {
   untilDate: "2099-12-31",
   penaltyAmount: null,
   paymentMethodId: null,
-  checker: "self" as const,
 };
 
 describe("途中で設定を変えられる", () => {

@@ -64,7 +64,6 @@ export async function seedPublicPage(
       startDate: day(-6),
       untilDate: day(30),
       penaltyAmount: null,
-      checker: "self",
       timeZone,
       settledThrough: day(-1),
       createdAt: new Date(Date.now() - index * 1000),

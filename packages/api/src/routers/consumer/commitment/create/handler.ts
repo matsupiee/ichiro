@@ -25,7 +25,6 @@ export async function handler({
     .values({
       ...normalizeCommitmentValues(input.values),
       userId: ctx.session.user.id,
-      checker: "self",
       startDate: input.today,
       timeZone: input.timeZone,
       // 今日の分から精算の対象にする

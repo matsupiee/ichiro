@@ -1,4 +1,4 @@
-import { checkers, commitmentFrequencies } from "@ichiro/db/schema/commitment";
+import { commitmentFrequencies } from "@ichiro/db/schema/commitment";
 import z from "zod";
 
 import { isPlausibleToday } from "../../../../shared/date/is-plausible-today";
@@ -22,7 +22,6 @@ export const commitmentListOutputSchema = z.array(
     untilDate: z.string(),
     penaltyAmount: z.number().nullable(),
     paymentMethodId: z.string().nullable(),
-    checker: z.enum(checkers),
     dueToday: z.boolean(),
     reportedToday: z.boolean(),
     streak: z.number(),

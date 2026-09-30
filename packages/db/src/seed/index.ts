@@ -20,13 +20,6 @@ export const DEMO_USER = {
   password: "password123",
 } as const;
 
-// 「体づくり」のチェック役。ichiro に登録ずみの友達
-export const FRIEND_USER = {
-  name: "tanaka",
-  email: "tanaka@example.com",
-  password: "password123",
-} as const;
-
 async function createUser(
   db: SeedDatabase,
   u: { name: string; email: string; password: string },
@@ -77,7 +70,7 @@ export function localTimeZone(): string {
 }
 
 // デモユーザーと、メインページに並ぶ3件のコミットメントを作る。
-// 何度実行しても同じ状態になるよう、既存のデモユーザーと友達は消してから作り直す。
+// 何度実行しても同じ状態になるよう、既存のデモユーザーは消してから作り直す。
 // 罰金は昨日の分まで精算ずみにする。timeZone は today と同じ日付になるものを渡す。
 // stripe を渡すと、1つめの支払い方法をその Stripe テスト環境の Customer・PaymentMethod にする。
 export async function seedDemo(
@@ -87,7 +80,6 @@ export async function seedDemo(
   stripe?: { customerId: string; paymentMethodId: string },
 ) {
   const userId = await createUser(db, DEMO_USER);
-  const friendId = await createUser(db, FRIEND_USER);
   const settled = { timeZone, settledThrough: addDays(today, -1) };
 
   // Stripe に登録ずみの支払い方法のつもりのデータ。stripe を渡さないときの ID は Stripe に
@@ -131,13 +123,11 @@ export async function seedDemo(
       untilDate: addDays(today, 186),
       penaltyAmount: 3000,
       paymentMethodId: applePay!.id,
-      checker: "self",
-      shareToken: crypto.randomUUID(),
       ...settled,
     })
     .returning();
 
-  // 2. 曜日ごと（月水金）。友達がチェックする
+  // 2. 曜日ごと（月水金）。自分で達成を報告する
   const [gym] = await db
     .insert(commitment)
     .values({
@@ -151,8 +141,6 @@ export async function seedDemo(
       untilDate: addDays(today, 65),
       penaltyAmount: 1000,
       paymentMethodId: card!.id,
-      checker: "friend",
-      checkerUserId: friendId,
       ...settled,
     })
     .returning();
@@ -172,8 +160,6 @@ export async function seedDemo(
       untilDate: addDays(today, 96),
       penaltyAmount: 500,
       paymentMethodId: applePay!.id,
-      checker: "self",
-      shareToken: null,
       ...settled,
     })
     .returning();

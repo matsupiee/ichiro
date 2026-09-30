@@ -52,19 +52,14 @@ describe("commitment の更新前の内容を保存する", () => {
     expect(Object.keys(rows[0]!.snapshot).sort()).toEqual(Object.keys(after!).sort());
   });
 
-  test("チェック者の変更・依頼承認・精算の更新も記録する", async () => {
+  test("精算による更新も記録する", async () => {
     const { db, caller, today } = await setupDemo();
     const created = await caller.consumer.commitment.create({ today, timeZone: "UTC", values });
-    await caller.consumer.commitment.setChecker({ id: created.id, selection: { mode: "link" } });
-    const [invited] = await db.select().from(commitment).where(eq(commitment.id, created.id));
-    const friend = callerFor(db, await createUser(db, "log-friend@example.com"));
-    await friend.consumer.commitment.acceptInvitation({ token: invited!.shareToken! });
-    const [accepted] = await db.select().from(commitment).where(eq(commitment.id, created.id));
+    const [before] = await db.select().from(commitment).where(eq(commitment.id, created.id));
     await db.update(commitment).set({ settledThrough: today }).where(eq(commitment.id, created.id));
     const rows = await logs(db, created.id);
-    expect(rows).toHaveLength(3);
-    expect(rows[1]!.snapshot).toEqual(snapshot(invited!));
-    expect(rows[2]!.snapshot).toEqual(snapshot(accepted!));
+    expect(rows).toHaveLength(1);
+    expect(rows[0]!.snapshot).toEqual(snapshot(before!));
   });
 
   test("権限エラー・入力エラー・DB 制約違反では履歴を増やさない", async () => {

@@ -28,7 +28,6 @@ const values = {
   untilDate: "2099-12-31",
   penaltyAmount: null,
   paymentMethodId: null,
-  checker: "self" as const,
 };
 
 describe("報告できなかった日は罰金が徴収される", () => {

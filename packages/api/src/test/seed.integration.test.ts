@@ -5,14 +5,13 @@ import { eq } from "drizzle-orm";
 
 import { setupDemo } from "./helpers";
 
-test("デモを再投入しても全ストーリー用のデータと共有リンクを作り直せる", async () => {
+test("デモを再投入しても全ストーリー用のデータを作り直せる", async () => {
   const { db, today, seeded } = await setupDemo();
   const again = await seedDemo(db as never, today, "UTC");
   expect(again.userId).not.toBe(seeded.userId);
   expect(await db.select().from(user).where(eq(user.id, seeded.userId))).toHaveLength(0);
   const rows = await db.select().from(commitment).where(eq(commitment.userId, again.userId));
   expect(rows).toHaveLength(3);
-  expect(rows.filter((c) => c.shareToken !== null)).toHaveLength(1);
   expect(await db.select().from(penalty).where(eq(penalty.userId, again.userId))).toHaveLength(2);
   expect((await db.select().from(report)).length).toBeGreaterThan(42);
 });

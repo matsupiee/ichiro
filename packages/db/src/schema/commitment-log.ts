@@ -4,6 +4,7 @@ import { index, integer, sqliteTable, text } from "drizzle-orm/sqlite-core";
 import type { commitment } from "./commitment";
 
 // JSON 内の日時は SQLite と同じ epoch milliseconds。配列は JSON 配列として保存する。
+// 古い履歴には、当時のスキーマの追加項目も残る。現在の列を追加・削除したらトリガーも更新する。
 type CommitmentSnapshot = Omit<typeof commitment.$inferSelect, "createdAt" | "updatedAt"> & {
   createdAt: number;
   updatedAt: number;

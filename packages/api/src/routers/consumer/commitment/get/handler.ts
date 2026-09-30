@@ -1,4 +1,4 @@
-import { penalty, report, user } from "@ichiro/db/schema/index";
+import { penalty, report } from "@ichiro/db/schema/index";
 import { desc, eq } from "drizzle-orm";
 import type z from "zod";
 
@@ -40,15 +40,8 @@ export async function handler({
     .where(eq(penalty.commitmentId, row.id))
     .orderBy(desc(penalty.dueDate));
 
-  const [checkerUser] = row.checkerUserId
-    ? await ctx.db
-        .select({ id: user.id, name: user.name, image: user.image })
-        .from(user)
-        .where(eq(user.id, row.checkerUserId))
-    : [];
   return {
     ...row,
-    checkerUser: checkerUser ?? null,
     settledThrough,
     dueToday: isScheduled(row, input.today),
     reportedToday: reported.has(input.today),

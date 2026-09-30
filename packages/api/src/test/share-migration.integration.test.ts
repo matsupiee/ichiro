@@ -35,10 +35,8 @@ test("メール招待から共有リンクへの移行は既存の宣言・報�
       "INSERT INTO invitation(id,commitment_id,email,kind,status) VALUES ('i','friend','friend@example.com','sign_up','sent')",
     );
     await migrate(db, { migrationsFolder: migrations });
-    const rows = (await client.execute("SELECT id, share_token FROM commitment ORDER BY id")).rows;
+    const rows = (await client.execute("SELECT id FROM commitment ORDER BY id")).rows;
     expect(rows).toHaveLength(2);
-    expect(rows[0]!.share_token).toBeNull();
-    expect(rows[1]!.share_token).toBeNull();
     expect((await client.execute("SELECT * FROM report")).rows).toHaveLength(1);
     expect((await client.execute("SELECT amount FROM penalty")).rows[0]!.amount).toBe(500);
     expect((await client.execute("PRAGMA foreign_key_check")).rows).toHaveLength(0);

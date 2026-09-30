@@ -1,4 +1,4 @@
-import { checkers, commitmentFrequencies } from "@ichiro/db/schema/commitment";
+import { commitmentFrequencies } from "@ichiro/db/schema/commitment";
 import { penaltyStatuses } from "@ichiro/db/schema/penalty";
 import z from "zod";
 
@@ -23,7 +23,6 @@ export const commitmentGetOutputSchema = z.object({
   untilDate: z.string(),
   penaltyAmount: z.number().nullable(),
   paymentMethodId: z.string().nullable(),
-  checker: z.enum(checkers),
   timeZone: z.string(),
   settledThrough: z.string().nullable(),
   dueToday: z.boolean(),
@@ -43,10 +42,6 @@ export const commitmentGetOutputSchema = z.object({
     }),
   ),
   penaltyTotal: z.number(),
-  shareToken: z.string().nullable(),
-  checkerUser: z
-    .object({ id: z.string(), name: z.string(), image: z.string().nullable() })
-    .nullable(),
 });
 
 // コミットメントの詳細。今週の達成状況・罰金の記録を含む

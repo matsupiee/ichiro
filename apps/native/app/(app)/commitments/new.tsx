@@ -55,7 +55,7 @@ export default function NewCommitmentScreen() {
           router.back();
           celebrate({
             title: "宣言したワン！",
-            commitmentId: c.id,
+            closeLabel: "ホームに戻る",
             message: `「${c.goal}」スタート。いっしょにがんばろう`,
             tiles:
               c.penaltyAmount !== null

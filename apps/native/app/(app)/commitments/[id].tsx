@@ -12,11 +12,10 @@ import {
   validate,
 } from "@/components/commitment-form";
 import { PenaltyHistory } from "@/components/penalty-history";
-import { FieldLabel, PrimaryButton, RowButton, ScreenHeader } from "@/components/ui";
+import { PrimaryButton, ScreenHeader } from "@/components/ui";
 import { useReport } from "@/lib/commitments";
 import { localTimeZone, localToday } from "@/lib/date";
 import { colors } from "@/lib/theme";
-import { CheckerModal } from "@/components/checker-modal";
 import { trpc } from "@/utils/trpc";
 
 const WEEK_LABELS = ["月", "火", "水", "木", "金", "土", "日"];
@@ -109,8 +108,6 @@ export default function CommitmentDetailScreen() {
     );
   };
 
-  const [checkerOpen, setCheckerOpen] = useState(false);
-
   return (
     <View className="flex-1 bg-canvas" style={{ paddingTop: insets.top }}>
       <ScreenHeader title="コミットメント詳細" onBack={() => router.back()} />
@@ -132,23 +129,6 @@ export default function CommitmentDetailScreen() {
               </>
             }
             editing
-            checkerField={
-              <>
-                <FieldLabel>チェック者</FieldLabel>
-                <RowButton onPress={() => setCheckerOpen(true)}>
-                  <View className="flex-1 py-3">
-                    <Text className="text-[17px] font-semibold text-ink">
-                      {data.checkerUser?.name ?? "自分"}
-                    </Text>
-                    {data.shareToken ? (
-                      <Text className="text-[13px] text-mute">依頼リンクを発行済み</Text>
-                    ) : null}
-                  </View>
-                  <Text className="mr-3 text-[14px] text-mute">変更</Text>
-                </RowButton>
-                <CheckerModal id={id} visible={checkerOpen} onClose={() => setCheckerOpen(false)} />
-              </>
-            }
             cta="変更を保存"
             submitting={update.isPending}
             error={error}

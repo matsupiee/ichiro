@@ -1,4 +1,4 @@
-import { checkers, commitmentFrequencies } from "@ichiro/db/schema/commitment";
+import { commitmentFrequencies } from "@ichiro/db/schema/commitment";
 import z from "zod";
 
 import { validateCommitmentValues } from "../../../../shared/commitment/validate-commitment-values";
@@ -43,10 +43,8 @@ export const commitmentCreateOutputSchema = z.object({
   untilDate: z.string(),
   penaltyAmount: z.number().nullable(),
   paymentMethodId: z.string().nullable(),
-  checker: z.enum(checkers),
   timeZone: z.string(),
   settledThrough: z.string().nullable(),
-  shareToken: z.string().nullable(),
 });
 
 // コミットメントを作る

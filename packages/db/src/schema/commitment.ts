@@ -6,10 +6,8 @@ import { user } from "./auth";
 import { paymentMethod } from "./payment-method";
 
 export const commitmentFrequencies = ["daily", "weekly", "monthly", "once"] as const;
-export const checkers = ["self", "friend"] as const;
 
 export type CommitmentFrequency = (typeof commitmentFrequencies)[number];
-export type Checker = (typeof checkers)[number];
 
 export const commitment = sqliteTable(
   "commitment",
@@ -43,10 +41,6 @@ export const commitment = sqliteTable(
     paymentMethodId: text("payment_method_id").references(() => paymentMethod.id, {
       onDelete: "restrict",
     }),
-    checker: text("checker", { enum: checkers }).notNull(),
-    // 未承認の依頼リンク。承認・チェック者の変更時に無効にする
-    shareToken: text("share_token").unique(),
-    checkerUserId: text("checker_user_id").references(() => user.id, { onDelete: "set null" }),
     // 締め切り（報告日の 23:59:59）を判定するタイムゾーン。IANA 名
     timeZone: text("time_zone").notNull().default("Asia/Tokyo"),
     // 罰金の精算がどの報告日まで終わったか（YYYY-MM-DD）。

@@ -1,0 +1,10 @@
+appId: com.anonymous.ichiro
+---
+- launchApp
+- openLink: ichiro://invite/00000000-0000-4000-8000-000000000000
+- extendedWaitUntil:
+    visible: "ページが見つからないワン"
+    timeout: 15000
+- assertNotVisible: "チェックを引き受ける"
+- tapOn: "ホームへ"
+- assertVisible: "コミットメントを作成"

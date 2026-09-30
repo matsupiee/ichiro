@@ -2,8 +2,7 @@ import "@/global.css";
 import { DelaGothicOne_400Regular, useFonts } from "@expo-google-fonts/dela-gothic-one";
 import { BottomSheetModalProvider } from "@gorhom/bottom-sheet";
 import { QueryClientProvider } from "@tanstack/react-query";
-import { Stack, useRouter } from "expo-router";
-import * as SecureStore from "expo-secure-store";
+import { Stack } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
 import { StatusBar } from "expo-status-bar";
 import { HeroUINativeProvider } from "heroui-native";
@@ -31,22 +30,6 @@ function RootNavigator() {
   }, [isPending]);
   // 登録後のセッション再取得で Navigator を破棄すると、コード入力画面が消えてしまう。
   const ready = fontsLoaded && (sessionLoaded || !isPending);
-  const router = useRouter();
-
-  useEffect(() => {
-    if (!ready || !session?.user.emailVerified) return;
-    let active = true;
-    void (async () => {
-      const token = await SecureStore.getItemAsync("pending-checker-invitation");
-      if (!token || !active) return;
-      await SecureStore.deleteItemAsync("pending-checker-invitation");
-      if (active) router.replace({ pathname: "/invite/[token]", params: { token } });
-    })().catch(() => {});
-    return () => {
-      active = false;
-    };
-  }, [ready, session?.user.id, session?.user.emailVerified, router]);
-
   useEffect(() => {
     if (ready) SplashScreen.hideAsync().catch(() => {});
   }, [ready]);
@@ -62,7 +45,6 @@ function RootNavigator() {
       <Stack.Protected guard={signedIn}>
         <Stack.Screen name="(app)" />
       </Stack.Protected>
-      <Stack.Screen name="invite/[token]" />
     </Stack>
   );
 }

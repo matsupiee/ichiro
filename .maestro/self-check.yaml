@@ -1,0 +1,40 @@
+appId: com.anonymous.ichiro
+---
+- launchApp
+- openLink: ichiro://commitments/new
+- extendedWaitUntil:
+    visible: "コミットメント作成"
+    timeout: 20000
+- tapOn: "広東語で日常会話ができる"
+- inputText: "Self check test"
+- tapOn: "コミット内容 毎日30分広東語を練習する"
+- inputText: "Read ten pages"
+- hideKeyboard
+- scrollUntilVisible:
+    element: "宣言する"
+    direction: DOWN
+- assertNotVisible: "チェック者"
+- tapOn: "宣言する"
+- extendedWaitUntil:
+    visible: "宣言したワン！"
+    timeout: 10000
+- assertNotVisible: "チェックを友達に依頼する"
+- tapOn: "ホームに戻る"
+- tapOn:
+    text: "Self check test,.*"
+    index: 0
+- scrollUntilVisible:
+    element: "変更を保存"
+    direction: DOWN
+- assertNotVisible: "チェック者"
+- assertNotVisible: "依頼リンクを発行済み"
+- tapOn: "変更を保存"
+- tapOn:
+    text: "Self check test,.*"
+    index: 0
+- tapOn: "今日の達成を報告する"
+- extendedWaitUntil:
+    visible: "つづける"
+    timeout: 10000
+- tapOn: "つづける"
+- assertVisible: "今日は報告ずみ.*"

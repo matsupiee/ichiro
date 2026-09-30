@@ -10,6 +10,6 @@ export const profileGetAvatarInputSchema = z.object({
 
 // 出力は写真のバイナリそのもの。アップロードされたときの Content-Type で返す
 
-// プロフィール写真を配信する。友達にも見せるので、ログインなしで読める。
+// プロフィール写真を配信する。画像URLからログインなしで読める。
 // パスは推測できない ID を含み、差し替えるたびに変わる
 export const profileGetAvatarRoute = publicHttpRoute("GET", "/avatars/:userId/:file", handler);

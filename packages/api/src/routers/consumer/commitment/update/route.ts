@@ -1,4 +1,4 @@
-import { checkers, commitmentFrequencies } from "@ichiro/db/schema/commitment";
+import { commitmentFrequencies } from "@ichiro/db/schema/commitment";
 import z from "zod";
 
 import { validateCommitmentValues } from "../../../../shared/commitment/validate-commitment-values";
@@ -41,10 +41,8 @@ export const commitmentUpdateOutputSchema = z.object({
   untilDate: z.string(),
   penaltyAmount: z.number().nullable(),
   paymentMethodId: z.string().nullable(),
-  checker: z.enum(checkers),
   timeZone: z.string(),
   settledThrough: z.string().nullable(),
-  shareToken: z.string().nullable(),
 });
 
 // 期間中でも設定を変えられる。開始日と報告履歴はそのまま残る。

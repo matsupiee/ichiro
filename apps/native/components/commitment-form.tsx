@@ -199,7 +199,6 @@ type Props = {
   minimumDate: string;
   header?: ReactNode;
   // 編集シートだけに表示するチェック者の欄
-  checkerField?: ReactNode;
   cta: string;
   submitting: boolean;
   error: string | null;
@@ -213,7 +212,6 @@ export function CommitmentForm({
   editing = false,
   minimumDate,
   header,
-  checkerField,
   cta,
   submitting,
   error,
@@ -375,8 +373,6 @@ export function CommitmentForm({
           />
         </>
       ) : null}
-
-      {checkerField}
 
       <ErrorText message={error} />
       <View className="px-[30px] pt-9">
