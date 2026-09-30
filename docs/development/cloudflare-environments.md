@@ -46,6 +46,8 @@ D1 のマイグレーションは `packages/db/src/migrations` からデプロ�
 
 ## ネイティブアプリ
 
+prod の API は `https://ichiro.app` を使用する。`packages/infra/alchemy.run.ts` の `domain` を prod にだけ設定し、Alchemy が Custom Domain を管理する。Cloudflare の同じアカウントに Active な `ichiro.app` のゾーンが必要。`BETTER_AUTH_URL` は `Cloudflare.Worker.URL` から独自ドメインの URL に解決される。stg は既存の Worker URL を使う。
+
 実機向けのクラウドビルド・内部配布は [EAS Build の手順](./eas-build.md)を参照する。既存の `preview` プロファイルから stg に接続する。
 
 `apps/native/.env.stg.local` / `.env.prod.local` に次を設定する。

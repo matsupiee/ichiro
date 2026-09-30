@@ -15,6 +15,7 @@ export const db = Cloudflare.D1.Database("database", {
 export const avatars = Cloudflare.R2.Bucket("avatars");
 
 export const server = Cloudflare.Worker("server", {
+  domain: process.env.APP_ENV === "prod" ? "ichiro.app" : undefined,
   main: "../../apps/server/src/index.ts",
   assets: "../../apps/server/public",
   compatibility: {

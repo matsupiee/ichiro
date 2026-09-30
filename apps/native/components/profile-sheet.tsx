@@ -16,10 +16,9 @@ import { Chevron, ErrorText, RowButton } from "@/components/ui";
 import { authClient } from "@/lib/auth-client";
 import type { useAvatar } from "@/lib/avatar";
 import { paymentMethodLabel, useAddPaymentMethod } from "@/lib/payments";
+import { legalPages, openLegalPage } from "@/lib/legal-pages";
 import { colors, shadows } from "@/lib/theme";
 import { queryClient, trpc } from "@/utils/trpc";
-
-const MENU = ["利用規約", "プライバシーポリシー", "問い合わせ・報告"];
 
 function SectionLabel({ children, top = 22 }: { children: string; top?: number }) {
   return (
@@ -178,6 +177,7 @@ export const ProfileSheet = forwardRef<BottomSheetModal, Props>(function Profile
 
   return (
     <BottomSheetModal
+      accessible={false}
       ref={ref}
       snapPoints={["100%"]}
       topInset={insets.top + 6}
@@ -254,11 +254,14 @@ export const ProfileSheet = forwardRef<BottomSheetModal, Props>(function Profile
         <PaymentInfo />
 
         <View className="gap-2.5 pt-8">
-          {MENU.map((m) => (
-            <RowButton key={m}>
-              <Text className="text-[17px] text-ink">{m}</Text>
+          {legalPages.map((page) => (
+            <RowButton key={page.id} onPress={() => void openLegalPage(page.id)}>
+              <Text className="text-[17px] text-ink">{page.title}</Text>
             </RowButton>
           ))}
+          <RowButton>
+            <Text className="text-[17px] text-ink">問い合わせ・報告</Text>
+          </RowButton>
         </View>
 
         <View className="pt-8">

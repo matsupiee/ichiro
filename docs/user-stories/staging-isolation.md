@@ -17,6 +17,7 @@
    - 必要なら `packages/db/src/seed/run.ts` を stg の D1 に対して実行し、既存ストーリー用のデモデータを作れる。
    - → [新規登録・ログイン](./onboarding.md)、[プロフィール写真](./upload-profile-photo.md)、[支払い方法](./register-payment-method.md)
 4. prod を設定・デプロイして prod のアプリに切り替える。
+   - prod の API は `https://ichiro.app` で応答し、stg の Worker に独自ドメインが割り当てられない。
    - stg のユーザー・セッション・画像・支払い情報が prod に引き継がれない。
    - prod にテスト用 Stripe キーを設定するとデプロイを拒否する。
 
