@@ -36,6 +36,17 @@ export function CheckerModal({ id, visible, onClose, onSaved }: Props) {
   const [sharing, setSharing] = useState(false);
   const [loadingFriends, setLoadingFriends] = useState(false);
   const [toast, setToast] = useState<{ message: string } | null>(null);
+  const [presentation, setPresentation] = useState({ id, visible });
+
+  // onShow は表示アニメーション後なので遅い。開く描画の時点で前回の画面を消す。
+  if (presentation.id !== id || presentation.visible !== visible) {
+    setPresentation({ id, visible });
+    if (visible) {
+      setFriendsOpen(false);
+      setError(null);
+      setToast(null);
+    }
+  }
 
   useEffect(() => {
     if (!toast) return;
@@ -105,10 +116,6 @@ export function CheckerModal({ id, visible, onClose, onSaved }: Props) {
       visible={visible}
       animationType="slide"
       presentationStyle="pageSheet"
-      onShow={() => {
-        setFriendsOpen(false);
-        setError(null);
-      }}
       onRequestClose={() => !busy && onClose()}
     >
       <View style={{ flex: 1, backgroundColor: colors.canvas }}>

@@ -112,50 +112,52 @@ export default function CommitmentDetailScreen() {
   const [checkerOpen, setCheckerOpen] = useState(false);
 
   return (
-    <KeyboardAwareScrollView
-      className="flex-1 bg-canvas"
-      keyboardShouldPersistTaps="handled"
-      bottomOffset={24}
-      contentContainerStyle={{ paddingTop: insets.top, paddingBottom: insets.bottom + 60 }}
-    >
+    <View className="flex-1 bg-canvas" style={{ paddingTop: insets.top }}>
       <ScreenHeader title="コミットメント詳細" onBack={() => router.back()} />
-      {data && values ? (
-        <CommitmentForm
-          values={values}
-          onChange={setValues}
-          minimumDate={data.startDate}
-          header={
-            <>
-              <StreakCard {...data} onReport={() => report(data)} />
-              <PenaltyHistory {...data} />
-            </>
-          }
-          editing
-          checkerField={
-            <>
-              <FieldLabel>チェック者</FieldLabel>
-              <RowButton onPress={() => setCheckerOpen(true)}>
-                <View className="flex-1 py-3">
-                  <Text className="text-[17px] font-semibold text-ink">
-                    {data.checkerUser?.name ?? "自分"}
-                  </Text>
-                  {data.shareToken ? (
-                    <Text className="text-[13px] text-mute">依頼リンクを発行済み</Text>
-                  ) : null}
-                </View>
-                <Text className="mr-3 text-[14px] text-mute">変更</Text>
-              </RowButton>
-              <CheckerModal id={id} visible={checkerOpen} onClose={() => setCheckerOpen(false)} />
-            </>
-          }
-          cta="変更を保存"
-          submitting={update.isPending}
-          error={error}
-          onSubmit={submit}
-        />
-      ) : (
-        <ActivityIndicator color={colors.pink} className="pt-10" />
-      )}
-    </KeyboardAwareScrollView>
+      <KeyboardAwareScrollView
+        className="flex-1"
+        keyboardShouldPersistTaps="handled"
+        bottomOffset={24}
+        contentContainerStyle={{ paddingBottom: insets.bottom + 60 }}
+      >
+        {data && values ? (
+          <CommitmentForm
+            values={values}
+            onChange={setValues}
+            minimumDate={data.startDate}
+            header={
+              <>
+                <StreakCard {...data} onReport={() => report(data)} />
+                <PenaltyHistory {...data} />
+              </>
+            }
+            editing
+            checkerField={
+              <>
+                <FieldLabel>チェック者</FieldLabel>
+                <RowButton onPress={() => setCheckerOpen(true)}>
+                  <View className="flex-1 py-3">
+                    <Text className="text-[17px] font-semibold text-ink">
+                      {data.checkerUser?.name ?? "自分"}
+                    </Text>
+                    {data.shareToken ? (
+                      <Text className="text-[13px] text-mute">依頼リンクを発行済み</Text>
+                    ) : null}
+                  </View>
+                  <Text className="mr-3 text-[14px] text-mute">変更</Text>
+                </RowButton>
+                <CheckerModal id={id} visible={checkerOpen} onClose={() => setCheckerOpen(false)} />
+              </>
+            }
+            cta="変更を保存"
+            submitting={update.isPending}
+            error={error}
+            onSubmit={submit}
+          />
+        ) : (
+          <ActivityIndicator color={colors.pink} className="pt-10" />
+        )}
+      </KeyboardAwareScrollView>
+    </View>
   );
 }

@@ -18,7 +18,10 @@
    - → [今日の達成を報告すると、ワンちゃんが祝福してくれる](./report-achievement.md)
    - 罰金を設定しているなら、その下に「これまでの罰金」のカードが出る。デモデータの「体づくり」は罰金の履歴がないので ¥0 と「まだ罰金はないワン。この調子でつづけよう。」になる。
    - → [報告できなかった日は罰金が徴収される](./penalty-collection.md)
-2. 下のフォームを見る。
+2. 下のフォームを最下部までスクロールし、先頭へ戻す。
+   - 「コミットメント詳細」のタイトルと戻るボタンはシート上部に固定され、本文だけがスクロールする。
+   - 最下部の「変更を保存」まで表示できる。
+   - 入力欄を押してキーボードを表示しても、タイトルと戻るボタンは固定されたまま、入力欄が見える位置にスクロールする。
    - 作成ページと同じ項目（目標・コミット内容・頻度・いつまで・罰金・支払い方法・チェック者）に、今の設定が入っている。
    - コミット内容は複数行で入力でき、改行と長い文章の折り返しが表示される。候補は出ない。
    - 編集シートに「チェック者」の欄がある。押すと、自分・依頼リンクの共有・既存の友達からの選択で変更できる。チェック者の変更はその場で保存される。
@@ -44,3 +47,4 @@
 
 - 詳細は `packages/api/src/routers/consumer/commitment/get/handler.integration.test.ts`、設定の変更は `packages/api/src/routers/consumer/commitment/update/handler.integration.test.ts`
 - チェック者の変更と古い依頼リンクの失効は `packages/api/src/routers/consumer/commitment/set-checker/handler.integration.test.ts` と `packages/api/src/routers/consumer/commitment/accept-invitation/handler.integration.test.ts`
+- ヘッダーの固定、最下部へのスクロール、キーボード表示中の入力、戻る操作は、既存の `packages/db/src/seed/run.ts` のデモデータを使って iOS Simulator または実機で確認する。
