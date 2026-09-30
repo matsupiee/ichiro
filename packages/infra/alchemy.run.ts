@@ -4,6 +4,7 @@ import { localState } from "alchemy/State";
 import * as Config from "effect/Config";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
+import * as Redacted from "effect/Redacted";
 import "varlock/auto-load";
 import { validateDeployment } from "./scripts/deployment-settings";
 
@@ -25,6 +26,10 @@ export const server = Cloudflare.Worker("server", {
   crons: ["5 * * * *"],
   env: {
     DB: db,
+    APP_ENV: Config.String("APP_ENV"),
+    RESEND_API_KEY: Config.Redacted("RESEND_API_KEY").pipe(Config.withDefault(Redacted.make(""))),
+    AUTH_EMAIL_FROM: Config.String("AUTH_EMAIL_FROM"),
+    AUTH_EMAIL_DELIVERY: Config.String("AUTH_EMAIL_DELIVERY"),
     AVATARS: avatars,
     CORS_ORIGIN: Config.String("CORS_ORIGIN"),
     BETTER_AUTH_SECRET: Config.Redacted("BETTER_AUTH_SECRET"),

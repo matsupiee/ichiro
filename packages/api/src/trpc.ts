@@ -16,6 +16,9 @@ export const protectedProcedure = t.procedure.use(({ ctx, next }) => {
       cause: "No session",
     });
   }
+  if (!ctx.session.user.emailVerified) {
+    throw new TRPCError({ code: "FORBIDDEN", message: "メールアドレスの確認が必要です" });
+  }
   return next({
     ctx: {
       ...ctx,

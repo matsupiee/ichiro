@@ -85,6 +85,17 @@ export const verification = sqliteTable(
   (table) => [index("verification_identifier_idx").on(table.identifier)],
 );
 
+// IP・メールアドレスは認証シークレットで HMAC 化したキーとして保存する。
+export const authRateLimit = sqliteTable(
+  "auth_rate_limit",
+  {
+    key: text("key").primaryKey(),
+    count: integer("count").notNull(),
+    expiresAt: integer("expires_at").notNull(),
+  },
+  (table) => [index("auth_rate_limit_expires_idx").on(table.expiresAt)],
+);
+
 export const authRelations = defineRelationsPart({ user, session, account, verification }, (r) => ({
   user: {
     sessions: r.many.session({

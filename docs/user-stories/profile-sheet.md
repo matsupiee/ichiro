@@ -23,17 +23,20 @@
    - 名前を変えて「保存」を押すと、シートの名前が変わる。
    - 空のまま保存するとエラーが表示され、変わらない。
    - 「キャンセル」を押すと、変えずに閉じる。
-4. 「支払い情報」を見る。
+4. 「メールアドレス」の行を押す。
+   - 現在と変更先のアドレスを確認して変更できる。
+   - → [メールアドレスを変更できる](./change-email.md)
+5. 「支払い情報」を見る。
    - Stripe に登録ずみの支払い方法が「Apple Pay（Visa •••• 4242）」「Mastercard •••• 4444」のように並ぶ。デモデータではこの2つ。
    - 登録がなければ「未登録」と出る。
    - 「支払い方法を追加」を押すと、Stripe の PaymentSheet が開いて追加できる。
    - → [罰金を払うカードや Apple Pay を Stripe に登録できる](./register-payment-method.md)
-5. メニューの各行を押す。
+6. メニューの各行を押す。
    - 利用規約・特定商取引法に基づく表記・プライバシーポリシーを確認できる。
    - → [アプリ内で利用条件と個人情報の取り扱いを確認できる](./read-legal-documents.md)
    - 「問い合わせ・報告」からメールを作成できる。
    - → [メールで問い合わせ・報告できる](./contact-support.md)
-6. 「ログアウト」を押す。
+7. 「ログアウト」を押す。
    - シートが閉じ、オンボーディング画面に戻る。
    - → [アプリを開いたら新規登録とログインを選べる](./onboarding.md)
 
@@ -49,3 +52,5 @@
 - 名前の変更とログアウトは Better Auth に任せており、API のテストはない。
 - プロフィール写真は `packages/api/src/routers/consumer/profile/` 配下の各 `handler.integration.test.ts`。
 - 支払い情報は `packages/api/src/routers/consumer/payment/list-methods/handler.integration.test.ts`
+
+- メール確認・変更・ログアウトは `packages/api/src/test/auth.integration.test.ts`。

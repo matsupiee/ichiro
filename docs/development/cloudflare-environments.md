@@ -20,6 +20,8 @@ Varlock の `APP_ENV` で設定ファイルを選ぶ。サーバーの `NODE_ENV
 | `STRIPE_SECRET_KEY`     | `sk_test_...`                    | `sk_live_...`                  |
 | `STRIPE_WEBHOOK_SECRET` | stg の Webhook の `whsec_...`    | prod の Webhook の `whsec_...` |
 
+`RESEND_API_KEY` も各環境に設定する。認証メールは `ichiro <noreply@mail.ichiro.app>` から Resend で送る。GitHub Environments の Secrets にも `RESEND_API_KEY` を追加する。詳細は [認証メール](./auth-email.md)。
+
 `BETTER_AUTH_URL` は Alchemy が Worker の URL を設定するので指定不要。ネイティブの認証では既存の `ichiro://` scheme を使う。
 
 Stripe の Webhook は各 Worker URL の `/stripe/webhook` に作成する。イベントは `setup_intent.succeeded`、`payment_intent.succeeded`、`payment_intent.payment_failed`。stg と prod で別エンドポイント・署名シークレットにする。

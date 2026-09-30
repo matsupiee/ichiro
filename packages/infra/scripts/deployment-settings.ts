@@ -15,6 +15,14 @@ export function validateDeployment(stage: string, env: Record<string, string | u
   if ((env.BETTER_AUTH_SECRET?.length ?? 0) < 32) {
     throw new Error("環境専用の BETTER_AUTH_SECRET（32文字以上）が必要です。");
   }
+  if (!env.RESEND_API_KEY?.startsWith("re_") || env.AUTH_EMAIL_DELIVERY !== "resend") {
+    throw new Error("Resend の API キーと AUTH_EMAIL_DELIVERY=resend が必要です。");
+  }
+  if (env.AUTH_EMAIL_FROM !== "ichiro <noreply@mail.ichiro.app>") {
+    throw new Error(
+      "AUTH_EMAIL_FROM は認証済みの ichiro <noreply@mail.ichiro.app> を指定してください。",
+    );
+  }
   if (!env.CORS_ORIGIN || new URL(env.CORS_ORIGIN).protocol !== "https:") {
     throw new Error("CORS_ORIGIN に HTTPS の URL を設定してください。");
   }

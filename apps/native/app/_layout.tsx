@@ -7,7 +7,7 @@ import * as SecureStore from "expo-secure-store";
 import * as SplashScreen from "expo-splash-screen";
 import { StatusBar } from "expo-status-bar";
 import { HeroUINativeProvider } from "heroui-native";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { KeyboardProvider } from "react-native-keyboard-controller";
 import { Uniwind } from "uniwind";
@@ -25,11 +25,16 @@ SplashScreen.preventAutoHideAsync().catch(() => {});
 function RootNavigator() {
   const { data: session, isPending } = authClient.useSession();
   const [fontsLoaded] = useFonts({ DelaGothicOne_400Regular });
-  const ready = !isPending && fontsLoaded;
+  const [sessionLoaded, setSessionLoaded] = useState(false);
+  useEffect(() => {
+    if (!isPending) setSessionLoaded(true);
+  }, [isPending]);
+  // 登録後のセッション再取得で Navigator を破棄すると、コード入力画面が消えてしまう。
+  const ready = fontsLoaded && (sessionLoaded || !isPending);
   const router = useRouter();
 
   useEffect(() => {
-    if (!ready || !session?.user) return;
+    if (!ready || !session?.user.emailVerified) return;
     let active = true;
     void (async () => {
       const token = await SecureStore.getItemAsync("pending-checker-invitation");
@@ -40,14 +45,14 @@ function RootNavigator() {
     return () => {
       active = false;
     };
-  }, [ready, session?.user.id, router]);
+  }, [ready, session?.user.id, session?.user.emailVerified, router]);
 
   useEffect(() => {
     if (ready) SplashScreen.hideAsync().catch(() => {});
   }, [ready]);
 
   if (!ready) return null;
-  const signedIn = !!session?.user;
+  const signedIn = !!session?.user.emailVerified;
 
   return (
     <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: colors.canvas } }}>

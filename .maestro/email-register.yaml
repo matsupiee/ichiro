@@ -1,0 +1,22 @@
+appId: com.anonymous.ichiro
+---
+- launchApp
+- openLink: "ichiro://sign-up"
+- tapOn:
+    text: "ラッシー"
+    waitToSettleTimeoutMs: 500
+- inputText: "OTP Native"
+- pressKey: Enter
+- inputText: "${EMAIL}"
+- pressKey: Enter
+- inputText: "otp-native-password"
+- pressKey: Enter
+- tapOn:
+    text: "今はしない"
+    optional: true
+    waitToSettleTimeoutMs: 500
+- extendedWaitUntil:
+    visible: "メールアドレスの確認"
+    timeout: 15000
+- assertVisible:
+    id: "verification-code"

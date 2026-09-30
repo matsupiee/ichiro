@@ -55,4 +55,5 @@ jobs:
           CORS_ORIGIN: ${{ vars.CORS_ORIGIN }}
           STRIPE_SECRET_KEY: ${{ secrets.STRIPE_SECRET_KEY }}
           STRIPE_WEBHOOK_SECRET: ${{ secrets.STRIPE_WEBHOOK_SECRET }}
+          RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
         run: bun run "deploy:$DEPLOY_STAGE" --yes

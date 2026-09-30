@@ -7,6 +7,7 @@ import z from "zod";
 
 import { Dog } from "@/components/dog/dog";
 import { ErrorText, Field, FieldLabel, PrimaryButton, ScreenHeader } from "@/components/ui";
+import { authErrorMessage } from "@/lib/auth-error";
 import { authClient } from "@/lib/auth-client";
 import { queryClient } from "@/utils/trpc";
 
@@ -40,6 +41,7 @@ export function AuthForm({ mode }: { mode: Mode }) {
   const set = (k: keyof typeof values) => (v: string) => setValues((s) => ({ ...s, [k]: v }));
 
   const submit = async () => {
+    if (submitting) return;
     const parsed = schemas[mode].safeParse(values);
     if (!parsed.success) {
       setError(parsed.error.issues[0]?.message ?? "入力内容を確認してください");
@@ -48,19 +50,33 @@ export function AuthForm({ mode }: { mode: Mode }) {
     setError(null);
     setSubmitting(true);
     const { name, email, password } = parsed.data;
-    const handlers = {
-      onError: (ctx: { error: { message?: string } }) =>
-        setError(ctx.error.message || "うまくいきませんでした。もう一度お試しください"),
-      onSuccess: () => {
-        queryClient.clear();
-      },
-    };
-    // 成功するとセッションが変わり、ルートのガードがメインページへ切り替える
     try {
+      const result =
+        mode === "sign-up"
+          ? await authClient.signUp.email({ name, email, password })
+          : await authClient.signIn.email({ email, password });
+      if (result.error) {
+        if (
+          result.error.code === "EMAIL_NOT_VERIFIED" ||
+          result.error.code === "EMAIL_DELIVERY_FAILED"
+        ) {
+          router.push({
+            pathname: "/verify-email",
+            params: {
+              email,
+              sent: "false",
+              deliveryFailed: String(result.error.code === "EMAIL_DELIVERY_FAILED"),
+            },
+          });
+        } else {
+          setError(authErrorMessage(result.error));
+        }
+        return;
+      }
       if (mode === "sign-up") {
-        await authClient.signUp.email({ name, email, password }, handlers);
+        router.push({ pathname: "/verify-email", params: { email, sent: "true" } });
       } else {
-        await authClient.signIn.email({ email, password }, handlers);
+        queryClient.clear();
       }
     } catch {
       setError("サーバーに接続できませんでした。通信環境を確認して、もう一度お試しください");

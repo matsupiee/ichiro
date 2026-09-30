@@ -49,6 +49,8 @@ export function protectedHttpRoute(
     async run(c, createContext) {
       const context = await createContext(c, { readSession: true });
       if (!context.session) return c.json({ message: "ログインしてください" }, 401);
+      if (!context.session.user.emailVerified)
+        return c.json({ message: "メールアドレスの確認が必要です" }, 403);
       return handler({ c, context: { ...context, session: context.session } });
     },
   };

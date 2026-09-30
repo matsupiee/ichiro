@@ -47,7 +47,9 @@ export async function sessionFor(db: Database, email: string): Promise<Session> 
 }
 
 export async function createUser(db: Database, email: string, name = "friend") {
-  await db.insert(user).values({ id: `user-${email}`, name, email, updatedAt: new Date() });
+  await db
+    .insert(user)
+    .values({ id: `user-${email}`, name, email, emailVerified: true, updatedAt: new Date() });
   return sessionFor(db, email);
 }
 

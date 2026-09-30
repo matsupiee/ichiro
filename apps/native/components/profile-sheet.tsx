@@ -5,6 +5,7 @@ import {
   BottomSheetScrollView,
 } from "@gorhom/bottom-sheet";
 import { useQuery } from "@tanstack/react-query";
+import { useRouter } from "expo-router";
 import Constants from "expo-constants";
 import { forwardRef, useCallback, useState } from "react";
 import { ActivityIndicator, Modal, Pressable, Text, TextInput, View } from "react-native";
@@ -155,6 +156,7 @@ export const ProfileSheet = forwardRef<BottomSheetModal, Props>(function Profile
   ref,
 ) {
   const insets = useSafeAreaInsets();
+  const router = useRouter();
   const { data: session } = authClient.useSession();
   const [photoMenu, setPhotoMenu] = useState(false);
   const [nameOpen, setNameOpen] = useState(false);
@@ -249,6 +251,18 @@ export const ProfileSheet = forwardRef<BottomSheetModal, Props>(function Profile
         <SectionLabel>名前</SectionLabel>
         <RowButton onPress={() => setNameOpen(true)}>
           <Text className="text-[18px] text-ink">{session?.user.name}</Text>
+        </RowButton>
+
+        <SectionLabel>メールアドレス</SectionLabel>
+        <RowButton
+          onPress={() => {
+            close();
+            router.push("/change-email");
+          }}
+        >
+          <Text className="flex-1 text-[16px] text-ink" numberOfLines={1}>
+            {session?.user.email}
+          </Text>
         </RowButton>
 
         <SectionLabel>支払い情報</SectionLabel>

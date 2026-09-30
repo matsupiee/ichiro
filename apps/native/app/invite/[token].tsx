@@ -21,11 +21,11 @@ export default function InvitationScreen() {
   const invite = useQuery(
     trpc.consumer.commitment.getInvitation.queryOptions(
       { token },
-      { enabled: !!session && !accepted, retry: false },
+      { enabled: !!session?.user.emailVerified && !accepted, retry: false },
     ),
   );
   const accept = useMutation(trpc.consumer.commitment.acceptInvitation.mutationOptions());
-  const leave = () => router.replace(session ? "/" : "/welcome");
+  const leave = () => router.replace(session?.user.emailVerified ? "/" : "/welcome");
   return (
     <ScrollView
       className="flex-1 bg-canvas"
@@ -33,7 +33,7 @@ export default function InvitationScreen() {
     >
       <ScreenHeader title="チェックの依頼" onBack={leave} />
       <View className="gap-6 px-[30px] pt-10">
-        {!session ? (
+        {!session?.user.emailVerified ? (
           <>
             <Text className="text-[20px] font-bold text-ink">
               友達からチェックの依頼が届いています

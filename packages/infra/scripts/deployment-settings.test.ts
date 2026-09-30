@@ -7,6 +7,9 @@ import { validateDeployment } from "./deployment-settings";
 
 const valid = {
   APP_ENV: "stg",
+  RESEND_API_KEY: "re_fixture",
+  AUTH_EMAIL_DELIVERY: "resend",
+  AUTH_EMAIL_FROM: "ichiro <noreply@mail.ichiro.app>",
   NODE_ENV: "production",
   STRIPE_SECRET_KEY: "sk_test_fixture",
   STRIPE_WEBHOOK_SECRET: "whsec_fixture",
@@ -136,4 +139,14 @@ test("ネイティブの stg/prod が開発用 URL を引き継がず各環境�
       `https://${stage}.example.com`,
     );
   }
+});
+
+test("デプロイでメールの未設定・ローカル送信を拒否する", () => {
+  expect(() => validateDeployment("stg", { ...valid, RESEND_API_KEY: "" })).toThrow("Resend");
+  expect(() => validateDeployment("stg", { ...valid, AUTH_EMAIL_DELIVERY: "console" })).toThrow(
+    "Resend",
+  );
+  expect(() =>
+    validateDeployment("stg", { ...valid, AUTH_EMAIL_FROM: "test@example.com" }),
+  ).toThrow("AUTH_EMAIL_FROM");
 });
