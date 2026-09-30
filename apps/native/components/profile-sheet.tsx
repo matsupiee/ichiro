@@ -15,6 +15,7 @@ import { Avatar } from "@/components/avatar";
 import { Chevron, ErrorText, RowButton } from "@/components/ui";
 import { authClient } from "@/lib/auth-client";
 import type { useAvatar } from "@/lib/avatar";
+import { openContactEmail } from "@/lib/contact";
 import { paymentMethodLabel, useAddPaymentMethod } from "@/lib/payments";
 import { legalPages, openLegalPage } from "@/lib/legal-pages";
 import { colors, shadows } from "@/lib/theme";
@@ -259,7 +260,7 @@ export const ProfileSheet = forwardRef<BottomSheetModal, Props>(function Profile
               <Text className="text-[17px] text-ink">{page.title}</Text>
             </RowButton>
           ))}
-          <RowButton>
+          <RowButton onPress={() => void openContactEmail()}>
             <Text className="text-[17px] text-ink">問い合わせ・報告</Text>
           </RowButton>
         </View>

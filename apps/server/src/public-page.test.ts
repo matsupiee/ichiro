@@ -69,6 +69,19 @@ describe("公開紹介ページ", () => {
     expect((await app.request(path!, { method: "POST" })).status).toBe(404);
   });
 
+  test("問い合わせ先を特商法表記に掲載し、規約とプライバシーポリシーから案内する", async () => {
+    const app = createPublicPageApp();
+    const commerce = await (await app.request("/commerce")).text();
+    expect(commerce).toContain("btq32jh@icloud.com");
+    for (const path of ["/terms", "/privacy"]) {
+      const html = await (await app.request(path)).text();
+      expect(html).toContain(
+        "お問い合わせは「特定商取引法に基づく表記」に記載のメールアドレスへご連絡ください。",
+      );
+      expect(html).not.toContain("問い合わせ窓口は未設定");
+    }
+  });
+
   test("HEAD は本文なしで取得できる", async () => {
     const response = await createPublicPageApp().request("/", { method: "HEAD" });
     expect(response.status).toBe(200);
