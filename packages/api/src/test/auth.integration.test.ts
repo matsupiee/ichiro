@@ -364,3 +364,63 @@ test("メール変更の再送は新アドレスだけに届き、期限切れ�
   ).toBe(403);
   expect((await t.db.select().from(user))[0]!.email).toBe(newEmail);
 });
+
+test("退会は既存の全セッションを失効し、正しいパスワードでも永久にログインを拒否する", async () => {
+  const t = await setup();
+  await t.register();
+  const verified = await t.verify();
+  const cookie1 = cookies(verified);
+  const login = await t.request("sign-in/email", credentials);
+  const cookie2 = cookies(login);
+  const caller = callerFor(t.db, await sessionFor(t.db, credentials.email));
+  expect(await caller.consumer.account.withdraw({ acknowledged: true })).toEqual({
+    status: "completed",
+  });
+  t.restart();
+  for (const cookie of [cookie1, cookie2]) {
+    expect(await (await t.request("get-session", undefined, cookie)).json()).toBeNull();
+    expect((await t.request("update-user", { name: "Changed" }, cookie)).status).toBe(401);
+  }
+  await t.clearLimits();
+  const denied = await t.request("sign-in/email", credentials);
+  expect(denied.status).toBe(403);
+  expect(await denied.json()).toMatchObject({ code: "ACCOUNT_WITHDRAWN" });
+  const [stored] = await t.db.select().from(user);
+  expect(stored).toMatchObject({ name: credentials.name, email: credentials.email });
+});
+
+for (const verified of [false, true]) {
+  test(`登録済みメールは大小文字を問わず重複エラーになり既存情報を維持する（確認済み=${verified}）`, async () => {
+    const t = await setup();
+    await t.register();
+    if (verified) await t.verify();
+    const originalUser = (await t.db.select().from(user))[0];
+    const originalCodes = await t.db.select().from(verification);
+    for (const email of [credentials.email, credentials.email.toUpperCase()]) {
+      const response = await t.request("sign-up/email", {
+        email,
+        name: "Replacement Name",
+        password: "replacement-password",
+      });
+      expect(response.status).toBe(422);
+      expect(await response.json()).toMatchObject({
+        code: "USER_ALREADY_EXISTS_USE_ANOTHER_EMAIL",
+        message: "登録済みのアカウントです。ログインしてください",
+      });
+      expect(cookies(response)).toBe("");
+    }
+    expect(await t.db.select().from(user)).toEqual([originalUser!]);
+    expect(await t.db.select().from(verification)).toEqual(originalCodes);
+    expect(t.mails).toHaveLength(1);
+    expect(
+      (await t.request("sign-in/email", { ...credentials, password: "replacement-password" }))
+        .status,
+    ).toBe(401);
+    const login = await t.request("sign-in/email", credentials);
+    expect(login.status).toBe(verified ? 200 : 403);
+    if (!verified) {
+      expect(await login.json()).toMatchObject({ code: "EMAIL_NOT_VERIFIED" });
+      expect((await t.verify()).status).toBe(200);
+    }
+  });
+}

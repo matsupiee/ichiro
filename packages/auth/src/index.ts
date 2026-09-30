@@ -20,10 +20,45 @@ export type VerificationMail = {
 export type SendVerificationMail = (mail: VerificationMail) => Promise<void>;
 
 export function createAuth(env: AuthConfig, database: Database, sendMail: SendVerificationMail) {
+  const assertActive = async (id: string) => {
+    const [row] = await database.select().from(schema.user).where(eq(schema.user.id, id));
+    if (!row || row.withdrawnAt)
+      throw new APIError("FORBIDDEN", {
+        message: "このアカウントは利用できません",
+        code: "ACCOUNT_WITHDRAWN",
+      });
+  };
   return betterAuth({
+    databaseHooks: {
+      user: {
+        update: {
+          before: async (_data, ctx) => {
+            if (ctx?.context.session?.user.id) await assertActive(ctx.context.session.user.id);
+          },
+        },
+      },
+      session: {
+        create: {
+          before: async (data) => {
+            await assertActive(data.userId);
+          },
+        },
+      },
+    },
     database: drizzleAdapter(database, { provider: "sqlite", schema }),
     trustedOrigins: [env.CORS_ORIGIN, "ichiro://", "exp://", "http://localhost:8081"],
-    emailAndPassword: { enabled: true, requireEmailVerification: true },
+    emailAndPassword: {
+      enabled: true,
+      requireEmailVerification: true,
+      // 登録済みの場合は成功扱いにせず、ネイティブのログイン画面へ案内する。
+      // await-auth-delivery がこのコールバックのエラーも応答へ伝播する。
+      onExistingUserSignUp: async () => {
+        throw new APIError("UNPROCESSABLE_ENTITY", {
+          code: "USER_ALREADY_EXISTS_USE_ANOTHER_EMAIL",
+          message: "登録済みのアカウントです。ログインしてください",
+        });
+      },
+    },
     emailVerification: {
       sendOnSignUp: true,
       sendOnSignIn: false,

@@ -12,6 +12,7 @@ import { ActivityIndicator, Modal, Pressable, Text, TextInput, View } from "reac
 import Animated, { ZoomIn } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
+import { WithdrawalSheet } from "@/components/withdrawal-sheet";
 import { Avatar } from "@/components/avatar";
 import { Chevron, ErrorText, RowButton } from "@/components/ui";
 import { authClient } from "@/lib/auth-client";
@@ -158,6 +159,8 @@ export const ProfileSheet = forwardRef<BottomSheetModal, Props>(function Profile
   const insets = useSafeAreaInsets();
   const router = useRouter();
   const { data: session } = authClient.useSession();
+  const [withdrawalOpen, setWithdrawalOpen] = useState(false);
+  const [withdrawalBusy, setWithdrawalBusy] = useState(false);
   const [photoMenu, setPhotoMenu] = useState(false);
   const [nameOpen, setNameOpen] = useState(false);
 
@@ -172,10 +175,10 @@ export const ProfileSheet = forwardRef<BottomSheetModal, Props>(function Profile
         appearsOnIndex={0}
         disappearsOnIndex={-1}
         opacity={0.18}
-        pressBehavior="close"
+        pressBehavior={withdrawalBusy ? "none" : "close"}
       />
     ),
-    [],
+    [withdrawalBusy],
   );
 
   return (
@@ -186,116 +189,130 @@ export const ProfileSheet = forwardRef<BottomSheetModal, Props>(function Profile
       topInset={insets.top + 6}
       enableDynamicSizing={false}
       backdropComponent={renderBackdrop}
-      onDismiss={() => setPhotoMenu(false)}
+      enablePanDownToClose={!withdrawalBusy}
+      onDismiss={() => {
+        setPhotoMenu(false);
+        setWithdrawalOpen(false);
+      }}
       backgroundStyle={{ backgroundColor: colors.canvas, borderRadius: 44 }}
       handleIndicatorStyle={{ width: 40, height: 5, backgroundColor: "#D1D1D6" }}
     >
-      <BottomSheetScrollView contentContainerStyle={{ paddingBottom: insets.bottom + 40 }}>
-        <View className="flex-row items-center justify-between px-6 pt-1.5">
-          <View className="w-11" />
-          <Text className="text-[24px] font-extrabold text-ink">アカウント</Text>
-          <Pressable
-            accessibilityRole="button"
-            accessibilityLabel="閉じる"
-            onPress={close}
-            className="h-11 w-11 items-center justify-center rounded-full bg-field"
-          >
-            <Text className="text-[18px] text-ink-2">✕</Text>
-          </Pressable>
-        </View>
-
-        <SectionLabel top={26}>プロフィール写真</SectionLabel>
-        <View style={{ zIndex: 5 }}>
-          <Pressable
-            onPress={() => setPhotoMenu((v) => !v)}
-            disabled={avatar.busy}
-            className="mx-[30px] min-h-16 flex-row items-center justify-between rounded-[36px] bg-field py-3 pl-[26px] pr-[22px]"
-          >
-            <Avatar
-              uri={avatar.uri}
-              size={44}
-              placeholderColor={colors.line}
-              loading={avatar.busy}
-            />
-            <Chevron />
-          </Pressable>
-          {photoMenu ? (
-            <Animated.View
-              entering={ZoomIn.duration(250)}
-              className="absolute left-20 right-20 top-[78px] gap-2.5 rounded-[32px] px-4 pb-4 pt-[18px]"
-              style={{ backgroundColor: "rgba(246,246,246,0.97)", boxShadow: shadows.popover }}
+      {withdrawalOpen ? (
+        <WithdrawalSheet onBack={() => setWithdrawalOpen(false)} onBusyChange={setWithdrawalBusy} />
+      ) : (
+        <BottomSheetScrollView contentContainerStyle={{ paddingBottom: insets.bottom + 40 }}>
+          <View className="flex-row items-center justify-between px-6 pt-1.5">
+            <View className="w-11" />
+            <Text className="text-[24px] font-extrabold text-ink">アカウント</Text>
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel="閉じる"
+              onPress={close}
+              className="h-11 w-11 items-center justify-center rounded-full bg-field"
             >
-              <Text className="pb-1 text-center text-[17px] text-ink">プロフィール写真</Text>
-              <Pressable
-                onPress={() => {
-                  setPhotoMenu(false);
-                  avatar.pick();
-                }}
-                className="h-[50px] items-center justify-center rounded-[25px] bg-field"
+              <Text className="text-[18px] text-ink-2">✕</Text>
+            </Pressable>
+          </View>
+
+          <SectionLabel top={26}>プロフィール写真</SectionLabel>
+          <View style={{ zIndex: 5 }}>
+            <Pressable
+              onPress={() => setPhotoMenu((v) => !v)}
+              disabled={avatar.busy}
+              className="mx-[30px] min-h-16 flex-row items-center justify-between rounded-[36px] bg-field py-3 pl-[26px] pr-[22px]"
+            >
+              <Avatar
+                uri={avatar.uri}
+                size={44}
+                placeholderColor={colors.line}
+                loading={avatar.busy}
+              />
+              <Chevron />
+            </Pressable>
+            {photoMenu ? (
+              <Animated.View
+                entering={ZoomIn.duration(250)}
+                className="absolute left-20 right-20 top-[78px] gap-2.5 rounded-[32px] px-4 pb-4 pt-[18px]"
+                style={{ backgroundColor: "rgba(246,246,246,0.97)", boxShadow: shadows.popover }}
               >
-                <Text className="text-[17px] font-semibold text-ink">写真を選択</Text>
-              </Pressable>
-              <Pressable
-                onPress={() => {
-                  setPhotoMenu(false);
-                  avatar.remove();
-                }}
-                className="h-[50px] items-center justify-center rounded-[25px] bg-field"
-              >
-                <Text className="text-[17px] font-semibold text-alert">削除</Text>
-              </Pressable>
-            </Animated.View>
-          ) : null}
-        </View>
+                <Text className="pb-1 text-center text-[17px] text-ink">プロフィール写真</Text>
+                <Pressable
+                  onPress={() => {
+                    setPhotoMenu(false);
+                    avatar.pick();
+                  }}
+                  className="h-[50px] items-center justify-center rounded-[25px] bg-field"
+                >
+                  <Text className="text-[17px] font-semibold text-ink">写真を選択</Text>
+                </Pressable>
+                <Pressable
+                  onPress={() => {
+                    setPhotoMenu(false);
+                    avatar.remove();
+                  }}
+                  className="h-[50px] items-center justify-center rounded-[25px] bg-field"
+                >
+                  <Text className="text-[17px] font-semibold text-alert">削除</Text>
+                </Pressable>
+              </Animated.View>
+            ) : null}
+          </View>
 
-        <SectionLabel>名前</SectionLabel>
-        <RowButton onPress={() => setNameOpen(true)}>
-          <Text className="text-[18px] text-ink">{session?.user.name}</Text>
-        </RowButton>
-
-        <SectionLabel>メールアドレス</SectionLabel>
-        <RowButton
-          onPress={() => {
-            close();
-            router.push("/change-email");
-          }}
-        >
-          <Text className="flex-1 text-[16px] text-ink" numberOfLines={1}>
-            {session?.user.email}
-          </Text>
-        </RowButton>
-
-        <SectionLabel>支払い情報</SectionLabel>
-        <PaymentInfo />
-
-        <View className="gap-2.5 pt-8">
-          {legalPages.map((page) => (
-            <RowButton key={page.id} onPress={() => void openLegalPage(page.id)}>
-              <Text className="text-[17px] text-ink">{page.title}</Text>
-            </RowButton>
-          ))}
-          <RowButton onPress={() => void openContactEmail()}>
-            <Text className="text-[17px] text-ink">問い合わせ・報告</Text>
+          <SectionLabel>名前</SectionLabel>
+          <RowButton onPress={() => setNameOpen(true)}>
+            <Text className="text-[18px] text-ink">{session?.user.name}</Text>
           </RowButton>
-        </View>
 
-        <View className="pt-8">
+          <SectionLabel>メールアドレス</SectionLabel>
           <RowButton
-            showChevron={false}
-            onPress={async () => {
+            onPress={() => {
               close();
-              await authClient.signOut();
-              queryClient.clear();
+              router.push("/change-email");
             }}
           >
-            <Text className="text-[17px] text-ink">ログアウト</Text>
+            <Text className="flex-1 text-[16px] text-ink" numberOfLines={1}>
+              {session?.user.email}
+            </Text>
           </RowButton>
-        </View>
 
-        <Text className="pt-7 text-center text-[13px] text-faint">
-          Version {Constants.expoConfig?.version}
-        </Text>
-      </BottomSheetScrollView>
+          <SectionLabel>支払い情報</SectionLabel>
+          <PaymentInfo />
+
+          <View className="gap-2.5 pt-8">
+            {legalPages.map((page) => (
+              <RowButton key={page.id} onPress={() => void openLegalPage(page.id)}>
+                <Text className="text-[17px] text-ink">{page.title}</Text>
+              </RowButton>
+            ))}
+            <RowButton onPress={() => void openContactEmail()}>
+              <Text className="text-[17px] text-ink">問い合わせ・報告</Text>
+            </RowButton>
+          </View>
+
+          <View className="pt-8">
+            <RowButton
+              showChevron={false}
+              onPress={async () => {
+                close();
+                await authClient.signOut();
+                queryClient.clear();
+              }}
+            >
+              <Text className="text-[17px] text-ink">ログアウト</Text>
+            </RowButton>
+          </View>
+
+          <View className="pt-2.5">
+            <RowButton onPress={() => setWithdrawalOpen(true)}>
+              <Text className="text-[17px] text-alert">退会</Text>
+            </RowButton>
+          </View>
+
+          <Text className="pt-7 text-center text-[13px] text-faint">
+            Version {Constants.expoConfig?.version}
+          </Text>
+        </BottomSheetScrollView>
+      )}
 
       <NameModal
         visible={nameOpen}

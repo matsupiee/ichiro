@@ -53,8 +53,8 @@ bun run db:seed -- --url file:./local.db --today <昨日の日付> --stripe-cust
   - `user_id` と `commitment_id` は `ON DELETE RESTRICT` とし、罰金から参照されるユーザーとコミットメントの削除を防ぐ。
   - 同じコミットメント・同じ日の罰金は1件だけ（`commitment_id` と `due_date` のユニーク制約）。cron が重なっても二重に徴収しない。
   - `amount` と `payment_method_id` は、精算した時点のコミットメントの設定を写す。あとで設定を変えても、過去の罰金の金額と引き落とし先は変わらない。
-  - `status` は `pending`（徴収待ち）・`processing`（Stripe で処理中）・`paid`（徴収ずみ）・`failed`（徴収できなかった）のどれか。
-  - 引き落としに失敗したら `attempts` を1つ増やし、理由を `failure_message` に残す。3回までは次の cron で試し直す。失敗した罰金も「これまでの罰金」の合計に入る。
+  - `status` は `pending`（徴収待ち）・`processing`（決済開始済み・結果確認待ち）・`paid`（徴収ずみ）・`failed`（徴収できなかった）のどれか。
+  - 引き落としに失敗したら `attempts` を1つ増やし、理由を `failure_message` に残す。カード拒否など結果が確定した失敗は3回までは次の cron で試し直す。失敗した罰金も「これまでの罰金」の合計に入る。
   - 支払い方法がない罰金（この変更より前に作られたコミットメントなど）は、Stripe を呼ばずに「支払い方法が登録されていません」で失敗にする。
 - `commitment.settled_through` に、どの報告日まで精算したかを持つ。
   - 作成したときは前日にする。今日の分から精算の対象になる。
@@ -69,6 +69,8 @@ bun run db:seed -- --url file:./local.db --today <昨日の日付> --stripe-cust
   - ユーザーがアプリを開いていないときの決済なので、登録ずみの支払い方法に `off_session: true`・`confirm: true` で請求する。通貨は円（`jpy`）。
   - 冪等キーは `penalty:<罰金のID>:<何回目か>`。cron が重なっても同じ試行で二重に請求しない。試し直すときはキーを変える。
   - PaymentIntent の ID を `charge_reference` に、罰金の ID を PaymentIntent の `metadata.penalty_id` に持つ。
+  - 通信断などで結果が不明な場合は、その罰金を `processing` として再請求を保留し、運用でStripeの結果を確認する。→ [退会機能の動作確認](../development/withdrawal-verification.md)
+  - 退会後は罰金の生成・請求・再試行の対象にしない。→ [退会できる](./withdrawal.md)
   - Stripe 側で処理中（`processing`）になったものは試し直さず、Webhook（`/stripe/webhook`）の `payment_intent.succeeded`・`payment_intent.payment_failed` で結果を反映する。先に成功が届いていたら、あとから届いた失敗で上書きしない。
 
 ## 対応するテスト

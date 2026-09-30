@@ -30,11 +30,19 @@ const copy = {
 } as const;
 
 // 新規登録とログインの画面。どちらも同じ見た目で、名前欄の有無だけが違う
-export function AuthForm({ mode }: { mode: Mode }) {
+export function AuthForm({
+  mode,
+  initialEmail = "",
+  initialError = null,
+}: {
+  mode: Mode;
+  initialEmail?: string;
+  initialError?: string | null;
+}) {
   const router = useRouter();
   const insets = useSafeAreaInsets();
-  const [values, setValues] = useState({ name: "", email: "", password: "" });
-  const [error, setError] = useState<string | null>(null);
+  const [values, setValues] = useState({ name: "", email: initialEmail, password: "" });
+  const [error, setError] = useState<string | null>(initialError);
   const [submitting, setSubmitting] = useState(false);
   const emailRef = useRef<TextInput>(null);
   const passwordRef = useRef<TextInput>(null);
@@ -56,6 +64,13 @@ export function AuthForm({ mode }: { mode: Mode }) {
           ? await authClient.signUp.email({ name, email, password })
           : await authClient.signIn.email({ email, password });
       if (result.error) {
+        if (mode === "sign-up" && result.error.code === "USER_ALREADY_EXISTS_USE_ANOTHER_EMAIL") {
+          router.replace({
+            pathname: "/sign-in",
+            params: { email, reason: "already-registered" },
+          });
+          return;
+        }
         if (
           result.error.code === "EMAIL_NOT_VERIFIED" ||
           result.error.code === "EMAIL_DELIVERY_FAILED"

@@ -1,0 +1,44 @@
+appId: com.anonymous.ichiro
+---
+- tapOn: "アカウント"
+- scrollUntilVisible:
+    element: "退会"
+    direction: DOWN
+- tapOn: "退会"
+- assertVisible: "ichiro の退会"
+- assertVisible:
+    id: "confirm-withdrawal"
+    enabled: false
+- tapOn: "注意事項を確認しました"
+- assertVisible:
+    id: "confirm-withdrawal"
+    enabled: true
+- tapOn: "戻る"
+- scrollUntilVisible:
+    element: "退会"
+    direction: DOWN
+- tapOn: "退会"
+- assertVisible:
+    id: "confirm-withdrawal"
+    enabled: false
+
+- assertVisible: "ichiro の退会"
+- tapOn: "注意事項を確認しました"
+- tapOn:
+    id: "confirm-withdrawal"
+- extendedWaitUntil:
+    visible: "退会しました"
+    timeout: 15000
+- tapOn: "OK"
+- tapOn:
+    text: "今はしない"
+    optional: true
+- openLink: ichiro://sign-in
+- tapOn: "you@example.com"
+- inputText: "${EMAIL}"
+- pressKey: Enter
+- inputText: "withdrawal-demo-password"
+- pressKey: Enter
+- extendedWaitUntil:
+    visible: "退会済みのため、このアカウントではログインできません"
+    timeout: 15000

@@ -1,0 +1,33 @@
+appId: com.anonymous.ichiro
+env:
+  DESTINATION: "コミットメントを作成"
+---
+- launchApp
+- openLink: "ichiro://sign-up"
+- tapOn: "ラッシー"
+- inputText: "Duplicate Native"
+- pressKey: Enter
+- inputText: "OTP@ICHIRO.EXAMPLE"
+- pressKey: Enter
+- inputText: "different-password"
+- pressKey: Enter
+- tapOn:
+    text: "今はしない"
+    optional: true
+- extendedWaitUntil:
+    visible: "登録済みのアカウントです。ログインしてください"
+    timeout: 15000
+- assertVisible: "はじめての方はこちら"
+- assertVisible: "OTP@ICHIRO.EXAMPLE"
+- assertNotVisible: "メールアドレスの確認"
+- takeScreenshot: existing-account-sign-up-notice
+- tapOn: "8文字以上"
+- inputText: "otp-demo-password"
+- pressKey: Enter
+- tapOn:
+    text: "今はしない"
+    optional: true
+    waitToSettleTimeoutMs: 500
+- extendedWaitUntil:
+    visible: "${DESTINATION}"
+    timeout: 15000

@@ -1,3 +1,4 @@
+import { accountWithdrawRoute } from "./consumer/account/withdraw/route";
 import type { HttpRoute } from "../http";
 import { router } from "../trpc";
 import { commitmentCreateRoute } from "./consumer/commitment/create/route";
@@ -14,6 +15,7 @@ import { profileUploadAvatarRoute } from "./consumer/profile/upload-avatar/route
 
 export const appRouter = router({
   consumer: router({
+    account: router({ withdraw: accountWithdrawRoute }),
     commitment: router({
       list: commitmentListRoute,
       get: commitmentGetRoute,

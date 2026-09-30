@@ -177,14 +177,30 @@ describe("報告できなかった日は罰金が徴収される", () => {
     expect(demo.stripe.charges.some((c) => c.params.metadata?.penalty_id === row.id)).toBe(false);
   });
 
-  test("Stripe に届かなかったときも、失敗として記録して続ける", async () => {
+  test("Stripe の応答が不明な罰金は processing に残し、再請求を保留する", async () => {
     const demo = await setupDemo();
     demo.stripe.client.paymentIntents.create = async () => {
       throw new Error("timeout");
     };
     const result = await runJob(demo, tomorrow(demo.today));
-    expect(result.failed).toBe(result.created);
-    const row = await penaltyOn(demo, demo.seeded.commitmentIds[0]!, demo.today);
-    expect(row.failureMessage).toBe("timeout");
+    expect(result.failed).toBe(0);
+    expect(result.processing).toBeGreaterThan(0);
+    const pending = await demo.db.select().from(penalty).where(eq(penalty.status, "processing"));
+    expect(pending).toHaveLength(result.processing);
+    expect(pending.every((row) => row.failureMessage === "timeout")).toBe(true);
+    expect(await runJob(demo, tomorrow(demo.today))).toEqual({
+      created: 0,
+      paid: 0,
+      processing: 0,
+      failed: 0,
+    });
   });
+});
+
+test("並行した徴収処理は同じ罰金を二重に請求しない", async () => {
+  const demo = await setupDemo();
+  await Promise.all([runJob(demo, tomorrow(demo.today)), runJob(demo, tomorrow(demo.today))]);
+  const ids = demo.stripe.charges.map((charge) => charge.params.metadata!.penalty_id);
+  expect(ids.length).toBeGreaterThan(0);
+  expect(new Set(ids).size).toBe(ids.length);
 });

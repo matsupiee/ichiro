@@ -17,7 +17,7 @@ export type ChargeRequest = {
 export type ChargeResult =
   | { status: "succeeded"; reference: string }
   | { status: "processing"; reference: string }
-  | { status: "failed"; reference: string | null; message: string };
+  | { status: "failed"; reference: string | null; message: string; uncertain?: boolean };
 
 // 罰金を Stripe で引き落とす。ユーザーがいないときに、保存した支払い方法で決済する
 export async function chargePenalty(
@@ -55,11 +55,12 @@ export async function chargePenalty(
         message: cardErrorMessage(e.code, e.message),
       };
     }
-    // Stripe に届かなかったときなども、失敗として記録して次の罰金に進む
+    // 通信失敗は決済されなかった証拠にならない。結果を確認するまで、この罰金の再請求を止める
     return {
       status: "failed",
       reference: null,
       message: e instanceof Error ? e.message : String(e),
+      uncertain: true,
     };
   }
 }

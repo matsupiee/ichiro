@@ -11,6 +11,7 @@
     "db:studio": "drizzle-kit studio --config=drizzle.local.config.ts",
     "db:migrate:deploy": "drizzle-kit migrate",
     "db:seed": "bun run src/seed/run.ts",
+    "db:seed:withdrawal": "bun run src/seed/withdrawal.ts",
     "db:seed:public-page": "bun run src/seed/public-page.ts",
     "db:seed:email-verification": "bun run src/seed/email-verification.ts"
   },

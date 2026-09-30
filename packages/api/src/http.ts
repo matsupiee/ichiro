@@ -1,3 +1,5 @@
+import { TRPCError } from "@trpc/server";
+import { withActiveUser } from "./shared/account/with-active-user";
 import { Hono, type Context as HonoContext } from "hono";
 
 import type { AuthedContext, Context } from "./context";
@@ -51,7 +53,15 @@ export function protectedHttpRoute(
       if (!context.session) return c.json({ message: "ログインしてください" }, 401);
       if (!context.session.user.emailVerified)
         return c.json({ message: "メールアドレスの確認が必要です" }, 403);
-      return handler({ c, context: { ...context, session: context.session } });
+      try {
+        return await withActiveUser(context.db, context.session.user.id, async () =>
+          handler({ c, context: { ...context, session: context.session! } }),
+        );
+      } catch (error) {
+        if (error instanceof TRPCError && error.code === "UNAUTHORIZED")
+          return c.json({ message: error.message }, 401);
+        throw error;
+      }
     },
   };
 }

@@ -1,6 +1,10 @@
 export function authErrorMessage(error: { code?: string; status?: number; message?: string }) {
   if (error.status === 429) return "操作が多すぎます。時間をおいてからもう一度お試しください";
   switch (error.code) {
+    case "USER_ALREADY_EXISTS_USE_ANOTHER_EMAIL":
+      return "登録済みのアカウントです。ログインしてください";
+    case "ACCOUNT_WITHDRAWN":
+      return "退会済みのため、このアカウントではログインできません";
     case "INVALID_OTP":
       return "認証コードが違います。届いた最新の6桁コードを入力してください";
     case "OTP_EXPIRED":
