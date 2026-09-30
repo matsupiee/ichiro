@@ -6,6 +6,7 @@ import { ActivityIndicator, Pressable, ScrollView, Text, View } from "react-nati
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import Svg, { Circle, Path } from "react-native-svg";
 
+import { BrandGradient, BrandLogo } from "@/components/brand-gradient";
 import { Avatar } from "@/components/avatar";
 import { CommitmentCard } from "@/components/commitment-card";
 import { Dog } from "@/components/dog/dog";
@@ -14,7 +15,7 @@ import { CheckMark } from "@/components/ui";
 import { useAvatar } from "@/lib/avatar";
 import { useReport } from "@/lib/commitments";
 import { localToday } from "@/lib/date";
-import { colors, fonts } from "@/lib/theme";
+import { colors } from "@/lib/theme";
 import { trpc } from "@/utils/trpc";
 
 export default function MainScreen() {
@@ -36,17 +37,7 @@ export default function MainScreen() {
         contentContainerStyle={{ paddingTop: insets.top, paddingBottom: 140 + insets.bottom }}
       >
         <View className="flex-row items-center justify-between pl-[30px] pr-6 pt-[22px]">
-          <Text
-            style={{
-              fontFamily: fonts.logo,
-              fontSize: 38,
-              lineHeight: 44,
-              color: colors.pink,
-              letterSpacing: -0.5,
-            }}
-          >
-            ichiro
-          </Text>
+          <BrandLogo size={38} />
           <Pressable
             accessibilityRole="button"
             accessibilityLabel="アカウント"
@@ -69,7 +60,8 @@ export default function MainScreen() {
         </View>
 
         <View className="flex-row items-center gap-2.5 px-[30px] pb-[22px] pt-[18px]">
-          <View className="h-[22px] w-[22px] items-center justify-center rounded-full bg-pink">
+          <View className="h-[22px] w-[22px] items-center justify-center rounded-full">
+            <BrandGradient radius={11} />
             <CheckMark width={5} height={9} thickness={2.5} color="#fff" offsetY={-2} />
           </View>
           <Text numberOfLines={1} className="flex-1 text-[17px] text-mute">
@@ -108,9 +100,10 @@ export default function MainScreen() {
         accessibilityRole="button"
         accessibilityLabel="コミットメントを作成"
         onPress={() => router.push("/commitments/new")}
-        className="absolute h-[68px] w-[68px] items-center justify-center rounded-full bg-white active:bg-field"
+        className="absolute h-[68px] w-[68px] items-center justify-center rounded-full active:opacity-80"
         style={{ right: 26, bottom: insets.bottom + 6 }}
       >
+        <BrandGradient radius={34} />
         <View style={{ width: 26, height: 26 }}>
           <View
             style={{
@@ -120,7 +113,7 @@ export default function MainScreen() {
               width: 3,
               height: 26,
               borderRadius: 2,
-              backgroundColor: colors.ink,
+              backgroundColor: colors.white,
             }}
           />
           <View
@@ -131,7 +124,7 @@ export default function MainScreen() {
               width: 26,
               height: 3,
               borderRadius: 2,
-              backgroundColor: colors.ink,
+              backgroundColor: colors.white,
             }}
           />
         </View>

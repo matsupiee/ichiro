@@ -31,3 +31,6 @@ export const shadows = {
   popover: "0px 12px 40px rgba(0, 0, 0, 0.14)",
   modal: "0px 20px 50px rgba(0, 0, 0, 0.18)",
 } as const;
+
+// ロゴ・主要操作・選択済み表示で共通の、左から右へのブランド配色。
+export const brandGradient = ["#FF4148", "#DB35AA", "#A333FF"] as const;

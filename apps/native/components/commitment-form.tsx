@@ -3,6 +3,7 @@ import { type ReactNode, useEffect, useState } from "react";
 import { Platform, Pressable, Text, View } from "react-native";
 import Animated, { useAnimatedStyle, useSharedValue, withTiming } from "react-native-reanimated";
 
+import { BrandGradient } from "@/components/brand-gradient";
 import { PaymentMethodPicker } from "@/components/payment-method-picker";
 import { ErrorText, Field, FieldLabel, NoteText, PrimaryButton } from "@/components/ui";
 import { formatFullDate, formatYen, fromDateString, toDateString } from "@/lib/date";
@@ -93,6 +94,7 @@ function Choice({
         justifyContent: "center",
       }}
     >
+      {style.backgroundColor === colors.pink ? <BrandGradient radius={style.radius} /> : null}
       <Text style={{ color: style.color, fontSize: style.font, fontWeight: style.weight }}>
         {label}
       </Text>

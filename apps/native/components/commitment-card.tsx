@@ -1,6 +1,8 @@
+import { useId } from "react";
 import { Alert, Pressable, Text, View } from "react-native";
 import Svg, { Circle } from "react-native-svg";
 
+import { BrandGradient, BrandGradientDefinition } from "@/components/brand-gradient";
 import { CheckMark } from "@/components/ui";
 import { formatPeriod } from "@/lib/date";
 import { colors } from "@/lib/theme";
@@ -22,6 +24,7 @@ const reportDots = Array.from({ length: 14 }, (_, index) => {
 
 // メインページのコミットメントの行。期間、コミット内容の順に表示する
 export function CommitmentCard(props: Props) {
+  const gradientId = useId();
   return (
     <Pressable
       onPress={props.onOpen}
@@ -37,7 +40,8 @@ export function CommitmentCard(props: Props) {
       </View>
       {props.reportedToday ? (
         <View accessibilityLabel="今日の報告済み" className="h-11 w-11 items-center justify-center">
-          <View className="h-9 w-9 items-center justify-center rounded-full bg-pink">
+          <View className="h-9 w-9 items-center justify-center rounded-full">
+            <BrandGradient radius={18} />
             <CheckMark width={8} height={14} thickness={3} color="#fff" offsetY={-3} />
           </View>
         </View>
@@ -67,8 +71,9 @@ export function CommitmentCard(props: Props) {
           })}
         >
           <Svg width={36} height={36} viewBox="0 0 36 36" accessible={false}>
+            <BrandGradientDefinition id={gradientId} width={36} />
             {reportDots.map((dot, index) => (
-              <Circle key={index} cx={dot.x} cy={dot.y} r={1.75} fill={colors.pink} />
+              <Circle key={index} cx={dot.x} cy={dot.y} r={1.75} fill={`url(#${gradientId})`} />
             ))}
           </Svg>
         </Pressable>

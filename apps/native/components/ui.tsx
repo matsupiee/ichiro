@@ -8,6 +8,8 @@ import {
   View,
 } from "react-native";
 
+import { BrandGradient } from "@/components/brand-gradient";
+
 import { colors } from "@/lib/theme";
 
 // setlog 風の大きな角丸パーツ。寸法はデザイン（393pt 幅）の値そのまま。
@@ -18,7 +20,7 @@ type ButtonProps = Omit<PressableProps, "children"> & {
   fontSize?: number;
 };
 
-// ピンクのフラットなボタン。押している間は色で反応を示す
+// 共通グラデーションのボタン。押下・無効状態は透明度で示す
 export function PrimaryButton({
   label,
   height = 60,
@@ -30,16 +32,18 @@ export function PrimaryButton({
     <Pressable
       accessibilityRole="button"
       disabled={disabled}
+      accessibilityState={{ disabled: !!disabled }}
       style={({ pressed }) => ({
         height,
         borderRadius: height / 2,
-        backgroundColor: pressed ? colors.pinkDeep : colors.pink,
+        backgroundColor: colors.pinkDeep,
         alignItems: "center",
         justifyContent: "center",
-        opacity: disabled ? 0.6 : 1,
+        opacity: disabled ? 0.45 : pressed ? 0.8 : 1,
       })}
       {...props}
     >
+      <BrandGradient radius={height / 2} />
       <Text style={{ fontSize, fontWeight: "700", color: "#fff" }}>{label}</Text>
     </Pressable>
   );

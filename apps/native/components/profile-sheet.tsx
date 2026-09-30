@@ -12,6 +12,7 @@ import { ActivityIndicator, Modal, Pressable, Text, TextInput, View } from "reac
 import Animated, { ZoomIn } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
+import { BrandGradient } from "@/components/brand-gradient";
 import { WithdrawalSheet } from "@/components/withdrawal-sheet";
 import { Avatar } from "@/components/avatar";
 import { Chevron, ErrorText, RowButton } from "@/components/ui";
@@ -105,9 +106,10 @@ function NameModal({
           <Pressable
             onPress={save}
             disabled={saving}
-            className="h-[54px] flex-1 items-center justify-center rounded-[27px] bg-pink"
+            className="h-[54px] flex-1 items-center justify-center rounded-[27px]"
             style={{ opacity: saving ? 0.6 : 1 }}
           >
+            <BrandGradient radius={27} />
             <Text className="text-[17px] font-bold text-white">保存</Text>
           </Pressable>
         </View>

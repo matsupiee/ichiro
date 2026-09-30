@@ -5,6 +5,7 @@ import { ActivityIndicator, Text, View } from "react-native";
 import { KeyboardAwareScrollView } from "react-native-keyboard-controller";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
+import { BrandGradient } from "@/components/brand-gradient";
 import {
   CommitmentForm,
   type FormValues,
@@ -42,8 +43,10 @@ function StreakCard({ streak, dueToday, reportedToday, week, onReport }: Detail)
             <View key={d.date} className="items-center gap-1.5">
               <View
                 className="h-[26px] w-[26px] rounded-full"
-                style={{ backgroundColor: d.reported ? colors.pink : colors.dot }}
-              />
+                style={{ backgroundColor: colors.dot }}
+              >
+                {d.reported ? <BrandGradient radius={13} /> : null}
+              </View>
               <Text className="text-[11px] text-faint">{WEEK_LABELS[i]}</Text>
             </View>
           ))}

@@ -4,10 +4,10 @@ import { Pressable, Text, View } from "react-native";
 import Animated, { FadeIn } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
+import { BrandLogo } from "@/components/brand-gradient";
 import { Dog } from "@/components/dog/dog";
 import { PrimaryButton, SecondaryButton } from "@/components/ui";
 import { haptics } from "@/lib/haptics";
-import { colors, fonts } from "@/lib/theme";
 
 export default function WelcomeScreen() {
   const router = useRouter();
@@ -33,18 +33,7 @@ export default function WelcomeScreen() {
         <Pressable accessibilityLabel="ワンちゃん" onPress={tapDog}>
           <Dog size={210} mood={jumping ? "jump" : "idle"} />
         </Pressable>
-        <Text
-          style={{
-            fontFamily: fonts.logo,
-            fontSize: 56,
-            lineHeight: 62,
-            color: colors.pink,
-            letterSpacing: -1,
-            marginTop: 10,
-          }}
-        >
-          ichiro
-        </Text>
+        <BrandLogo size={56} style={{ marginTop: 10 }} />
         <Text className="text-center text-[16px] leading-[27px] text-mute">
           {"目標を宣言して、毎日の達成を報告しよう。\nがんばった日は、ボクがお祝いするワン。"}
         </Text>
