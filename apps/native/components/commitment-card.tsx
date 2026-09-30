@@ -1,4 +1,4 @@
-import { Pressable, Text, View } from "react-native";
+import { Alert, Pressable, Text, View } from "react-native";
 
 import { CheckMark, Chevron } from "@/components/ui";
 import { formatPeriod } from "@/lib/date";
@@ -15,7 +15,7 @@ type Props = {
   onReport: () => void;
 };
 
-// メインページのコミットメントの行。目標（太字）＋期間、その下にコミット内容
+// メインページのコミットメントの行。期間、目標、コミット内容の順に表示する
 export function CommitmentCard(props: Props) {
   return (
     <Pressable
@@ -23,20 +23,18 @@ export function CommitmentCard(props: Props) {
       className="flex-row items-center gap-3.5 rounded-[36px] border border-card-line bg-card py-5 pl-6 pr-4 active:bg-card-pressed"
     >
       <View className="min-w-0 flex-1 gap-1.5">
-        <View className="flex-row items-baseline gap-2.5">
-          <Text numberOfLines={1} className="min-w-0 flex-1 text-[21px] font-extrabold text-ink">
-            {props.goal}
-          </Text>
-          <Text className="text-[13px] font-semibold text-faint">
-            {formatPeriod(props.startDate, props.untilDate)}
-          </Text>
-        </View>
+        <Text numberOfLines={1} className="text-[13px] font-semibold text-faint">
+          {formatPeriod(props.startDate, props.untilDate)}
+        </Text>
+        <Text numberOfLines={1} className="text-[21px] font-extrabold text-ink">
+          {props.goal}
+        </Text>
         <Text numberOfLines={1} className="text-[14px] text-mute">
           {props.content}
         </Text>
       </View>
       {props.reportedToday ? (
-        <View className="h-[52px] w-[52px] items-center justify-center rounded-full bg-pink-soft">
+        <View className="h-[44px] w-[44px] items-center justify-center rounded-full bg-pink-soft">
           <CheckMark width={9} height={17} thickness={4} color={colors.pink} offsetY={-4} />
         </View>
       ) : props.dueToday ? (
@@ -44,11 +42,17 @@ export function CommitmentCard(props: Props) {
           accessibilityRole="button"
           accessibilityLabel="今日の達成を報告する"
           hitSlop={6}
-          onPress={props.onReport}
+          onPress={(event) => {
+            event.stopPropagation();
+            Alert.alert("達成済みにしますか？？", `「${props.goal}」の今日の達成を報告します。`, [
+              { text: "キャンセル", style: "cancel" },
+              { text: "達成済みにする", onPress: props.onReport },
+            ]);
+          }}
           style={({ pressed }) => ({
-            width: 52,
-            height: 52,
-            borderRadius: 26,
+            width: 44,
+            height: 44,
+            borderRadius: 22,
             backgroundColor: colors.pink,
             alignItems: "center",
             justifyContent: "center",

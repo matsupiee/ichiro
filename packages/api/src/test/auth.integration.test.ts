@@ -218,7 +218,7 @@ test("既存の未認証セッションでも tRPC と保護HTTPを利用でき�
   expect(response.status).toBe(403);
 });
 
-test("メール変更には現在・変更先の両方のコードが必要で完了まで旧アドレスを保つ", async () => {
+test("メール変更は新アドレスだけにコードを送り、完了まで旧アドレスを保つ", async () => {
   const t = await setup();
   await t.register();
   const cookie = cookies(await t.verify());
@@ -226,20 +226,11 @@ test("メール変更には現在・変更先の両方のコードが必要で�
   expect(
     (await t.request("email-otp/change-email", { newEmail, otp: "123456" }, cookie)).status,
   ).toBe(400);
-  await t.clearLimits();
-  expect(
-    (
-      await t.request(
-        "email-otp/send-verification-otp",
-        { email: credentials.email, type: "email-verification" },
-        cookie,
-      )
-    ).status,
-  ).toBe(200);
-  expect(
-    (await t.request("email-otp/request-email-change", { newEmail, otp: t.last().otp }, cookie))
-      .status,
-  ).toBe(200);
+  const before = t.mails.length;
+  expect((await t.request("email-otp/request-email-change", { newEmail }, cookie)).status).toBe(
+    200,
+  );
+  expect(t.mails.slice(before)).toHaveLength(1);
   expect(t.last()).toMatchObject({ email: newEmail, type: "change-email" });
   expect((await t.db.select().from(user))[0]!.email).toBe(credentials.email);
   const code = t.last().otp;
@@ -315,4 +306,61 @@ test("ログインは標準DBで同じIPから60秒に10回までに制限する
   expect((await t.request("sign-in/email", credentials, "", "192.0.2.2")).status).toBe(200);
   await t.db.update(rateLimit).set({ lastRequest: Date.now() - 61_000 });
   expect((await t.request("sign-in/email", credentials)).status).toBe(200);
+});
+
+test("メール変更の送信・確定はログイン必須で、同じアドレスは拒否する", async () => {
+  const t = await setup();
+  const newEmail = "new@example.com";
+  expect((await t.request("email-otp/request-email-change", { newEmail })).status).toBe(401);
+  expect((await t.request("email-otp/change-email", { newEmail, otp: "123456" })).status).toBe(401);
+  expect(t.mails).toHaveLength(0);
+  await t.register();
+  const cookie = cookies(await t.verify());
+  expect(
+    (await t.request("email-otp/request-email-change", { newEmail: credentials.email }, cookie))
+      .status,
+  ).toBe(400);
+  expect(
+    (await t.request("email-otp/request-email-change", { newEmail: "invalid" }, cookie)).status,
+  ).toBe(400);
+  expect(t.mails).toHaveLength(1);
+});
+
+test("メール変更の再送は新アドレスだけに届き、期限切れ・誤入力上限を守る", async () => {
+  const t = await setup();
+  await t.register();
+  const cookie = cookies(await t.verify());
+  const newEmail = "new@example.com";
+  const send = () => t.request("email-otp/request-email-change", { newEmail }, cookie);
+  const confirm = (otp: string) => t.request("email-otp/change-email", { newEmail, otp }, cookie);
+  expect((await send()).status).toBe(200);
+  await t.db.update(verification).set({ expiresAt: new Date(Date.now() - 1000) });
+  expect((await confirm(t.last().otp)).status).toBe(400);
+  expect((await send()).status).toBe(200);
+  const old = t.last().otp;
+  await Bun.sleep(2);
+  expect((await send()).status).toBe(200);
+  const latest = t.last().otp;
+  expect(
+    t.mails.slice(1).every((mail) => mail.email === newEmail && mail.type === "change-email"),
+  ).toBe(true);
+  if (old !== latest) expect((await confirm(old)).status).toBe(400);
+  expect((await confirm(latest)).status).toBe(200);
+  expect((await confirm(latest)).status).toBe(400);
+  const nextEmail = "next@example.com";
+  expect(
+    (await t.request("email-otp/request-email-change", { newEmail: nextEmail }, cookie)).status,
+  ).toBe(200);
+  const code = t.last().otp;
+  const wrong = code === "000000" ? "111111" : "000000";
+  await t.clearLimits();
+  for (let i = 0; i < 5; i++)
+    expect(
+      (await t.request("email-otp/change-email", { newEmail: nextEmail, otp: wrong }, cookie))
+        .status,
+    ).toBe(400);
+  expect(
+    (await t.request("email-otp/change-email", { newEmail: nextEmail, otp: code }, cookie)).status,
+  ).toBe(403);
+  expect((await t.db.select().from(user))[0]!.email).toBe(newEmail);
 });

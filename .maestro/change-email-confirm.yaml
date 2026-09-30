@@ -1,0 +1,13 @@
+appId: com.anonymous.ichiro
+---
+- tapOn:
+    id: "change-email-code"
+    waitToSettleTimeoutMs: 500
+- inputText: "${OTP}"
+- tapOn: "確認して変更する"
+- extendedWaitUntil:
+    visible: "メールアドレスを変更しました"
+    timeout: 15000
+- assertVisible: "${NEW_EMAIL}"
+- takeScreenshot: /tmp/ichiro-email-change-completed
+- tapOn: "ホームへ"

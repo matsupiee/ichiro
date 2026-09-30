@@ -73,11 +73,7 @@ export function createAuth(env: AuthConfig, database: Database, sendMail: SendVe
             code: "INVALID_OTP_TYPE",
           });
         }
-        if (
-          path === "/email-otp/verify-email" ||
-          path === "/email-otp/change-email" ||
-          path === "/email-otp/request-email-change"
-        ) {
+        if (path === "/email-otp/verify-email" || path === "/email-otp/change-email") {
           if (!/^\d{6}$/.test(ctx.body?.otp ?? "")) {
             throw new APIError("BAD_REQUEST", {
               message: "6桁の認証コードを入力してください",
@@ -121,7 +117,7 @@ export function createAuth(env: AuthConfig, database: Database, sendMail: SendVe
         resendStrategy: "rotate",
         disableSignUp: true,
         overrideDefaultEmailVerification: true,
-        changeEmail: { enabled: true, verifyCurrentEmail: true },
+        changeEmail: { enabled: true, verifyCurrentEmail: false },
         async sendVerificationOTP({ email, otp, type }) {
           if (type !== "email-verification" && type !== "change-email")
             throw new Error("Unsupported OTP purpose");

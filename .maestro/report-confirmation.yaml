@@ -1,0 +1,44 @@
+# iPhone 17 Pro / iOS 26.4。ログイン済みのテスト用アカウントで実行する。
+# カード内の丸は親とアクセシビリティ要素がまとまるため、先頭行の丸を座標で押す。
+appId: com.anonymous.ichiro
+---
+- stopApp
+- launchApp
+- openLink: ichiro://commitments/new
+- extendedWaitUntil:
+    visible: "コミットメント作成"
+    timeout: 20000
+- tapOn: "広東語で日常会話ができる"
+- inputText: "Report confirmation test"
+- tapOn: "コミット内容 毎日30分広東語を練習する"
+- inputText: "Read ten pages"
+- hideKeyboard
+- scrollUntilVisible:
+    element: "宣言する"
+    direction: DOWN
+- tapOn: "宣言する"
+- extendedWaitUntil:
+    visible: "宣言したワン！"
+    timeout: 10000
+- tapOn: "ホームに戻る"
+- tapOn:
+    point: "79%,28%"
+- assertVisible: "達成済みにしますか？？"
+- assertVisible: "「Report confirmation test」の今日の達成を報告します。"
+- assertNotVisible: "つづける"
+- tapOn: "キャンセル"
+- assertNotVisible: "達成済みにしますか？？"
+- assertVisible: "コミットメントを作成"
+- tapOn:
+    point: "79%,28%"
+- assertVisible: "達成済みにしますか？？"
+- tapOn: "達成済みにする"
+- extendedWaitUntil:
+    visible: "つづける"
+    timeout: 10000
+- tapOn: "つづける"
+- tapOn:
+    text: ".*Report confirmation test,.*"
+    index: 0
+- assertVisible: "今日は報告ずみ.*"
+- assertNotVisible: "今日の達成を報告する"

@@ -12,7 +12,7 @@ export default function ChangeEmailScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const { data: session, refetch: refetchSession } = authClient.useSession();
-  const [step, setStep] = useState<"address" | "current" | "new" | "done">("address");
+  const [step, setStep] = useState<"address" | "new" | "done">("address");
   const [newEmail, setNewEmail] = useState("");
   const [otp, setOtp] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -41,23 +41,12 @@ export default function ChangeEmailScreen() {
     setError(null);
     try {
       if (step === "address" || resend) {
-        const result = await authClient.emailOtp.sendVerificationOtp({
-          email: session.user.email,
-          type: "email-verification",
-        });
+        const result = await authClient.emailOtp.requestEmailChange({ newEmail: email });
         if (result.error) {
           setError(authErrorMessage(result.error));
           return;
         }
         setNewEmail(email);
-        setStep("current");
-        setNextSend(Date.now() + 60_000);
-      } else if (step === "current") {
-        const result = await authClient.emailOtp.requestEmailChange({ newEmail: email, otp });
-        if (result.error) {
-          setError(authErrorMessage(result.error));
-          return;
-        }
         setStep("new");
         setNextSend(Date.now() + 60_000);
       } else if (step === "new") {
@@ -100,13 +89,14 @@ export default function ChangeEmailScreen() {
         <>
           <Text className="px-[30px] pb-4 pt-8 text-[16px] leading-7 text-mute">
             {step === "address"
-              ? `現在のメールアドレス：${session?.user.email}\n現在のアドレスと変更先の両方にコードを送り、確認します。`
-              : `${step === "current" ? session?.user.email : newEmail} に送信した6桁コードを入力してください。有効期限は5分です。`}
+              ? `現在のメールアドレス：${session?.user.email}\n新しいメールアドレスに認証コードを送ります。`
+              : `${newEmail} に送信した6桁コードを入力してください。有効期限は5分です。`}
           </Text>
           {step === "address" ? (
             <>
               <FieldLabel>新しいメールアドレス</FieldLabel>
               <Field
+                testID="new-email"
                 accessibilityLabel="新しいメールアドレス"
                 value={newEmail}
                 onChangeText={setNewEmail}
@@ -119,10 +109,9 @@ export default function ChangeEmailScreen() {
             </>
           ) : (
             <>
-              <FieldLabel>
-                {step === "current" ? "現在のアドレスの認証コード" : "新しいアドレスの認証コード"}
-              </FieldLabel>
+              <FieldLabel>新しいアドレスの認証コード</FieldLabel>
               <Field
+                testID="change-email-code"
                 accessibilityLabel="認証コード"
                 value={otp}
                 onChangeText={(v) => setOtp(v.replace(/[^0-9]/g, "").slice(0, 6))}
@@ -139,13 +128,7 @@ export default function ChangeEmailScreen() {
           <View className="px-[30px] pt-8">
             <PrimaryButton
               label={
-                busy
-                  ? "処理中…"
-                  : step === "address"
-                    ? "現在のアドレスにコードを送る"
-                    : step === "current"
-                      ? "新しいアドレスにコードを送る"
-                      : "確認して変更する"
+                busy ? "処理中…" : step === "address" ? "認証コードを送る" : "確認して変更する"
               }
               disabled={busy}
               onPress={() => void submit()}
@@ -158,11 +141,7 @@ export default function ChangeEmailScreen() {
               className="px-[30px] py-6"
             >
               <Text className="text-center text-[15px] text-mute">
-                {remaining > 0
-                  ? `${remaining}秒後に再送できます`
-                  : step === "new"
-                    ? "現在のアドレスの確認からやり直す"
-                    : "認証コードを再送する"}
+                {remaining > 0 ? `${remaining}秒後に再送できます` : "認証コードを再送する"}
               </Text>
             </Pressable>
           ) : null}

@@ -21,7 +21,7 @@ appId: com.anonymous.ichiro
 - assertNotVisible: "チェックを友達に依頼する"
 - tapOn: "ホームに戻る"
 - tapOn:
-    text: "Self check test,.*"
+    text: ".*Self check test,.*"
     index: 0
 - scrollUntilVisible:
     element: "変更を保存"
@@ -30,7 +30,7 @@ appId: com.anonymous.ichiro
 - assertNotVisible: "依頼リンクを発行済み"
 - tapOn: "変更を保存"
 - tapOn:
-    text: "Self check test,.*"
+    text: ".*Self check test,.*"
     index: 0
 - tapOn: "今日の達成を報告する"
 - extendedWaitUntil:

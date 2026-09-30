@@ -4,6 +4,7 @@ import { useRouter } from "expo-router";
 import { useRef } from "react";
 import { ActivityIndicator, Pressable, ScrollView, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import Svg, { Circle, Path } from "react-native-svg";
 
 import { Avatar } from "@/components/avatar";
 import { CommitmentCard } from "@/components/commitment-card";
@@ -58,6 +59,12 @@ export default function MainScreen() {
               size={42}
               placeholderColor={colors.field}
               loading={avatar.busy}
+              placeholder={
+                <Svg width={26} height={26} viewBox="0 0 24 24" accessible={false}>
+                  <Circle cx={12} cy={8} r={4} fill={colors.mute} />
+                  <Path d="M4 21v-1a8 8 0 0 1 16 0v1Z" fill={colors.mute} />
+                </Svg>
+              }
             />
           </Pressable>
         </View>

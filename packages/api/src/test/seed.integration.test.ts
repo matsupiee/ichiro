@@ -35,3 +35,19 @@ test("編集履歴用の seed はトリガーで旧金額と支払い方法を�
   const [after] = await db.select().from(commitment).where(eq(commitment.id, id));
   expect(after).toMatchObject({ penaltyAmount: 1500, paymentMethodId: seeded.paymentMethodIds[1] });
 });
+
+test("メール確認 seed は変更確認用の認証済みユーザーを再作成できる", async () => {
+  const { seedEmailVerification, OTP_USER } = await import("@ichiro/db/seed/email-verification");
+  const { createTestDb } = await import("./helpers");
+  const db = await createTestDb();
+  await seedEmailVerification(db, true);
+  await db.update(user).set({ email: "changed@ichiro.example" }).where(eq(user.id, OTP_USER.id));
+  await seedEmailVerification(db, true);
+  expect(await db.select().from(user).where(eq(user.id, OTP_USER.id))).toMatchObject([
+    { email: OTP_USER.email, emailVerified: true },
+  ]);
+  await seedEmailVerification(db);
+  expect((await db.select().from(user).where(eq(user.id, OTP_USER.id)))[0]!.emailVerified).toBe(
+    false,
+  );
+});

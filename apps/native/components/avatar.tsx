@@ -1,3 +1,4 @@
+import type { ReactNode } from "react";
 import { ActivityIndicator, Image, View } from "react-native";
 
 export function Avatar({
@@ -5,16 +6,24 @@ export function Avatar({
   size,
   placeholderColor,
   loading = false,
+  placeholder,
 }: {
   uri: string | null;
   size: number;
   placeholderColor: string;
   loading?: boolean;
+  placeholder?: ReactNode;
 }) {
   const round = { width: size, height: size, borderRadius: size / 2 };
   return (
     <View style={[round, { backgroundColor: placeholderColor, overflow: "hidden" }]}>
-      {uri ? <Image source={{ uri }} style={round} /> : null}
+      {uri ? (
+        <Image source={{ uri }} style={round} />
+      ) : (
+        <View style={[round, { alignItems: "center", justifyContent: "center" }]}>
+          {placeholder}
+        </View>
+      )}
       {loading ? (
         <View
           style={[

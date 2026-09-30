@@ -85,3 +85,31 @@ maestro --device <SimulatorのUDID> test -e OTP=<届いた6桁コード> .maestr
 - Alchemy のローカル D1 に移行を適用し、`auth_rate_limit` がなく `rate_limit` があること、既存ユーザーが残ることを確認。本番へのデプロイは未実施。
 - iPhone 17 Pro / iOS 26.4 Simulator：ログアウト、新規登録、Resend テスト宛先への配信、6桁コード確認、ホームへの遷移を確認。DB の確認済みフラグと標準テーブルへの回数記録も確認。
 - プライバシーポリシーの保存情報を標準方式に合わせて更新。利用開始の条件は変わらないため、利用規約と特商法表記の追加変更は不要。
+
+## 新アドレスだけを確認する変更フロー
+
+[Better Auth の Email OTP](https://better-auth.com/docs/plugins/email-otp#change-email-with-otp) に沿って、`verifyCurrentEmail: false` を指定する。
+ログイン中に `requestEmailChange({ newEmail })` で変更先に送り、`changeEmail({ newEmail, otp })` で確定する。再送も変更先へ送る。
+旧アドレスへのコード・通知メールは送らず、パスワードの再入力も求めない。変更完了までは旧アドレスを維持する。
+
+変更確認用のユーザーは次のコマンドで作成する。既存の専用ユーザーは元のアドレスへ戻り、セッションは破棄される。
+
+```sh
+bun run --cwd packages/db db:seed:email-verification --url file:/absolute/path/to/local.sqlite --skip-migrations --verified
+```
+
+`otp@ichiro.example` / `otp-demo-password` でログインして、console モードのローカルサーバーで確認する。
+
+```sh
+maestro test -e NEW_EMAIL=changed@ichiro.example .maestro/change-email-request.yaml
+maestro test -e NEW_EMAIL=changed@ichiro.example -e OTP=<届いた6桁コード> .maestro/change-email-confirm.yaml
+```
+
+利用規約の変更時の確認方法を更新した。取得情報・委託先・利用開始条件は変わらないため、プライバシーポリシーと特商法表記の追加変更は不要。
+
+### 変更後の確認記録（2026年9月30日）
+
+- `bun run test`：139件成功（API 114、サーバー11、インフラ14）。全ユーザーストーリーに対応する回帰テストを含む。
+- `bun run check-types`、`bun run check:patterns`、`bunx oxlint`、変更ファイルのフォーマット確認：成功。
+- iPhone 17 Pro Max / iOS 26.4 Simulator：専用 seed ユーザーでログインし、新アドレスの入力、コード送信、変更完了、プロフィールへの反映、変更先アドレスでの再ログインを確認。
+- ローカル console 配信で、新アドレス宛ての `change-email` が1件だけ出力されることを確認。実メール配信や本番デプロイは今回実施していない。

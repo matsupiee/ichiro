@@ -1,0 +1,24 @@
+appId: com.anonymous.ichiro
+---
+- launchApp
+- openLink: ichiro://change-email
+- tapOn:
+    text: "開く"
+    optional: true
+    waitToSettleTimeoutMs: 500
+- extendedWaitUntil:
+    visible: "新しいメールアドレス"
+    timeout: 15000
+- assertNotVisible: "現在のアドレスにコードを送る"
+- tapOn:
+    id: "new-email"
+    waitToSettleTimeoutMs: 500
+- inputText: "${NEW_EMAIL}"
+- hideKeyboard
+- tapOn: "認証コードを送る"
+- extendedWaitUntil:
+    visible: "新しいアドレスの認証コード"
+    timeout: 15000
+- assertVisible:
+    id: "change-email-code"
+- assertNotVisible: "現在のアドレスの認証コード"

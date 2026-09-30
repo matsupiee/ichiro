@@ -21,6 +21,7 @@
   "type": "module",
   "scripts": {
     "dev": "turbo run dev -F native -F @ichiro/infra",
+    "dev:stop": "bun scripts/dev-stop.mjs",
     "build": "turbo run build",
     "check-types": "turbo run check-types",
     "test": "turbo run test",
