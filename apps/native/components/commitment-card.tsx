@@ -53,7 +53,7 @@ export function CommitmentCard(props: Props) {
               `「${props.content}」の今日の達成を報告します。`,
               [
                 { text: "キャンセル", style: "cancel" },
-                { text: "達成済みにする", onPress: props.onReport },
+                { text: "達成済みにする", isPreferred: true, onPress: props.onReport },
               ],
             );
           }}
