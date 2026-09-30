@@ -10,6 +10,7 @@ import { logger } from "hono/logger";
 
 import { createContext } from "./context";
 import { ENV } from "./env.server";
+import { createPublicPageApp } from "./public-page";
 import { createAuth, getDb, getStripe } from "./services";
 
 const app = new Hono();
@@ -58,9 +59,7 @@ app.post("/stripe/webhook", async (c) => {
   return c.json({ received: true });
 });
 
-app.get("/", (c) => {
-  return c.text("OK");
-});
+app.route("/", createPublicPageApp());
 
 export default {
   fetch: app.fetch,

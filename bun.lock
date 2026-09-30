@@ -96,6 +96,7 @@
         "@cloudflare/workers-types": "catalog:",
         "@ichiro/config": "workspace:*",
         "@ichiro/infra": "workspace:*",
+        "@types/bun": "^1.4.2",
         "@types/node": "catalog:",
         "tsdown": "^0.23.0",
         "typescript": "^6.0.3",

@@ -16,6 +16,7 @@ export const avatars = Cloudflare.R2.Bucket("avatars");
 
 export const server = Cloudflare.Worker("server", {
   main: "../../apps/server/src/index.ts",
+  assets: "../../apps/server/public",
   compatibility: {
     flags: ["nodejs_compat"],
   },
