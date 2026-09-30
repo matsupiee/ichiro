@@ -5,7 +5,6 @@ import { eq, sql } from "drizzle-orm";
 import { callerFor, createUser, setupDemo } from "./helpers";
 
 const values = {
-  goal: "履歴を確認する",
   content: "毎日10ページ読む\n感想を書く",
   frequency: "weekly" as const,
   weekdays: [1, 3, 5],
@@ -76,7 +75,7 @@ describe("commitment の更新前の内容を保存する", () => {
     await expect(
       db
         .update(commitment)
-        .set({ goal: sql`NULL` })
+        .set({ content: sql`NULL` })
         .where(eq(commitment.id, created.id))
         .execute(),
     ).rejects.toThrow();
@@ -92,11 +91,11 @@ describe("commitment の更新前の内容を保存する", () => {
     await expect(
       caller.consumer.commitment.update({
         id: created.id,
-        values: { ...values, goal: "保存されない" },
+        values: { ...values, content: "保存されない" },
       }),
     ).rejects.toThrow();
     const [after] = await db.select().from(commitment).where(eq(commitment.id, created.id));
-    expect(after!.goal).toBe(values.goal);
+    expect(after!.content).toBe(values.content);
     expect(await logs(db, created.id)).toEqual([]);
   });
 
@@ -104,15 +103,17 @@ describe("commitment の更新前の内容を保存する", () => {
     const { db, caller, today } = await setupDemo();
     const created = await caller.consumer.commitment.create({ today, timeZone: "UTC", values });
     await Promise.all(
-      ["更新A", "更新B"].map((goal) =>
-        db.update(commitment).set({ goal }).where(eq(commitment.id, created.id)),
+      ["更新A", "更新B"].map((content) =>
+        db.update(commitment).set({ content }).where(eq(commitment.id, created.id)),
       ),
     );
     const rows = await logs(db, created.id);
     const [after] = await db.select().from(commitment).where(eq(commitment.id, created.id));
     expect(rows).toHaveLength(2);
-    expect(rows[0]!.snapshot.goal).toBe(values.goal);
-    expect(new Set([rows[1]!.snapshot.goal, after!.goal])).toEqual(new Set(["更新A", "更新B"]));
+    expect(rows[0]!.snapshot.content).toBe(values.content);
+    expect(new Set([rows[1]!.snapshot.content, after!.content])).toEqual(
+      new Set(["更新A", "更新B"]),
+    );
     await db.delete(commitment).where(eq(commitment.id, created.id));
     expect(await logs(db, created.id)).toEqual(rows);
   });

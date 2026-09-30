@@ -8,7 +8,7 @@ import {
   View,
 } from "react-native";
 
-import { colors, shadows } from "@/lib/theme";
+import { colors } from "@/lib/theme";
 
 // setlog 風の大きな角丸パーツ。寸法はデザイン（393pt 幅）の値そのまま。
 
@@ -18,7 +18,7 @@ type ButtonProps = Omit<PressableProps, "children"> & {
   fontSize?: number;
 };
 
-// ピンクの立体ボタン。押すと沈む
+// ピンクのフラットなボタン。押している間は色で反応を示す
 export function PrimaryButton({
   label,
   height = 60,
@@ -33,12 +33,10 @@ export function PrimaryButton({
       style={({ pressed }) => ({
         height,
         borderRadius: height / 2,
-        backgroundColor: colors.pink,
+        backgroundColor: pressed ? colors.pinkDeep : colors.pink,
         alignItems: "center",
         justifyContent: "center",
         opacity: disabled ? 0.6 : 1,
-        boxShadow: pressed ? shadows.pinkButtonPressed : shadows.pinkButton,
-        transform: [{ translateY: pressed ? 4 : 0 }],
       })}
       {...props}
     >
@@ -68,8 +66,7 @@ export function BackButton({ onPress }: { onPress: () => void }) {
       accessibilityRole="button"
       accessibilityLabel="戻る"
       onPress={onPress}
-      className="h-12 w-12 items-center justify-center rounded-full bg-white"
-      style={{ boxShadow: shadows.backButton }}
+      className="h-12 w-12 items-center justify-center rounded-full bg-white active:bg-field"
     >
       <View
         style={{

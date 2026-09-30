@@ -7,10 +7,14 @@ describe("メインページでコミットメントを一覧できる", () => {
     const { caller, today } = await setupDemo();
     const list = await caller.consumer.commitment.list({ today });
 
-    expect(list.map((c) => c.goal)).toEqual(["広東語マスター", "体づくり", "禁煙"]);
-    const cantonese = list.find((c) => c.goal === "広東語マスター")!;
+    expect(list.map((c) => c.content)).toEqual([
+      "毎日30分広東語を練習する",
+      "週3でジムに行って、筋トレ45分と有酸素運動20分をやる",
+      "禁煙する",
+    ]);
+    const cantonese = list.find((c) => c.content === "毎日30分広東語を練習する")!;
     expect(cantonese).toMatchObject({ dueToday: true, reportedToday: false, streak: 7 });
-    const smoking = list.find((c) => c.goal === "禁煙")!;
+    const smoking = list.find((c) => c.content === "禁煙する")!;
     expect(smoking).toMatchObject({ dueToday: true, reportedToday: true, streak: 42 });
   });
 

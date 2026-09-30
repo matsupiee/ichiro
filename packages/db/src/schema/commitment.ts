@@ -25,7 +25,6 @@ export const commitment = sqliteTable(
     userId: text("user_id")
       .notNull()
       .references(() => user.id, { onDelete: "cascade" }),
-    goal: text("goal").notNull(),
     content: text("content").notNull(),
     frequency: text("frequency", { enum: commitmentFrequencies }).notNull(),
     // 0 = 日曜 ... 6 = 土曜。frequency が weekly のときだけ意味を持つ

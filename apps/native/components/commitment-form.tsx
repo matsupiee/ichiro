@@ -11,7 +11,6 @@ import { colors, shadows } from "@/lib/theme";
 export type Frequency = "daily" | "weekly" | "monthly" | "once";
 
 export type FormValues = {
-  goal: string;
   content: string;
   frequency: Frequency;
   weekdays: number[];
@@ -35,7 +34,6 @@ const QUICK_AMOUNTS = [500, 1000, 3000];
 
 export function toApiValues(v: FormValues) {
   return {
-    goal: v.goal,
     content: v.content,
     frequency: v.frequency,
     weekdays: v.weekdays,
@@ -48,7 +46,6 @@ export function toApiValues(v: FormValues) {
 
 // サーバーと同じ条件を先に確かめて、すぐに分かるエラーは送信前に出す
 export function validate(v: FormValues): string | null {
-  if (!v.goal.trim()) return "目標を入力してください";
   if (!v.content.trim()) return "コミット内容を入力してください";
   if (v.frequency === "weekly" && v.weekdays.length === 0) return "曜日を選んでください";
   if (v.frequency === "monthly" && v.monthDays.length === 0) return "日付を選んでください";
@@ -223,15 +220,6 @@ export function CommitmentForm({
   return (
     <>
       {header}
-
-      <FieldLabel>目標</FieldLabel>
-      <Field
-        bold
-        value={v.goal}
-        onChangeText={(t) => set("goal", t)}
-        placeholder="広東語で日常会話ができる"
-        returnKeyType="next"
-      />
 
       <FieldLabel>コミット内容</FieldLabel>
       <Field

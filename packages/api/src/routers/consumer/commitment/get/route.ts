@@ -14,7 +14,6 @@ export const commitmentGetInputSchema = z.object({
 
 export const commitmentGetOutputSchema = z.object({
   id: z.string(),
-  goal: z.string(),
   content: z.string(),
   frequency: z.enum(commitmentFrequencies),
   weekdays: z.array(z.number()),

@@ -14,7 +14,7 @@ import { CheckMark } from "@/components/ui";
 import { useAvatar } from "@/lib/avatar";
 import { useReport } from "@/lib/commitments";
 import { localToday } from "@/lib/date";
-import { colors, fonts, shadows } from "@/lib/theme";
+import { colors, fonts } from "@/lib/theme";
 import { trpc } from "@/utils/trpc";
 
 export default function MainScreen() {
@@ -51,8 +51,7 @@ export default function MainScreen() {
             accessibilityRole="button"
             accessibilityLabel="アカウント"
             onPress={() => sheet.current?.present()}
-            className="h-[58px] w-[58px] items-center justify-center rounded-full bg-white"
-            style={{ boxShadow: shadows.avatarButton }}
+            className="h-[58px] w-[58px] items-center justify-center rounded-full bg-white active:bg-field"
           >
             <Avatar
               uri={avatar.uri}
@@ -109,8 +108,8 @@ export default function MainScreen() {
         accessibilityRole="button"
         accessibilityLabel="コミットメントを作成"
         onPress={() => router.push("/commitments/new")}
-        className="absolute h-[68px] w-[68px] items-center justify-center rounded-full bg-white active:scale-95"
-        style={{ right: 26, bottom: insets.bottom + 6, boxShadow: shadows.fab }}
+        className="absolute h-[68px] w-[68px] items-center justify-center rounded-full bg-white active:bg-field"
+        style={{ right: 26, bottom: insets.bottom + 6 }}
       >
         <View style={{ width: 26, height: 26 }}>
           <View

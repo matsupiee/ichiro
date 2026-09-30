@@ -5,7 +5,7 @@ import { useCelebrate } from "@/components/celebration/celebration";
 import { localToday } from "@/lib/date";
 import { trpc } from "@/utils/trpc";
 
-type Reportable = { id: string; goal: string; streak: number };
+type Reportable = { id: string; content: string; streak: number };
 
 // 今日の達成を報告する。待たせないように先にお祝いを出し、裏でサーバーに送る
 export function useReport() {
@@ -16,7 +16,7 @@ export function useReport() {
   return (c: Reportable) => {
     const today = localToday();
     celebrate({
-      message: `「${c.goal}」今日も達成！`,
+      message: `「${c.content}」今日も達成！`,
       tiles: [{ label: "連続達成", value: `${c.streak + 1}日` }],
     });
     queryClient.setQueryData(trpc.consumer.commitment.list.queryKey({ today }), (list) =>

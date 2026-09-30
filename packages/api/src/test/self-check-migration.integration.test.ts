@@ -54,11 +54,11 @@ test("友達と招待中の設定を廃止しても報告・罰金・変更履�
     expect(
       logs.map((r) => JSON.parse(String(r.snapshot))).some((s) => s.checkerUserId === "friend"),
     ).toBe(true);
-    await client.execute("UPDATE commitment SET goal = 'セルフチェック' WHERE id = 'assigned'");
+    await client.execute("UPDATE commitment SET content = 'セルフチェック' WHERE id = 'assigned'");
     const latest = (
       await client.execute("SELECT snapshot FROM commitment_log ORDER BY id DESC LIMIT 1")
     ).rows[0]!;
-    expect(JSON.parse(String(latest.snapshot)).goal).toBe("変更後");
+    expect(JSON.parse(String(latest.snapshot)).content).toBe("10ページ");
     expect(JSON.parse(String(latest.snapshot))).not.toHaveProperty("checker");
   } finally {
     client.close();

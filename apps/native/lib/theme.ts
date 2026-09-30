@@ -27,13 +27,6 @@ export const fonts = {
 
 // デザインの影をそのまま RN の boxShadow に写したもの
 export const shadows = {
-  pinkButton: "0px 5px 0px #D63FCB",
-  pinkButtonPressed: "0px 1px 0px #D63FCB",
-  pinkRound: "0px 4px 0px #D63FCB",
-  pinkRoundPressed: "0px 1px 0px #D63FCB",
-  backButton: "0px 4px 14px rgba(0, 0, 0, 0.06)",
-  avatarButton: "0px 6px 18px rgba(0, 0, 0, 0.07)",
-  fab: "0px 8px 24px rgba(0, 0, 0, 0.1)",
   knob: "0px 2px 6px rgba(0, 0, 0, 0.18)",
   popover: "0px 12px 40px rgba(0, 0, 0, 0.14)",
   modal: "0px 20px 50px rgba(0, 0, 0, 0.18)",

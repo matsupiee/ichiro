@@ -17,7 +17,6 @@ import { trpc } from "@/utils/trpc";
 
 function blank(today: string): FormValues {
   return {
-    goal: "",
     content: "",
     frequency: "daily",
     weekdays: [1, 3, 5],
@@ -56,7 +55,7 @@ export default function NewCommitmentScreen() {
           celebrate({
             title: "宣言したワン！",
             closeLabel: "ホームに戻る",
-            message: `「${c.goal}」スタート。いっしょにがんばろう`,
+            message: `「${c.content}」スタート。いっしょにがんばろう`,
             tiles:
               c.penaltyAmount !== null
                 ? [

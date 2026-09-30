@@ -46,17 +46,16 @@ export async function seedPublicPage(
       updatedAt: new Date(),
     })
     .onConflictDoNothing();
-  const goals = [
-    ["朝の読書", "毎朝、本を10ページ読む"],
-    ["英語を習慣に", "毎日15分、英語の練習をする"],
-    ["からだを動かす", "夕方に20分ウォーキングする"],
+  const contents = [
+    "毎朝、本を10ページ読む",
+    "毎日15分、英語の練習をする",
+    "夕方に20分ウォーキングする",
   ] as const;
-  for (const [index, [goal, content]] of goals.entries()) {
+  for (const [index, content] of contents.entries()) {
     const commitmentId = `${id}-${index}`;
     await db.insert(commitment).values({
       id: commitmentId,
       userId: id,
-      goal,
       content,
       frequency: "daily",
       weekdays: [1],

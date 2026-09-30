@@ -20,7 +20,6 @@ const penaltyOn = async ({ db }: Demo, commitmentId: string, dueDate: string) =>
 };
 
 const values = {
-  goal: "読書",
   content: "毎日10ページ読む",
   frequency: "daily" as const,
   weekdays: [],
@@ -48,6 +47,7 @@ describe("報告できなかった日は罰金が徴収される", () => {
     const row = await penaltyOn(demo, cantonese, today);
     const charge = stripe.charges.find((c) => c.params.metadata?.penalty_id === row.id)!;
     expect(charge.params).toMatchObject({
+      description: `ichiro 罰金「毎日30分広東語を練習する」${today}`,
       amount: 500,
       currency: "jpy",
       customer: `cus_demo_${seeded.userId}`,

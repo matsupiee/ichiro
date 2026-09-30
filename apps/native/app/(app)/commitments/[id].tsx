@@ -76,7 +76,6 @@ export default function CommitmentDetailScreen() {
   useEffect(() => {
     if (!data || values) return;
     setValues({
-      goal: data.goal,
       content: data.content,
       frequency: data.frequency,
       weekdays: data.weekdays,

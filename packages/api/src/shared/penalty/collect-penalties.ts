@@ -13,8 +13,8 @@ export const MAX_CHARGE_ATTEMPTS = 3;
 export async function collectPenalties(db: Database, stripe: StripeClient, now: Date = new Date()) {
   const due = await db
     .select({
+      content: commitment.content,
       penalty,
-      goal: commitment.goal,
       stripePaymentMethodId: paymentMethod.stripePaymentMethodId,
       stripeCustomerId: paymentCustomer.stripeCustomerId,
     })
@@ -30,7 +30,7 @@ export async function collectPenalties(db: Database, stripe: StripeClient, now: 
     );
 
   const counts = { paid: 0, processing: 0, failed: 0 };
-  for (const { penalty: p, goal, stripePaymentMethodId, stripeCustomerId } of due) {
+  for (const { penalty: p, content, stripePaymentMethodId, stripeCustomerId } of due) {
     const attempts = p.attempts + 1;
     // 退会判定とこの試行の確保を一度の更新で行う。開始済みの決済は退会後も結果を保存する。
     const [claimed] = await db
@@ -61,7 +61,7 @@ export async function collectPenalties(db: Database, stripe: StripeClient, now: 
             stripeCustomerId,
             stripePaymentMethodId,
             amount: p.amount,
-            description: `ichiro 罰金「${goal}」${p.dueDate}`,
+            description: `ichiro 罰金「${content}」${p.dueDate}`,
           });
 
     if (result.status === "failed" && result.uncertain) {

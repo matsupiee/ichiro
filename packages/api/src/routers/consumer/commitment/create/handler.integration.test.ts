@@ -4,7 +4,6 @@ import { addDays } from "../../../../shared/date/add-days";
 import { callerFor, createUser, setupDemo } from "../../../../test/helpers";
 
 const values = {
-  goal: "読書",
   content: "毎日10ページ読む",
   frequency: "daily" as const,
   weekdays: [1, 3, 5],
@@ -20,8 +19,13 @@ describe("コミットメントを作成できる", () => {
     const created = await caller.consumer.commitment.create({ today, values });
 
     expect(created.startDate).toBe(today);
+    expect(created).not.toHaveProperty("goal");
+    expect(created.content).toBe(values.content);
+    const detail = await caller.consumer.commitment.get({ id: created.id, today });
+    expect(detail).not.toHaveProperty("goal");
     const list = await caller.consumer.commitment.list({ today });
-    expect(list[0]).toMatchObject({ id: created.id, goal: "読書", streak: 0 });
+    expect(list[0]).not.toHaveProperty("goal");
+    expect(list[0]).toMatchObject({ id: created.id, content: "毎日10ページ読む", streak: 0 });
   });
 
   test("罰金は100円未満にできない", async () => {
@@ -108,4 +112,16 @@ describe("コミットメントを作成できる", () => {
       "Authentication required",
     );
   });
+});
+
+test("content は前後の空白を除去して保存し、空白だけなら作成できない", async () => {
+  const { caller, today } = await setupDemo();
+  const created = await caller.consumer.commitment.create({
+    today,
+    values: { ...values, content: "  10ページ読む\n感想を書く  " },
+  });
+  expect(created.content).toBe("10ページ読む\n感想を書く");
+  await expect(
+    caller.consumer.commitment.create({ today, values: { ...values, content: " \n " } }),
+  ).rejects.toThrow("コミット内容を入力してください");
 });

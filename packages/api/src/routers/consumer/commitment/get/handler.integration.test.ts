@@ -8,7 +8,7 @@ describe("コミットメントの詳細を見られる", () => {
     const { caller, today, seeded } = await setupDemo();
     const detail = await caller.consumer.commitment.get({ id: seeded.commitmentIds[2]!, today });
 
-    expect(detail.goal).toBe("禁煙");
+    expect(detail.content).toBe("禁煙する");
     expect(detail.week).toHaveLength(7);
     expect(new Date(`${detail.week[0]!.date}T00:00:00Z`).getUTCDay()).toBe(1);
     const todayCell = detail.week.find((d) => d.date === today)!;

@@ -28,7 +28,6 @@ describe("今日の達成を報告できる", () => {
     const created = await caller.consumer.commitment.create({
       today,
       values: {
-        goal: "読書",
         content: "本を1冊読みきる",
         frequency: "once",
         weekdays: [],

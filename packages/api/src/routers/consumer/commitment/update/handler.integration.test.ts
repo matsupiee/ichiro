@@ -7,7 +7,6 @@ import { runPenaltyJob } from "../../../../shared/penalty/run-penalty-job";
 import { callerFor, createUser, setupDemo } from "../../../../test/helpers";
 
 const values = {
-  goal: "読書",
   content: "毎日10ページ読む",
   frequency: "daily" as const,
   weekdays: [1, 3, 5],
@@ -27,7 +26,7 @@ describe("途中で設定を変えられる", () => {
       id,
       values: {
         ...values,
-        goal: "広東語ペラペラ",
+        content: "毎日広東語を話す",
         penaltyAmount: 1500,
         paymentMethodId: seeded.paymentMethodIds[1]!,
       },
@@ -35,7 +34,7 @@ describe("途中で設定を変えられる", () => {
     const after = await caller.consumer.commitment.get({ id, today });
 
     expect(after).toMatchObject({
-      goal: "広東語ペラペラ",
+      content: "毎日広東語を話す",
       penaltyAmount: 1500,
       paymentMethodId: seeded.paymentMethodIds[1],
       startDate: before.startDate,

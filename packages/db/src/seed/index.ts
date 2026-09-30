@@ -114,7 +114,6 @@ export async function seedDemo(
     .insert(commitment)
     .values({
       userId,
-      goal: "禁煙",
       content: "禁煙する",
       frequency: "daily",
       weekdays: [1],
@@ -132,7 +131,6 @@ export async function seedDemo(
     .insert(commitment)
     .values({
       userId,
-      goal: "体づくり",
       content: "週3でジムに行って、筋トレ45分と有酸素運動20分をやる",
       frequency: "weekly",
       weekdays: [1, 3, 5],
@@ -151,7 +149,6 @@ export async function seedDemo(
     .insert(commitment)
     .values({
       userId,
-      goal: "広東語マスター",
       content: "毎日30分広東語を練習する",
       frequency: "daily",
       weekdays: [1, 3, 5],

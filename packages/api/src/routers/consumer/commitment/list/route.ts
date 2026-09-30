@@ -13,7 +13,6 @@ export const commitmentListInputSchema = z.object({
 export const commitmentListOutputSchema = z.array(
   z.object({
     id: z.string(),
-    goal: z.string(),
     content: z.string(),
     frequency: z.enum(commitmentFrequencies),
     weekdays: z.array(z.number()),

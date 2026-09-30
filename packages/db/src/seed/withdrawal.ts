@@ -28,31 +28,26 @@ export async function seedWithdrawal(db: SeedDatabase, email = WITHDRAWAL_USER.e
       "退会テスト用ユーザーは既に存在します。再実行には別の --email を指定してください",
     );
   await db.insert(user).values({ id, email, name, emailVerified: true });
-  await db
-    .insert(account)
-    .values({
-      id,
-      userId: id,
-      accountId: id,
-      providerId: "credential",
-      password: await hashPassword(password),
-      updatedAt: new Date(),
-    });
-  await db
-    .insert(commitment)
-    .values({
-      id: `${id}-commitment`,
-      userId: id,
-      goal: "退会動作の確認",
-      content: "毎日記録する",
-      frequency: "daily",
-      weekdays: [],
-      monthDays: [],
-      startDate: "2026-01-01",
-      untilDate: "2099-12-31",
-      penaltyAmount: null,
-      settledThrough: "2026-01-01",
-    });
+  await db.insert(account).values({
+    id,
+    userId: id,
+    accountId: id,
+    providerId: "credential",
+    password: await hashPassword(password),
+    updatedAt: new Date(),
+  });
+  await db.insert(commitment).values({
+    id: `${id}-commitment`,
+    userId: id,
+    content: "毎日記録する",
+    frequency: "daily",
+    weekdays: [],
+    monthDays: [],
+    startDate: "2026-01-01",
+    untilDate: "2099-12-31",
+    penaltyAmount: null,
+    settledThrough: "2026-01-01",
+  });
 }
 if (import.meta.main) {
   const { values } = parseArgs({

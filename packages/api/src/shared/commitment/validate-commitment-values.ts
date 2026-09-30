@@ -1,7 +1,6 @@
 import type { CommitmentFrequency } from "@ichiro/db/schema/commitment";
 
 export type CommitmentValues = {
-  goal: string;
   content: string;
   frequency: CommitmentFrequency;
   weekdays: number[];

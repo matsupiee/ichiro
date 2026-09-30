@@ -10,7 +10,7 @@ test("紹介ページの撮影データで、目標一覧・連続達成・報�
   const caller = callerFor(db, await sessionFor(db, PUBLIC_PAGE_USER.email));
   const items = await caller.consumer.commitment.list({ today });
   expect(items).toHaveLength(3);
-  expect(items.map((item) => item.goal)).toContain("朝の読書");
+  expect(items.map((item) => item.content)).toContain("毎朝、本を10ページ読む");
   expect(items.every((item) => item.penaltyAmount === null)).toBe(true);
   const detail = await caller.consumer.commitment.get({ id: items[0]!.id, today });
   expect(detail.streak).toBe(6);

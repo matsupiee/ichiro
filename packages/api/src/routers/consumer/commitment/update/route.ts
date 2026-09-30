@@ -13,7 +13,6 @@ export const commitmentUpdateInputSchema = z.object({
   timeZone: z.string().refine(isValidTimeZone, "タイムゾーンが正しくありません").optional(),
   values: z
     .object({
-      goal: z.string().trim().min(1, "目標を入力してください").max(60),
       content: z.string().trim().min(1, "コミット内容を入力してください").max(200),
       frequency: z.enum(commitmentFrequencies),
       weekdays: z.array(z.number().int().min(0).max(6)).max(7),
@@ -32,7 +31,6 @@ export const commitmentUpdateInputSchema = z.object({
 
 export const commitmentUpdateOutputSchema = z.object({
   id: z.string(),
-  goal: z.string(),
   content: z.string(),
   frequency: z.enum(commitmentFrequencies),
   weekdays: z.array(z.number()),
