@@ -183,16 +183,18 @@ function DogFigure({ mood }: { mood: DogMood }) {
               top: 98,
               width: 48,
               height: 48,
-              transformOrigin: "10% 90%",
+              // パスの根元を支点にし、体の内側に重ねて振っても離れないようにする。
+              transformOrigin: "8px 40px",
             },
             tailStyle,
           ]}
         >
           <Svg width={48} height={48}>
             <Path
-              d="M 11.27 11.27 A 18 18 0 0 1 36.73 36.73"
+              d="M 8 40 C 28 40 42 28 36 16 C 32 6 20 6 18 16"
               stroke={palette.tail}
               strokeWidth={12}
+              strokeLinecap="round"
               fill="none"
             />
           </Svg>
