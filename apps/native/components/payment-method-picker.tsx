@@ -16,7 +16,7 @@ function Radio({ selected }: { selected: boolean }) {
         borderRadius: 12,
         backgroundColor: "#fff",
         borderWidth: selected ? 7 : 2,
-        borderColor: selected ? colors.pink : colors.line,
+        borderColor: selected ? colors.brand : colors.line,
       }}
     />
   );
@@ -38,7 +38,7 @@ export function PaymentMethodPicker({ value, onChange }: Props) {
     if (value === null && first) onChange(first);
   }, [value, first, onChange]);
 
-  if (isPending) return <ActivityIndicator color={colors.pink} className="py-4" />;
+  if (isPending) return <ActivityIndicator color={colors.brand} className="py-4" />;
 
   return (
     <>
@@ -65,7 +65,7 @@ export function PaymentMethodPicker({ value, onChange }: Props) {
           className="min-h-[62px] flex-row items-center justify-center rounded-[31px] border border-dashed border-line active:bg-field"
         >
           {adding ? (
-            <ActivityIndicator color={colors.pink} />
+            <ActivityIndicator color={colors.brand} />
           ) : (
             <Text className="text-[16px] font-semibold text-ink-2">＋ 支払い方法を追加</Text>
           )}

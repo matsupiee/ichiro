@@ -37,7 +37,7 @@ export function CommitmentCard(props: Props) {
       </View>
       {props.reportedToday ? (
         <View accessibilityLabel="今日の報告済み" className="h-11 w-11 items-center justify-center">
-          <View className="h-9 w-9 items-center justify-center rounded-full bg-pink">
+          <View className="h-9 w-9 items-center justify-center rounded-full bg-brand">
             <CheckMark width={8} height={14} thickness={3} color="#fff" offsetY={-3} />
           </View>
         </View>
@@ -61,14 +61,14 @@ export function CommitmentCard(props: Props) {
             width: 44,
             height: 44,
             borderRadius: 22,
-            backgroundColor: pressed ? colors.pinkSoft : "transparent",
+            backgroundColor: pressed ? colors.brandSoft : "transparent",
             alignItems: "center",
             justifyContent: "center",
           })}
         >
           <Svg width={36} height={36} viewBox="0 0 36 36" accessible={false}>
             {reportDots.map((dot, index) => (
-              <Circle key={index} cx={dot.x} cy={dot.y} r={1.75} fill={colors.pink} />
+              <Circle key={index} cx={dot.x} cy={dot.y} r={1.75} fill={colors.brand} />
             ))}
           </Svg>
         </Pressable>

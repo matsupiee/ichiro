@@ -4,19 +4,20 @@
 
 /* ichiro のデザイントークン。値は lib/theme.ts の colors と揃える */
 @theme {
-  --color-pink: #ff5cf2;
-  --color-pink-deep: #d63fcb;
-  --color-pink-soft: #ffe1fc;
-  --color-canvas: #f4f4f4;
-  --color-card: #ededed;
-  --color-card-pressed: #e6e6e6;
-  --color-card-line: #e4e4e4;
-  --color-field: #e2e2e2;
-  --color-field-pressed: #d5d5d5;
-  --color-ink: #1c1c1e;
-  --color-ink-2: #3a3a3c;
-  --color-mute: #8e8e93;
-  --color-faint: #a1a1a6;
-  --color-line: #c7c7cc;
+  --color-brand: #3dc4f4;
+  --color-brand-pressed: #29afe1;
+  --color-brand-ink: #087da8;
+  --color-brand-soft: #dcf5ff;
+  --color-canvas: #f4fafd;
+  --color-card: #eaf3f8;
+  --color-card-pressed: #dcecf5;
+  --color-card-line: #ddebf3;
+  --color-field: #deeaf1;
+  --color-field-pressed: #ccdfea;
+  --color-ink: #163447;
+  --color-ink-2: #365466;
+  --color-mute: #647f90;
+  --color-faint: #8098a7;
+  --color-line: #c4d8e4;
   --color-alert: #ff3b30;
 }

@@ -75,19 +75,19 @@ function NameModal({
       <Animated.View
         entering={ZoomIn.duration(250)}
         className="absolute left-[22px] right-[22px] top-[170px] rounded-[36px] px-[18px] pb-[18px] pt-7"
-        style={{ backgroundColor: "#F2F2F2", boxShadow: shadows.modal }}
+        style={{ backgroundColor: colors.canvas, boxShadow: shadows.modal }}
       >
         <Text className="px-3 text-[20px] font-extrabold text-ink">名前を編集</Text>
         <Text className="px-3 pb-4 pt-1.5 text-[15px] text-mute">名前を入力してください</Text>
         <View
           className="min-h-[62px] flex-row items-center rounded-[28px] px-[22px]"
-          style={{ backgroundColor: "#DCDCDC" }}
+          style={{ backgroundColor: colors.field }}
         >
           <TextInput
             value={draft}
             onChangeText={setDraft}
             autoFocus
-            selectionColor={colors.pink}
+            selectionColor={colors.brand}
             returnKeyType="done"
             onSubmitEditing={save}
             style={{ flex: 1, fontSize: 18, color: colors.ink, paddingVertical: 18 }}
@@ -98,14 +98,14 @@ function NameModal({
           <Pressable
             onPress={onClose}
             className="h-[54px] flex-1 items-center justify-center rounded-[27px]"
-            style={{ backgroundColor: "#DCDCDC" }}
+            style={{ backgroundColor: colors.field }}
           >
             <Text className="text-[17px] font-bold text-ink">キャンセル</Text>
           </Pressable>
           <Pressable
             onPress={save}
             disabled={saving}
-            className="h-[54px] flex-1 items-center justify-center rounded-[27px] bg-pink"
+            className="h-[54px] flex-1 items-center justify-center rounded-[27px] bg-brand"
             style={{ opacity: saving ? 0.6 : 1 }}
           >
             <Text className="text-[17px] font-bold text-white">保存</Text>
@@ -140,7 +140,7 @@ function PaymentInfo() {
       ))}
       <RowButton onPress={adding ? undefined : add}>
         {adding ? (
-          <ActivityIndicator color={colors.pink} />
+          <ActivityIndicator color={colors.brand} />
         ) : (
           <Text className="text-[17px] text-ink">支払い方法を追加</Text>
         )}
@@ -195,7 +195,7 @@ export const ProfileSheet = forwardRef<BottomSheetModal, Props>(function Profile
         setWithdrawalOpen(false);
       }}
       backgroundStyle={{ backgroundColor: colors.canvas, borderRadius: 44 }}
-      handleIndicatorStyle={{ width: 40, height: 5, backgroundColor: "#D1D1D6" }}
+      handleIndicatorStyle={{ width: 40, height: 5, backgroundColor: colors.line }}
     >
       {withdrawalOpen ? (
         <WithdrawalSheet onBack={() => setWithdrawalOpen(false)} onBusyChange={setWithdrawalBusy} />

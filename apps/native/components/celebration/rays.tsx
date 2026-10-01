@@ -54,8 +54,8 @@ export function Rays({ centerY }: { centerY: number }) {
       <Svg width={SIZE} height={SIZE}>
         <Defs>
           <RadialGradient id="fade" cx={C} cy={C} r={R} gradientUnits="userSpaceOnUse">
-            <Stop offset="0.18" stopColor={colors.pinkRay} stopOpacity={1} />
-            <Stop offset="0.52" stopColor={colors.pinkRay} stopOpacity={0} />
+            <Stop offset="0.18" stopColor={colors.brandRay} stopOpacity={1} />
+            <Stop offset="0.52" stopColor={colors.brandRay} stopOpacity={0} />
           </RadialGradient>
         </Defs>
         {WEDGES.map((d, i) => (

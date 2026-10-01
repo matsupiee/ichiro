@@ -73,7 +73,7 @@ function useCountUp(delay: number) {
 }
 
 const TILE_COLORS = [
-  { frame: colors.pink, value: colors.pink },
+  { frame: colors.brand, value: colors.brand },
   { frame: colors.amber, value: colors.amberDeep },
 ];
 
@@ -179,7 +179,7 @@ function CelebrationOverlay({ cel, onClose }: { cel: CelebrationState; onClose: 
         {cel.title ? (
           <Animated.Text
             style={[
-              { fontFamily: fonts.logo, fontSize: 40, color: colors.pink, marginTop: 18 },
+              { fontFamily: fonts.celebration, fontSize: 40, color: colors.brand, marginTop: 18 },
               titleRise,
             ]}
           >

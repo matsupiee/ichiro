@@ -8,13 +8,14 @@ import Svg, { Circle, Path } from "react-native-svg";
 
 import { Avatar } from "@/components/avatar";
 import { CommitmentCard } from "@/components/commitment-card";
+import { BrandLogo } from "@/components/brand-logo";
 import { Dog } from "@/components/dog/dog";
 import { ProfileSheet } from "@/components/profile-sheet";
 import { CheckMark } from "@/components/ui";
 import { useAvatar } from "@/lib/avatar";
 import { useReport } from "@/lib/commitments";
 import { localToday } from "@/lib/date";
-import { colors, fonts } from "@/lib/theme";
+import { colors } from "@/lib/theme";
 import { trpc } from "@/utils/trpc";
 
 export default function MainScreen() {
@@ -36,17 +37,7 @@ export default function MainScreen() {
         contentContainerStyle={{ paddingTop: insets.top, paddingBottom: 140 + insets.bottom }}
       >
         <View className="flex-row items-center justify-between pl-[30px] pr-6 pt-[22px]">
-          <Text
-            style={{
-              fontFamily: fonts.logo,
-              fontSize: 38,
-              lineHeight: 44,
-              color: colors.pink,
-              letterSpacing: -0.5,
-            }}
-          >
-            ichiro
-          </Text>
+          <BrandLogo width={150} />
           <Pressable
             accessibilityRole="button"
             accessibilityLabel="アカウント"
@@ -69,7 +60,7 @@ export default function MainScreen() {
         </View>
 
         <View className="flex-row items-center gap-2.5 px-[30px] pb-[22px] pt-[18px]">
-          <View className="h-[22px] w-[22px] items-center justify-center rounded-full bg-pink">
+          <View className="h-[22px] w-[22px] items-center justify-center rounded-full bg-brand">
             <CheckMark width={5} height={9} thickness={2.5} color="#fff" offsetY={-2} />
           </View>
           <Text numberOfLines={1} className="flex-1 text-[17px] text-mute">
@@ -82,7 +73,7 @@ export default function MainScreen() {
         </View>
 
         {isPending ? (
-          <ActivityIndicator color={colors.pink} className="pt-10" />
+          <ActivityIndicator color={colors.brand} className="pt-10" />
         ) : items && items.length > 0 ? (
           <View className="gap-3 px-4">
             {items.map((c) => (

@@ -18,7 +18,7 @@ type ButtonProps = Omit<PressableProps, "children"> & {
   fontSize?: number;
 };
 
-// ピンクのフラットなボタン。押している間は色で反応を示す
+// 水色のフラットなボタン。押している間は色で反応を示す
 export function PrimaryButton({
   label,
   height = 60,
@@ -33,14 +33,14 @@ export function PrimaryButton({
       style={({ pressed }) => ({
         height,
         borderRadius: height / 2,
-        backgroundColor: pressed ? colors.pinkDeep : colors.pink,
+        backgroundColor: pressed ? colors.brandPressed : colors.brand,
         alignItems: "center",
         justifyContent: "center",
         opacity: disabled ? 0.6 : 1,
       })}
       {...props}
     >
-      <Text style={{ fontSize, fontWeight: "700", color: "#fff" }}>{label}</Text>
+      <Text style={{ fontSize, fontWeight: "700", color: colors.white }}>{label}</Text>
     </Pressable>
   );
 }
@@ -155,7 +155,7 @@ export const Field = forwardRef<TextInput, FieldProps>(function Field(
       <TextInput
         ref={ref}
         placeholderTextColor={colors.faint}
-        selectionColor={colors.pink}
+        selectionColor={colors.brand}
         style={[
           { flex: 1, minWidth: 0, fontSize: 17, color: colors.ink, paddingVertical: 18 },
           bold && { fontWeight: "700" },

@@ -146,7 +146,7 @@ function DateField({
             mode="date"
             display="inline"
             locale="ja-JP"
-            accentColor={colors.pink}
+            accentColor={colors.brand}
             onChange={(_, d) => d && onChange(toDateString(d))}
           />
         </View>
@@ -264,8 +264,8 @@ export function CommitmentForm({
                     radius: 19,
                     font: 15,
                     weight: "700",
-                    backgroundColor: sel ? colors.pink : colors.chipOff,
-                    color: sel ? "#fff" : colors.ink,
+                    backgroundColor: sel ? colors.brand : colors.chipOff,
+                    color: sel ? colors.white : colors.ink,
                   }}
                 />
               );
@@ -286,8 +286,8 @@ export function CommitmentForm({
                       radius: 18,
                       font: 14,
                       weight: "600",
-                      backgroundColor: sel ? colors.pink : "transparent",
-                      color: sel ? "#fff" : colors.ink,
+                      backgroundColor: sel ? colors.brand : "transparent",
+                      color: sel ? colors.white : colors.ink,
                     }}
                   />
                 </View>

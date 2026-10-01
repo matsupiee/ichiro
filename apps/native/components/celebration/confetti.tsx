@@ -9,7 +9,7 @@ import Animated, {
   withTiming,
 } from "react-native-reanimated";
 
-const COLORS = ["#FF5CF2", "#FFC800", "#4DD8FF", "#58E08A", "#FF8A4C", "#B67CFF"];
+const COLORS = ["#3DC4F4", "#FFC800", "#4DD8FF", "#58E08A", "#FF8A4C", "#B67CFF"];
 const easing = Easing.bezier(0.15, 0.6, 0.35, 1);
 
 type Piece = {

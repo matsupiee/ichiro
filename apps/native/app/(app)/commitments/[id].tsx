@@ -3,7 +3,7 @@ import { useLocalSearchParams, useRouter } from "expo-router";
 import { useEffect, useState } from "react";
 import { ActivityIndicator, Text, View } from "react-native";
 import { KeyboardAwareScrollView } from "react-native-keyboard-controller";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { SafeAreaProvider, useSafeAreaInsets } from "react-native-safe-area-context";
 
 import {
   CommitmentForm,
@@ -35,14 +35,14 @@ function StreakCard({ streak, dueToday, reportedToday, week, onReport }: Detail)
       <View className="flex-row items-center justify-between">
         <View className="gap-0.5">
           <Text className="text-[13px] text-mute">連続達成</Text>
-          <Text className="text-[30px] font-extrabold text-pink">{streak}日</Text>
+          <Text className="text-[30px] font-extrabold text-brand-ink">{streak}日</Text>
         </View>
         <View className="flex-row gap-1.5">
           {week.map((d, i) => (
             <View key={d.date} className="items-center gap-1.5">
               <View
                 className="h-[26px] w-[26px] rounded-full"
-                style={{ backgroundColor: d.reported ? colors.pink : colors.dot }}
+                style={{ backgroundColor: d.reported ? colors.brand : colors.dot }}
               />
               <Text className="text-[11px] text-faint">{WEEK_LABELS[i]}</Text>
             </View>
@@ -50,8 +50,8 @@ function StreakCard({ streak, dueToday, reportedToday, week, onReport }: Detail)
         </View>
       </View>
       {reportedToday ? (
-        <View className="h-14 items-center justify-center rounded-[28px] bg-pink-soft">
-          <Text className="text-[17px] font-bold text-pink">今日は報告ずみ　えらいワン</Text>
+        <View className="h-14 items-center justify-center rounded-[28px] bg-brand-soft">
+          <Text className="text-[17px] font-bold text-brand-ink">今日は報告ずみ　えらいワン</Text>
         </View>
       ) : dueToday ? (
         <PrimaryButton label="今日の達成を報告する" height={56} fontSize={17} onPress={onReport} />
@@ -61,6 +61,15 @@ function StreakCard({ streak, dueToday, reportedToday, week, onReport }: Detail)
 }
 
 export default function CommitmentDetailScreen() {
+  // シート自身を基準に計測し、背面の画面の上部余白を引き継がない。
+  return (
+    <SafeAreaProvider>
+      <CommitmentDetailContent />
+    </SafeAreaProvider>
+  );
+}
+
+function CommitmentDetailContent() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
   const insets = useSafeAreaInsets();
@@ -134,7 +143,7 @@ export default function CommitmentDetailScreen() {
             onSubmit={submit}
           />
         ) : (
-          <ActivityIndicator color={colors.pink} className="pt-10" />
+          <ActivityIndicator color={colors.brand} className="pt-10" />
         )}
       </KeyboardAwareScrollView>
     </View>

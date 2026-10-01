@@ -1,28 +1,29 @@
 // global.css の @theme と同じ値。className が使えない場所（SVG・アニメーション・
 // 動的な色）ではこちらを使う。
 export const colors = {
-  pink: "#FF5CF2",
-  pinkDeep: "#D63FCB",
-  pinkSoft: "#FFE1FC",
-  pinkRay: "#FFEAFD",
-  canvas: "#F4F4F4",
-  card: "#EDEDED",
-  field: "#E2E2E2",
-  ink: "#1C1C1E",
-  ink2: "#3A3A3C",
-  mute: "#8E8E93",
-  faint: "#A1A1A6",
-  line: "#C7C7CC",
-  chipOff: "#F4F4F6",
-  dot: "#DADADA",
-  toggleOn: "#34C759",
+  brand: "#3DC4F4",
+  brandPressed: "#29AFE1",
+  brandInk: "#087DA8",
+  brandSoft: "#DCF5FF",
+  brandRay: "#EAF9FF",
+  canvas: "#F4FAFD",
+  card: "#EAF3F8",
+  field: "#DEEAF1",
+  ink: "#163447",
+  ink2: "#365466",
+  mute: "#647F90",
+  faint: "#8098A7",
+  line: "#C4D8E4",
+  chipOff: "#EAF3F8",
+  dot: "#CEDFE9",
+  toggleOn: "#3DC4F4",
   amber: "#FFB800",
   amberDeep: "#E0A000",
   white: "#FFFFFF",
 } as const;
 
 export const fonts = {
-  logo: "DelaGothicOne_400Regular",
+  celebration: "DelaGothicOne_400Regular",
 } as const;
 
 // デザインの影をそのまま RN の boxShadow に写したもの
