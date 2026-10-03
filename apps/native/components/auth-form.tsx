@@ -9,6 +9,7 @@ import { Dog } from "@/components/dog/dog";
 import { ErrorText, Field, FieldLabel, PrimaryButton, ScreenHeader } from "@/components/ui";
 import { authErrorMessage } from "@/lib/auth-error";
 import { authClient } from "@/lib/auth-client";
+import { openLegalPage } from "@/lib/legal-pages";
 import { queryClient } from "@/utils/trpc";
 
 type Mode = "sign-up" | "sign-in";
@@ -29,7 +30,7 @@ const copy = {
   "sign-in": { title: "ログイン", cta: "ログイン", swap: "はじめての方はこちら" },
 } as const;
 
-// 新規登録とログインの画面。どちらも同じ見た目で、名前欄の有無だけが違う
+// 新規登録とログインの共通フォーム。新規登録には名前欄と同意の案内を表示する。
 export function AuthForm({
   mode,
   initialEmail = "",
@@ -159,6 +160,27 @@ export function AuthForm({
       />
       <ErrorText message={error} />
       <View className="px-[30px] pt-[34px]">
+        {mode === "sign-up" ? (
+          <Text className="mb-5 text-[13px] leading-[22px] text-ink-2">
+            「登録する」を押すと、
+            <Text
+              accessibilityRole="link"
+              className="text-brand-ink underline"
+              onPress={() => void openLegalPage("terms")}
+            >
+              利用規約
+            </Text>
+            および
+            <Text
+              accessibilityRole="link"
+              className="text-brand-ink underline"
+              onPress={() => void openLegalPage("privacy")}
+            >
+              プライバシーポリシー
+            </Text>
+            に同意したものとみなします。
+          </Text>
+        ) : null}
         <PrimaryButton label={submitting ? "…" : c.cta} disabled={submitting} onPress={submit} />
       </View>
       <Pressable
