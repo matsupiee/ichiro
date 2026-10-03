@@ -228,7 +228,8 @@ export function CommitmentForm({
         placeholder="毎日30分広東語を練習する"
         accessibilityLabel="コミット内容"
         multiline
-        submitBehavior="newline"
+        submitBehavior="blurAndSubmit"
+        returnKeyType="done"
         textAlignVertical="top"
         style={{ height: 144, lineHeight: 24 }}
       />

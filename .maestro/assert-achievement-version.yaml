@@ -1,5 +1,6 @@
 appId: com.anonymous.ichiro
 ---
+- evalScript: ${output.achievementVersion = VERSION}
 - assertVisible:
     id: "achievement-dog-${VERSION}"
 - assertNotVisible:

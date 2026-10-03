@@ -66,3 +66,39 @@ appId: com.anonymous.ichiro
     index: 0
 - assertVisible: "今日は報告ずみ.*"
 - assertNotVisible: "今日の達成を報告する"
+- tapOn: "戻る"
+- evalScript: ${output.nextAchievementVersion = ['lifting', 'studying'].filter(v => v !== output.achievementVersion)[0]}
+- openLink: ichiro://commitments/new
+- tapOn:
+    text: "開く"
+    optional: true
+- extendedWaitUntil:
+    visible: "コミットメント作成"
+    timeout: 20000
+- tapOn: "コミット内容 毎日30分広東語を練習する"
+- inputText: "Report second animation"
+- hideKeyboard
+- scrollUntilVisible:
+    element: "宣言する"
+    direction: DOWN
+- tapOn: "宣言する"
+- extendedWaitUntil:
+    visible: "宣言したワン！"
+    timeout: 10000
+- tapOn: "ホームに戻る"
+- tapOn:
+    text: ".*Report second animation.*"
+    index: 0
+- tapOn: "今日の達成を報告する"
+- extendedWaitUntil:
+    visible: "つづける"
+    timeout: 10000
+- assertVisible:
+    id: "achievement-dog-${output.nextAchievementVersion}"
+- assertNotVisible:
+    id: "achievement-dog-${output.achievementVersion}"
+- takeScreenshot: achievement-dog-second-version
+- tapOn: "つづける"
+- assertNotVisible:
+    id: "achievement-dog-animation"
+- assertVisible: "今日は報告ずみ.*"

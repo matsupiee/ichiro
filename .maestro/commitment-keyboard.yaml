@@ -1,0 +1,46 @@
+# ローカルのテスト用アカウントでログインして実行する。罰金なしで1件作成する。
+appId: com.anonymous.ichiro
+---
+- stopApp
+- launchApp
+- openLink: ichiro://commitments/new
+- tapOn:
+    text: "開く"
+    optional: true
+- extendedWaitUntil:
+    visible: "コミットメント作成"
+    timeout: 20000
+- tapOn: "コミット内容 毎日30分広東語を練習する"
+- inputText: "Keyboard dismissal test"
+- assertVisible: "完了|Done|done"
+- pressKey: Enter
+- assertNotVisible: "完了|Done|done"
+- assertVisible: "コミットメント作成"
+- assertVisible: "Keyboard dismissal test"
+- scrollUntilVisible:
+    element: "宣言する"
+    direction: DOWN
+- tapOn: "宣言する"
+- extendedWaitUntil:
+    visible: "宣言したワン！"
+    timeout: 10000
+- tapOn: "ホームに戻る"
+- tapOn:
+    text: ".*Keyboard dismissal test.*"
+    index: 0
+- tapOn: "Keyboard dismissal test"
+- eraseText
+- inputText: "Updated keyboard test"
+- assertVisible: "完了|Done|done"
+- pressKey: Enter
+- assertNotVisible: "完了|Done|done"
+- assertVisible: "コミットメント詳細"
+- assertVisible: "Updated keyboard test"
+- scrollUntilVisible:
+    element: "変更を保存"
+    direction: DOWN
+- tapOn: "変更を保存"
+- tapOn:
+    text: ".*Updated keyboard test.*"
+    index: 0
+- assertVisible: "Updated keyboard test"

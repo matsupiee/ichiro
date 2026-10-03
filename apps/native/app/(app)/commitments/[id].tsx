@@ -118,7 +118,9 @@ function CommitmentDetailContent() {
 
   return (
     <View className="flex-1 bg-canvas" style={{ paddingTop: insets.top }}>
-      <ScreenHeader title="コミットメント詳細" onBack={() => router.back()} />
+      <View className="pb-3">
+        <ScreenHeader title="コミットメント詳細" onBack={() => router.back()} />
+      </View>
       <KeyboardAwareScrollView
         className="flex-1"
         keyboardShouldPersistTaps="handled"
