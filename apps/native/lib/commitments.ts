@@ -2,6 +2,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Alert } from "react-native";
 
 import { useCelebrate } from "@/components/celebration/celebration";
+import { chooseAchievementAnimation } from "@/lib/achievement-animation";
 import { localToday } from "@/lib/date";
 import { trpc } from "@/utils/trpc";
 
@@ -16,7 +17,7 @@ export function useReport() {
   return (c: Reportable) => {
     const today = localToday();
     celebrate({
-      illustration: "lifting",
+      illustration: chooseAchievementAnimation(),
       message: `「${c.content}」今日も達成！`,
       tiles: [{ label: "連続達成", value: `${c.streak + 1}日` }],
     });

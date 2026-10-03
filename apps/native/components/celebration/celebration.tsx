@@ -23,11 +23,12 @@ import { FullWindowOverlay } from "react-native-screens";
 
 import { Dog } from "@/components/dog/dog";
 import { PrimaryButton } from "@/components/ui";
+import { type AchievementAnimation } from "@/lib/achievement-animation";
 import { haptics } from "@/lib/haptics";
 import { colors, fonts } from "@/lib/theme";
 
+import { AchievementDog } from "./achievement-dog";
 import { Confetti } from "./confetti";
-import { LiftingDog } from "./lifting-dog";
 import { Rays } from "./rays";
 
 // 達成を報告したとき・コミットメントを作ったときに出す Duolingo 風のお祝い。
@@ -36,7 +37,7 @@ import { Rays } from "./rays";
 export type Tile = { label: string; value: string };
 
 export type CelebrationInput = {
-  illustration?: "lifting";
+  illustration?: AchievementAnimation;
   closeLabel?: string;
   title?: string;
   message: string;
@@ -158,7 +159,7 @@ function CelebrationOverlay({ cel, onClose }: { cel: CelebrationState; onClose: 
         overflow: "hidden",
       }}
     >
-      {cel.illustration !== "lifting" ? <Rays centerY={top + 220} /> : null}
+      {!cel.illustration ? <Rays centerY={top + 220} /> : null}
       <Animated.View
         style={[
           {
@@ -175,8 +176,8 @@ function CelebrationOverlay({ cel, onClose }: { cel: CelebrationState; onClose: 
       >
         <Animated.View style={[{ marginTop: 60 }, dogEnter]}>
           <Pressable accessibilityLabel="ワンちゃん" onPress={haptics.tap}>
-            {cel.illustration === "lifting" ? (
-              <LiftingDog size={280} />
+            {cel.illustration ? (
+              <AchievementDog key={cel.illustration} size={280} variant={cel.illustration} />
             ) : (
               <Dog size={230} mood="jump" />
             )}

@@ -1,0 +1,16 @@
+appId: com.anonymous.ichiro
+---
+- assertVisible:
+    id: "achievement-dog-${VERSION}"
+- assertNotVisible:
+    id: "achievement-dog-${OTHER}"
+- repeat:
+    times: 3
+    commands:
+      - tapOn: "ワンちゃん"
+      - waitForAnimationToEnd:
+          timeout: 1000
+      - assertVisible:
+          id: "achievement-dog-${VERSION}"
+      - assertNotVisible:
+          id: "achievement-dog-${OTHER}"

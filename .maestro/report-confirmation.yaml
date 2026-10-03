@@ -41,6 +41,22 @@ appId: com.anonymous.ichiro
     timeout: 10000
 - assertVisible:
     id: "achievement-dog-animation"
+- runFlow:
+    when:
+      visible:
+        id: "achievement-dog-studying"
+    file: assert-achievement-version.yaml
+    env:
+      VERSION: studying
+      OTHER: lifting
+- runFlow:
+    when:
+      visible:
+        id: "achievement-dog-lifting"
+    file: assert-achievement-version.yaml
+    env:
+      VERSION: lifting
+      OTHER: studying
 - takeScreenshot: achievement-dog-loop
 - tapOn: "つづける"
 - assertNotVisible:

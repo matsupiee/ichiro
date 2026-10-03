@@ -20,7 +20,12 @@
       }
     },
     "production": {
-      "autoIncrement": true
+      "autoIncrement": true,
+      "environment": "production",
+      "env": {
+        "APP_ENV": "prod",
+        "EXPO_NO_DOTENV": "1"
+      }
     }
   },
   "submit": {
