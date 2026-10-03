@@ -2,7 +2,13 @@ import Stripe from "stripe";
 
 import type { StripeClient } from "../third-party-lib/stripe";
 
-type ChargeOutcome = "succeeded" | "processing" | "card_declined" | "authentication_required";
+type ChargeOutcome =
+  | "succeeded"
+  | "processing"
+  | "requires_action"
+  | "card_declined"
+  | "authentication_required"
+  | "decline_authentication_required";
 
 type FakePaymentMethod = {
   id: string;
@@ -76,10 +82,16 @@ export function createFakeStripe() {
       create: (async (params, options) => {
         charges.push({ params: params!, idempotencyKey: options?.idempotencyKey });
         const id = next("pi");
-        if (outcome === "card_declined" || outcome === "authentication_required") {
+        if (
+          outcome === "card_declined" ||
+          outcome === "authentication_required" ||
+          outcome === "decline_authentication_required"
+        ) {
           throw new Stripe.errors.StripeCardError({
             type: "card_error",
-            code: outcome,
+            code: outcome === "decline_authentication_required" ? "card_declined" : outcome,
+            decline_code:
+              outcome === "decline_authentication_required" ? "authentication_required" : undefined,
             message: `Stripe: ${outcome}`,
             payment_intent: { id } as Stripe.PaymentIntent,
           });

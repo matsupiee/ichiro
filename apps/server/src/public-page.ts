@@ -47,7 +47,7 @@ export function createPublicPageApp() {
       path,
       document(
         entry.title,
-        `${header(true)}<main class="legal wrap"><p class="meta">施行日：2026年9月30日</p><h1>${entry.title}</h1>${entry.sections.map(([heading, body]) => `<section><h2>${heading}</h2><p>${body}</p></section>`).join("")}${path === "/privacy" ? '<p class="external">外部サービスの方針：<a href="https://stripe.com/jp/privacy">Stripe</a> / <a href="https://www.cloudflare.com/privacypolicy/">Cloudflare</a></p>' : ""}</main>`,
+        `${header(true)}<main class="legal wrap"><p class="meta">施行日：2026年10月3日</p><h1>${entry.title}</h1>${entry.sections.map(([heading, body]) => `<section><h2>${heading}</h2><p>${body}</p></section>`).join("")}${path === "/privacy" ? '<p class="external">外部サービスの方針：<a href="https://stripe.com/jp/privacy">Stripe</a> / <a href="https://www.cloudflare.com/privacypolicy/">Cloudflare</a> / <a href="https://resend.com/legal/privacy-policy">Resend</a></p><p class="external">データ処理契約・再委託先：<a href="https://stripe.com/legal/dpa">Stripe の契約</a> / <a href="https://stripe.com/legal/service-providers">Stripe の委託先</a> / <a href="https://www.cloudflare.com/cloudflare-customer-dpa/">Cloudflare の契約</a> / <a href="https://www.cloudflare.com/cloudflare-subprocessors/">Cloudflare の委託先</a> / <a href="https://resend.com/legal/dpa">Resend の契約</a> / <a href="https://resend.com/legal/subprocessors">Resend の委託先</a></p>' : ""}</main>`,
         true,
       ),
     );

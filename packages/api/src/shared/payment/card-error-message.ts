@@ -3,7 +3,7 @@
 export function cardErrorMessage(code: string | undefined, fallback: string) {
   switch (code) {
     case "authentication_required":
-      return "カードの本人認証が必要なため引き落とせませんでした";
+      return "カードの本人認証が必要なため、この報告日分の自動請求を停止しました";
     case "card_declined":
       return "カードが拒否されました";
     case "expired_card":

@@ -41,7 +41,7 @@ bun run dev:stripe --port 3001
 CLI のログでイベントの転送と HTTP 200 を確認し、アプリや DB に結果が反映されることを確かめる。
 操作手順と期待する結果は、[支払い方法の登録](../user-stories/register-payment-method.md)と[罰金の徴収](../user-stories/penalty-collection.md)を参照する。
 
-CLI の購読対象は `setup_intent.succeeded`・`payment_intent.succeeded`・`payment_intent.payment_failed`。
+CLI の購読対象は `setup_intent.succeeded`・`payment_intent.succeeded`・`payment_intent.payment_failed`・`payment_intent.requires_action`。
 `stripe trigger` の生成データはアプリの顧客や罰金と一致しないため、HTTP 200 だけでは DB 反映の確認にならない。
 
 ## 確認用データの作成

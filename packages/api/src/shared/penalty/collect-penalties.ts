@@ -1,6 +1,6 @@
 import type { Database } from "@ichiro/db";
 import { commitment, paymentCustomer, paymentMethod, penalty, user } from "@ichiro/db/schema/index";
-import { and, eq, exists, isNull, lt, or } from "drizzle-orm";
+import { and, eq, exists, isNull, lt, ne, or } from "drizzle-orm";
 
 import type { StripeClient } from "../../third-party-lib/stripe";
 import { chargePenalty, type ChargeResult } from "../payment/charge-penalty";
@@ -23,9 +23,12 @@ export async function collectPenalties(db: Database, stripe: StripeClient, now: 
     .leftJoin(paymentMethod, eq(paymentMethod.id, penalty.paymentMethodId))
     .leftJoin(paymentCustomer, eq(paymentCustomer.userId, penalty.userId))
     .where(
-      or(
-        eq(penalty.status, "pending"),
-        and(eq(penalty.status, "failed"), lt(penalty.attempts, MAX_CHARGE_ATTEMPTS)),
+      and(
+        isNull(penalty.retryStoppedAt),
+        or(
+          eq(penalty.status, "pending"),
+          and(eq(penalty.status, "failed"), lt(penalty.attempts, MAX_CHARGE_ATTEMPTS)),
+        ),
       ),
     );
 
@@ -41,6 +44,7 @@ export async function collectPenalties(db: Database, stripe: StripeClient, now: 
           eq(penalty.id, p.id),
           eq(penalty.status, p.status),
           eq(penalty.attempts, p.attempts),
+          isNull(penalty.retryStoppedAt),
           exists(
             db
               .select({ id: user.id })
@@ -92,7 +96,13 @@ export async function collectPenalties(db: Database, stripe: StripeClient, now: 
         await db
           .update(penalty)
           .set({ status: "processing", attempts, chargeReference: result.reference })
-          .where(eq(penalty.id, p.id));
+          .where(
+            and(
+              eq(penalty.id, p.id),
+              eq(penalty.status, "processing"),
+              isNull(penalty.retryStoppedAt),
+            ),
+          );
         break;
       case "failed":
         counts.failed++;
@@ -103,8 +113,11 @@ export async function collectPenalties(db: Database, stripe: StripeClient, now: 
             attempts,
             chargeReference: result.reference,
             failureMessage: result.message,
+            ...(result.stopRetrying ? { retryStoppedAt: now } : {}),
           })
-          .where(eq(penalty.id, p.id));
+          .where(
+            and(eq(penalty.id, p.id), ne(penalty.status, "paid"), isNull(penalty.retryStoppedAt)),
+          );
         break;
     }
   }

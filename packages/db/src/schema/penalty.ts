@@ -41,6 +41,8 @@ export const penalty = sqliteTable(
     status: text("status", { enum: penaltyStatuses }).notNull().default("pending"),
     // 決済を試みた回数。失敗が続いたら打ち切る
     attempts: integer("attempts").notNull().default(0),
+    // 追加認証が必要な報告日分は、自動再請求を打ち切る。実際の試行回数とは分けて記録する。
+    retryStoppedAt: integer("retry_stopped_at", { mode: "timestamp_ms" }),
     // Stripe の PaymentIntent の ID
     chargeReference: text("charge_reference"),
     failureMessage: text("failure_message"),

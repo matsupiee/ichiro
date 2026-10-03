@@ -75,7 +75,7 @@ describe("公開紹介ページ", () => {
     const html = await response.text();
     expect(html).toContain(`<h1>${title}</h1>`);
     expect(html).toContain(heading!);
-    expect(html).toContain("施行日：2026年9月30日");
+    expect(html).toContain("施行日：2026年10月3日");
     expect(html).not.toContain("草案");
     expect(html).not.toContain("未施行");
     expect(html).not.toContain("施行日は未定");

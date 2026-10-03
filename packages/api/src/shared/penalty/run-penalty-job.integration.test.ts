@@ -138,13 +138,35 @@ describe("報告できなかった日は罰金が徴収される", () => {
     });
   });
 
-  test("本人認証が必要なカードは、その理由を残す", async () => {
+  test.each([
+    "authentication_required",
+    "decline_authentication_required",
+    "requires_action",
+  ] as const)("追加認証 %s はその報告日分を再請求せず、別の報告日分は処理する", async (outcome) => {
     const demo = await setupDemo();
-    demo.stripe.willCharge("authentication_required");
+    demo.stripe.willCharge(outcome);
     await runJob(demo, tomorrow(demo.today));
-
     const row = await penaltyOn(demo, demo.seeded.commitmentIds[0]!, demo.today);
-    expect(row.failureMessage).toBe("カードの本人認証が必要なため引き落とせませんでした");
+    expect(row).toMatchObject({
+      status: "failed",
+      attempts: 1,
+      retryStoppedAt: tomorrow(demo.today),
+    });
+    expect(row.failureMessage).toBe(
+      "カードの本人認証が必要なため、この報告日分の自動請求を停止しました",
+    );
+    const count = demo.stripe.charges.length;
+    demo.stripe.willCharge("succeeded");
+    for (let i = 0; i < 4; i++) await runJob(demo, tomorrow(demo.today));
+    expect(demo.stripe.charges.length).toBe(count);
+    await runJob(demo, tomorrow(addDays(demo.today, 1)));
+    expect(demo.stripe.charges.length).toBeGreaterThan(count);
+    expect(
+      demo.stripe.charges.filter((c) => c.params.metadata?.penalty_id === row.id),
+    ).toHaveLength(1);
+    expect(
+      (await penaltyOn(demo, demo.seeded.commitmentIds[0]!, addDays(demo.today, 1))).status,
+    ).toBe("paid");
   });
 
   test("Stripe 側で処理中になったものは、試し直さずに Webhook を待つ", async () => {

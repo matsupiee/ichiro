@@ -6,7 +6,8 @@ import { parseArgs } from "node:util";
 import { internal } from "varlock";
 
 const infraDirectory = fileURLToPath(new URL("../", import.meta.url));
-const events = "setup_intent.succeeded,payment_intent.succeeded,payment_intent.payment_failed";
+const events =
+  "setup_intent.succeeded,payment_intent.succeeded,payment_intent.payment_failed,payment_intent.requires_action";
 
 export async function loadSettings(env = process.env) {
   const graph = await internal.loadEnvGraph({

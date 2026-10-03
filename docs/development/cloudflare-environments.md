@@ -24,7 +24,7 @@ Varlock の `APP_ENV` で設定ファイルを選ぶ。サーバーの `NODE_ENV
 
 `BETTER_AUTH_URL` は Alchemy が Worker の URL を設定するので指定不要。ネイティブの認証では既存の `ichiro://` scheme を使う。
 
-Stripe の Webhook は各 Worker URL の `/stripe/webhook` に作成する。イベントは `setup_intent.succeeded`、`payment_intent.succeeded`、`payment_intent.payment_failed`。stg と prod で別エンドポイント・署名シークレットにする。
+Stripe の Webhook は各 Worker URL の `/stripe/webhook` に作成する。イベントは `setup_intent.succeeded`、`payment_intent.succeeded`、`payment_intent.payment_failed`・`payment_intent.requires_action`。stg と prod で別エンドポイント・署名シークレットにする。
 
 初回に Worker URL がまだ不明なら、任意のランダムな `whsec_...` を一時設定してデプロイする。出力された URL で Stripe の Webhook を作り、実際の署名シークレットへ置き換えて再デプロイする。一時設定の間は署名検証に失敗するため、ユーザーの利用・支払い登録・seed 投入は再デプロイ後に行う。
 

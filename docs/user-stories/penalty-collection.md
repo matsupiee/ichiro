@@ -1,11 +1,11 @@
 # 報告できなかった日は罰金が徴収される
 
-> ステータス: 実装済み（Stripe で引き落とす。本人認証が必要なカードで失敗したときに、ユーザーに認証してもらう流れは未実装）
+> ステータス: 実装済み（追加の本人認証が必要な報告日分は自動請求を打ち切り、認証や手動支払いを求めない）
 
 ## ストーリー
 
 罰金を設定したユーザーとして、報告日の 23:59:59 までに報告できなかったら、決めた金額を本当に払いたい。
-払わずに済む抜け道がないからこそ、毎回きちんとやろうと思えるから。
+未報告時に支払いが発生する仕組みで、取り組みを続けたいから。
 
 ## 動作確認の手順
 
@@ -47,6 +47,14 @@ bun run db:seed -- --url file:./local.db --today <昨日の日付> --stripe-cust
 7. 罰金を設定したばかりのコミットメントの詳細ページを開く。
    - 「これまでの罰金」は ¥0 で、「まだ罰金はないワン。この調子でつづけよう。」と出る。
 
+8. 追加認証による請求停止の履歴を、実決済なしで確認する。
+   - `bun run --cwd packages/db src/seed/payment-authentication.ts --url file:/絶対パス/対象.sqlite --skip-migrations` で確認用データを作る。同名ユーザーがいるときは `--email auth-stop-2@ichiro.example` を指定する。
+   - `auth-stop@ichiro.example` / `withdrawal-demo-password` でネイティブアプリにログインし、「追加認証で請求停止」の詳細を開く。
+   - 「この報告日分の自動請求を停止しました」が表示され、認証・再支払いを求めるボタンがない。実カードや Stripe Customer は作らない。
+9. API テストで追加認証の同期応答・Webhook と、その後の定期処理を確認する。
+   - 停止した報告日分は再請求されず、別の報告日分は通常どおり処理される。
+   - 遅延・重複した失敗通知で停止を解除しない。決済成功が届いた場合は成功を記録し、成功済みを失敗に戻さない。
+
 ## データの持ち方
 
 - `penalty` テーブルに、報告できなかった報告日1日につき1行を持つ。
@@ -73,6 +81,9 @@ bun run db:seed -- --url file:./local.db --today <昨日の日付> --stripe-cust
   - 退会後は罰金の生成・請求・再試行の対象にしない。→ [退会できる](./withdrawal.md)
   - Stripe 側で処理中（`processing`）になったものは試し直さず、Webhook（`/stripe/webhook`）の `payment_intent.succeeded`・`payment_intent.payment_failed` で結果を反映する。先に成功が届いていたら、あとから届いた失敗で上書きしない。
 
+- カード登録時の本人認証は従来どおり。保存済みカードへの自動請求時に `authentication_required`（code / decline_code）または `requires_action` を受けた報告日分は再請求しない。
+  - `penalty.retryStoppedAt` に停止日時を保存し、実際の試行回数は水増ししない。通常のカード拒否は引き続き合計3回まで試す。
+
 ## 対応するテスト
 
 - 削除による履歴の消失を防ぐ制約は `packages/api/src/shared/penalty/penalty-deletion.integration.test.ts`。既存のデモ seed を使って確認する。
@@ -80,3 +91,5 @@ bun run db:seed -- --url file:./local.db --today <昨日の日付> --stripe-cust
 - 設定を変えたときの扱いは `packages/api/src/routers/consumer/commitment/update/handler.integration.test.ts` の「設定を変えても、過去の分の罰金は変わらない」
 - Webhook での反映は `packages/api/src/shared/payment/handle-stripe-event.integration.test.ts`
 - 締め切りの判定と、罰金の対象になる日の計算は `packages/api/src/shared/penalty/penalty.test.ts`
+
+- 追加認証の停止は `run-penalty-job.integration.test.ts`、`handle-stripe-event.integration.test.ts`、`payment-authentication-seed.integration.test.ts`、`payment-authentication-migration.integration.test.ts` で確認する。
