@@ -11,7 +11,8 @@ function document(title: string, content: string, noIndex = false) {
   return `<!doctype html><html lang="ja"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="description" content="目標を宣言して、毎日の達成を報告。ichiro は、続けたいことを応援するネイティブアプリです。公開準備中。">${noIndex ? '<meta name="robots" content="noindex">' : ""}<title>${title} | ichiro</title><link rel="stylesheet" href="/site.css"></head><body>${content}${footer}</body></html>`;
 }
 function phone(file: string, alt: string, eager = false) {
-  return `<div class="phone"><img src="/images/${file}.png" alt="${alt}" width="1206" height="2622" ${eager ? 'fetchpriority="high"' : 'loading="lazy"'} decoding="async"></div>`;
+  const [width, height] = file === "penalty" ? [1206, 2622] : [1320, 2868];
+  return `<div class="phone"><img src="/images/${file}.png" alt="${alt}" width="${width}" height="${height}" ${eager ? 'fetchpriority="high"' : 'loading="lazy"'} decoding="async"></div>`;
 }
 const page = document(
   "続けたいことを、毎日の約束に。",

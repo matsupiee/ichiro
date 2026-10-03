@@ -48,6 +48,11 @@ describe("公開紹介ページ", () => {
       expect([...bytes.subarray(0, 8)]).toEqual([137, 80, 78, 71, 13, 10, 26, 10]);
       expect(match[2]!.length).toBeGreaterThan(0);
     }
+    for (const match of html.matchAll(/<img[^>]+src="([^"]+)"[^>]+width="(\d+)" height="(\d+)"/g)) {
+      const bytes = await readFile(new URL(`../public${match[1]}`, import.meta.url));
+      expect(bytes.readUInt32BE(16)).toBe(Number(match[2]));
+      expect(bytes.readUInt32BE(20)).toBe(Number(match[3]));
+    }
     await access(new URL("../public/site.css", import.meta.url));
     expect(
       await readFile(new URL("../public/images/ichiro-wordmark.png", import.meta.url)),
