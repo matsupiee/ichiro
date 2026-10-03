@@ -6,19 +6,22 @@ import UniformTypeIdentifiers
 // --iphone-6.5 exports a separate set for the 6.5-inch App Store screenshot slot.
 let arguments = Array(CommandLine.arguments.dropFirst())
 let export65 = arguments.first == "--iphone-6.5"
-let paths = export65 ? Array(arguments.dropFirst()) : arguments
-let width = export65 ? 1284 : 1320
-let height = export65 ? 2778 : 2868
+let exportIPad = arguments.first == "--ipad-13"
+let paths = (export65 || exportIPad) ? Array(arguments.dropFirst()) : arguments
+let width = exportIPad ? 2048 : (export65 ? 1284 : 1320)
+let height = exportIPad ? 2732 : (export65 ? 2778 : 2868)
+let sourceWidth = exportIPad ? 2048 : 1320
+let sourceHeight = exportIPad ? 2732 : 2868
 for path in paths {
     let url = URL(fileURLWithPath: path)
     guard let source = CGImageSourceCreateWithURL(url as CFURL, nil),
           let image = CGImageSourceCreateImageAtIndex(source, 0, nil),
-          image.width == 1320, image.height == 2868,
+          image.width == sourceWidth, image.height == sourceHeight,
           let colorSpace = CGColorSpace(name: CGColorSpace.sRGB),
           let context = CGContext(data: nil, width: width, height: height,
                                   bitsPerComponent: 8, bytesPerRow: 0, space: colorSpace,
                                   bitmapInfo: CGImageAlphaInfo.noneSkipLast.rawValue)
-    else { fatalError("Expected a 1320 × 2868 native PNG: \(path)") }
+    else { fatalError("Expected a \(sourceWidth) × \(sourceHeight) native PNG: \(path)") }
     let bounds = CGRect(x: 0, y: 0, width: width, height: height)
     context.setFillColor(CGColor(gray: 1, alpha: 1))
     context.fill(bounds)
