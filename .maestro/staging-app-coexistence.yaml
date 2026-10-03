@@ -1,0 +1,18 @@
+appId: com.anonymous.ichiro.stg
+---
+- launchApp:
+    appId: com.anonymous.ichiro
+- openLink: "ichiro://sign-in"
+- tapOn:
+    text: "開く"
+    optional: true
+- assertVisible: "メールアドレス"
+- takeScreenshot: /tmp/ichiro-coexist-production-login
+- launchApp:
+    appId: com.anonymous.ichiro.stg
+- openLink: "ichiro-stg://sign-in"
+- tapOn:
+    text: "開く"
+    optional: true
+- assertVisible: "メールアドレス"
+- takeScreenshot: /tmp/ichiro-coexist-staging-login

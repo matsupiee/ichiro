@@ -40,3 +40,16 @@ test("本番でconsoleへの退避や未設定の送信を許可しない", asyn
     "not configured",
   );
 });
+
+test("パスワード再設定メールに専用の件名とコードを記載する", async () => {
+  let payload: { subject: string; text: string; html: string } | undefined;
+  const request = (async (_input: RequestInfo | URL, init?: RequestInit) => {
+    payload = JSON.parse(String(init?.body));
+    return Response.json({ id: "reset-mail" });
+  }) as typeof fetch;
+  await createAuthMailer(config, request)({ ...mail, type: "forget-password" });
+  expect(payload!.subject).toBe("【ichiro】パスワード再設定コード");
+  expect(payload!.text).toContain("012345");
+  expect(payload!.text).toContain("5分");
+  expect(payload!.html).toContain("パスワード再設定");
+});

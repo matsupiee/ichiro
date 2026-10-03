@@ -21,7 +21,11 @@ export function createAuthMailer(
     if (env.AUTH_EMAIL_DELIVERY !== "resend" || !env.RESEND_API_KEY || !env.AUTH_EMAIL_FROM) {
       throw new Error("Resend is not configured");
     }
-    const purpose = type === "change-email" ? "メールアドレス変更" : "メールアドレス確認";
+    const purpose = {
+      "change-email": "メールアドレス変更",
+      "email-verification": "メールアドレス確認",
+      "forget-password": "パスワード再設定",
+    }[type];
     const text = `ichiro の${purpose}コードは ${otp} です。\n\nアプリにこの6桁のコードを入力してください。有効期限は5分です。\nコードを他の人に教えないでください。心当たりがない場合は、このメールを破棄してください。`;
     const response = await request("https://api.resend.com/emails", {
       method: "POST",

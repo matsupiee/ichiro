@@ -5,6 +5,12 @@ export function authErrorMessage(error: { code?: string; status?: number; messag
       return "登録済みのアカウントです。ログインしてください";
     case "ACCOUNT_WITHDRAWN":
       return "退会済みのため、このアカウントではログインできません";
+    case "PASSWORD_TOO_SHORT":
+      return "パスワードは8文字以上にしてください";
+    case "PASSWORD_TOO_LONG":
+      return "パスワードは128文字以内にしてください";
+    case "INVALID_EMAIL":
+      return "メールアドレスが正しくありません";
     case "INVALID_OTP":
       return "認証コードが違います。届いた最新の6桁コードを入力してください";
     case "OTP_EXPIRED":

@@ -1,4 +1,53 @@
-# EAS Build で stg 用アプリを実機に配布する
+# EAS Build で iOS アプリをビルド・アップロードする
+
+## App Store Connect へのアップロード
+
+以下はリポジトリのルートから実行する。Expo と Apple Developer の認証を求められたら、対象プロジェクト・Apple チームのアカウントでログインする。
+
+### ビルド済みのアプリをアップロードする
+
+```bash
+bun run ios:submit
+```
+
+案内に従って EAS のビルドを選ぶ。iOS・production・App Store 配布用で、アップロードしたいバージョンとビルド番号のものを選択する。preview は内部配布用なので選ばない。
+
+ビルド ID がわかっている場合は、対象を直接指定できる。
+
+```bash
+bun run ios:submit --id 7bb62ce5-9719-411d-ac30-92baa55a62b8
+```
+
+この ID は 2026年10月3日に作成した 1.0.0（3）。次回以降は EAS のビルド詳細に表示される ID に置き換える。
+
+### 次回のビルドからアップロードまでまとめて実行する
+
+```bash
+bun run ios:release
+```
+
+production プロファイルで iOS をビルドし、成功したビルドを App Store Connect に自動アップロードする。ビルド番号は EAS が自動で増やす。API は本番、Stripe は本番の公開可能キーを使用する。
+
+ビルドだけ実行する場合は次を使う。
+
+```bash
+bun run ios:build
+```
+
+### 初回設定と確認
+
+- EAS の production 環境に `EXPO_PUBLIC_SERVER_URL=https://ichiro.app` と本番用 `EXPO_PUBLIC_STRIPE_PUBLISHABLE_KEY=pk_live_...` を設定する。
+- App Store Connect に `com.anonymous.ichiro` のアプリを用意する。初回の EAS Submit では Apple の認証やアップロード用認証情報の設定が必要になる場合がある。
+- アプリの選択を省略したい場合は、`apps/native/eas.json` の `submit.production.ios.ascAppId` に、App Store Connect の「アプリ情報」にある数字の Apple ID を設定する。Bundle ID や Apple アカウントのメールアドレスとは異なる。
+- ビルド前に `bun run test` と `bun run check-types` を実行し、iOS Simulator または実機で動作確認する。
+- アップロード完了後は Apple 側の処理を待ち、App Store Connect の TestFlight に対象バージョン・ビルド番号が表示されることを確認する。
+- 審査提出画面でそのビルドを選び、スクリーンショット・説明・審査情報を揃えて審査へ提出する。上記コマンドはアップロードまでを行い、App Review への提出や一般公開は行わない。
+
+コマンドの引数だけ確認する場合は `bun run ios:submit --help`、`bun run ios:build --help`、`bun run ios:release --help` を使う。ヘルプ表示ではビルド・アップロードは開始しない。
+
+参考: [EAS Submit の iOS 手順](https://docs.expo.dev/submit/ios/)、[ビルド後の自動アップロード](https://docs.expo.dev/build/automate-submissions/)。
+
+## stg 用アプリの内部配布
 
 ## 前提
 
@@ -41,14 +90,14 @@ npx eas-cli@latest whoami
 
 これは `build` 内の抜粋。現在のファイルには設定済み。
 
-| 設定 | 役割 |
-| --- | --- |
-| `--profile preview` | EAS のビルド設定 `build.preview` を選ぶ |
-| `distribution: internal` | 登録した実機へ内部配布する |
-| `environment: preview` | EAS 上の preview 環境変数をビルドに渡す |
-| `APP_ENV: stg` | Varlock がアプリの stg 設定を選ぶ |
-| `EXPO_NO_DOTENV: 1` | Expo による `.env` の自動読み込みを止める |
-| `ios.simulator: false` | Simulator 用ではなく iPhone 実機用にビルドする |
+| 設定                     | 役割                                           |
+| ------------------------ | ---------------------------------------------- |
+| `--profile preview`      | EAS のビルド設定 `build.preview` を選ぶ        |
+| `distribution: internal` | 登録した実機へ内部配布する                     |
+| `environment: preview`   | EAS 上の preview 環境変数をビルドに渡す        |
+| `APP_ENV: stg`           | Varlock がアプリの stg 設定を選ぶ              |
+| `EXPO_NO_DOTENV: 1`      | Expo による `.env` の自動読み込みを止める      |
+| `ios.simulator: false`   | Simulator 用ではなく iPhone 実機用にビルドする |
 
 `EXPO_NO_DOTENV` は Expo 側の読み込みだけを止める。このプロジェクトでは Varlock が環境変数を管理しており、Expo が先に開発用 `.env` の値を process.env に入れると、stg 用の設定より優先される可能性があるため指定する。Varlock のファイル読み込みと、EAS から渡される環境変数は引き続き利用できる。
 
@@ -58,9 +107,9 @@ npx eas-cli@latest whoami
 
 [Expo ダッシュボード](https://expo.dev/)で対象プロジェクトの Environment variables を開き、preview 環境に次の値を登録する。
 
-| 名前 | 値 | Visibility |
-| --- | --- | --- |
-| `EXPO_PUBLIC_SERVER_URL` | stg Worker の HTTPS URL | Plain text |
+| 名前                                 | 値                                                   | Visibility |
+| ------------------------------------ | ---------------------------------------------------- | ---------- |
+| `EXPO_PUBLIC_SERVER_URL`             | stg Worker の HTTPS URL                              | Plain text |
 | `EXPO_PUBLIC_STRIPE_PUBLISHABLE_KEY` | stg サーバーと同じ Stripe テスト環境の `pk_test_...` | Plain text |
 
 これらはアプリに組み込まれる公開値。サーバー用の `STRIPE_SECRET_KEY`、`STRIPE_WEBHOOK_SECRET`、`BETTER_AUTH_SECRET` はアプリに渡さない。
@@ -91,7 +140,21 @@ npx eas-cli@latest build --platform ios --profile preview
 
 ビルド完了後、表示されたインストール URL または QR コードを登録済みの iPhone で開いてインストールする。端末で求められた場合はデベロッパモードを有効にする。
 
-これは内部配布であり、TestFlight や App Store への提出ではない。現在は stg / prod で Bundle ID が共通なので、同じ端末に両方を並べるには、事前に Bundle ID とアプリ名を環境別にする設定が必要。
+これは内部配布であり、TestFlight や App Store への提出ではない。`app.config.ts` が `APP_ENV=stg` の場合だけ表示名・識別子・URL スキームを切り替える。
+
+| 設定                            | stg（preview）             | 本番（production）     |
+| ------------------------------- | -------------------------- | ---------------------- |
+| 表示名                          | `[stg] ichiro`             | `ichiro`               |
+| iOS Bundle ID / Android package | `com.anonymous.ichiro.stg` | `com.anonymous.ichiro` |
+| URL スキーム                    | `ichiro-stg`               | `ichiro`               |
+
+本番の TestFlight アプリと同じ端末にインストールできる。旧 stg ビルドは本番と同じ識別子なので、上記のコマンドで再ビルドして新しい stg をインストールする。初回は stg の識別子用の Provisioning Profile が必要になる。別アプリになるため、旧アプリのログイン状態は引き継がれない。
+
+stg の認証リクエストでは `ichiro-stg://` を使用するため、新しいアプリを配布する前に、このスキームを許可した API を stg にデプロイする。
+
+ローカルで既存の `ios/` を再利用する場合は、`APP_ENV=stg EXPO_NO_DOTENV=1 bunx expo prebuild --platform ios --no-install` で設定を反映してからビルドする。本番に戻すときも `APP_ENV=prod` で再生成する。
+
+参考: [Expo のアプリバリアント](https://docs.expo.dev/build-reference/variants/)。
 
 ## 動作確認
 

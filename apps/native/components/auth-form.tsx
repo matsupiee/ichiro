@@ -5,6 +5,7 @@ import { KeyboardAwareScrollView } from "react-native-keyboard-controller";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import z from "zod";
 
+import { PasswordField } from "@/components/password-field";
 import { Dog } from "@/components/dog/dog";
 import { ErrorText, Field, FieldLabel, PrimaryButton, ScreenHeader } from "@/components/ui";
 import { authErrorMessage } from "@/lib/auth-error";
@@ -147,17 +148,29 @@ export function AuthForm({
         onSubmitEditing={() => passwordRef.current?.focus()}
       />
       <FieldLabel>パスワード</FieldLabel>
-      <Field
+      <PasswordField
         ref={passwordRef}
         value={values.password}
         onChangeText={set("password")}
         placeholder="8文字以上"
-        secureTextEntry
         autoComplete={mode === "sign-up" ? "new-password" : "current-password"}
         textContentType={mode === "sign-up" ? "newPassword" : "password"}
         returnKeyType="go"
         onSubmitEditing={submit}
       />
+      {mode === "sign-in" ? (
+        <Pressable
+          accessibilityRole="button"
+          onPress={() =>
+            router.push({ pathname: "/reset-password", params: { email: values.email.trim() } })
+          }
+          className="px-[30px] pt-5 pb-1"
+        >
+          <Text className="text-center text-[14px] text-brand-ink">
+            パスワードを忘れた方はこちら
+          </Text>
+        </Pressable>
+      ) : null}
       <ErrorText message={error} />
       <View className="px-[30px] pt-[34px]">
         {mode === "sign-up" ? (

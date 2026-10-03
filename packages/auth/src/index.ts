@@ -6,6 +6,7 @@ import { betterAuth } from "better-auth";
 import { APIError, createAuthMiddleware } from "better-auth/api";
 import { emailOTP } from "better-auth/plugins";
 import { eq } from "drizzle-orm";
+import { z } from "zod";
 
 export type AuthConfig = {
   BETTER_AUTH_URL: string;
@@ -15,7 +16,7 @@ export type AuthConfig = {
 export type VerificationMail = {
   email: string;
   otp: string;
-  type: "email-verification" | "change-email";
+  type: "email-verification" | "change-email" | "forget-password";
 };
 export type SendVerificationMail = (mail: VerificationMail) => Promise<void>;
 
@@ -46,10 +47,17 @@ export function createAuth(env: AuthConfig, database: Database, sendMail: SendVe
       },
     },
     database: drizzleAdapter(database, { provider: "sqlite", schema }),
-    trustedOrigins: [env.CORS_ORIGIN, "ichiro://", "exp://", "http://localhost:8081"],
+    trustedOrigins: [
+      env.CORS_ORIGIN,
+      "ichiro://",
+      "ichiro-stg://",
+      "exp://",
+      "http://localhost:8081",
+    ],
     emailAndPassword: {
       enabled: true,
       requireEmailVerification: true,
+      revokeSessionsOnPasswordReset: true,
       // 登録済みの場合は成功扱いにせず、ネイティブのログイン画面へ案内する。
       // await-auth-delivery がこのコールバックのエラーも応答へ伝播する。
       onExistingUserSignUp: async () => {
@@ -66,13 +74,11 @@ export function createAuth(env: AuthConfig, database: Database, sendMail: SendVe
     },
     secret: env.BETTER_AUTH_SECRET,
     baseURL: env.BETTER_AUTH_URL,
-    // メール確認以外の OTP ログイン・パスワード再設定は今回公開しない。
+    // OTP ログイン・事前のコード照合・旧再設定 API は公開しない。
     disabledPaths: [
       "/sign-in/email-otp",
       "/email-otp/check-verification-otp",
-      "/email-otp/request-password-reset",
       "/forget-password/email-otp",
-      "/email-otp/reset-password",
       "/change-email",
       "/verify-email",
     ],
@@ -89,6 +95,8 @@ export function createAuth(env: AuthConfig, database: Database, sendMail: SendVe
         "/email-otp/verify-email": { window: 60, max: 10 },
         "/email-otp/request-email-change": { window: 60, max: 5 },
         "/email-otp/change-email": { window: 60, max: 10 },
+        "/email-otp/request-password-reset": { window: 60, max: 5 },
+        "/email-otp/reset-password": { window: 60, max: 10 },
       },
     },
     advanced: {
@@ -99,6 +107,26 @@ export function createAuth(env: AuthConfig, database: Database, sendMail: SendVe
     hooks: {
       before: createAuthMiddleware(async (ctx) => {
         const path = ctx.path;
+        if (path === "/email-otp/request-password-reset" || path === "/email-otp/reset-password") {
+          const email = z.email().safeParse(ctx.body?.email);
+          if (!email.success)
+            throw new APIError("BAD_REQUEST", {
+              message: "メールアドレスが正しくありません",
+              code: "INVALID_EMAIL",
+            });
+          const [user] = await database
+            .select()
+            .from(schema.user)
+            .where(eq(schema.user.email, email.data.toLowerCase()));
+          if (user?.withdrawnAt) {
+            // 退会済みでも送信応答からアカウントの有無を判別させない。
+            if (path === "/email-otp/request-password-reset") return ctx.json({ success: true });
+            throw new APIError("BAD_REQUEST", {
+              message: "認証コードが無効です",
+              code: "INVALID_OTP",
+            });
+          }
+        }
         if (
           path === "/email-otp/send-verification-otp" &&
           ctx.body?.type !== "email-verification"
@@ -108,7 +136,11 @@ export function createAuth(env: AuthConfig, database: Database, sendMail: SendVe
             code: "INVALID_OTP_TYPE",
           });
         }
-        if (path === "/email-otp/verify-email" || path === "/email-otp/change-email") {
+        if (
+          path === "/email-otp/verify-email" ||
+          path === "/email-otp/change-email" ||
+          path === "/email-otp/reset-password"
+        ) {
           if (!/^\d{6}$/.test(ctx.body?.otp ?? "")) {
             throw new APIError("BAD_REQUEST", {
               message: "6桁の認証コードを入力してください",
@@ -154,7 +186,11 @@ export function createAuth(env: AuthConfig, database: Database, sendMail: SendVe
         overrideDefaultEmailVerification: true,
         changeEmail: { enabled: true, verifyCurrentEmail: false },
         async sendVerificationOTP({ email, otp, type }) {
-          if (type !== "email-verification" && type !== "change-email")
+          if (
+            type !== "email-verification" &&
+            type !== "change-email" &&
+            type !== "forget-password"
+          )
             throw new Error("Unsupported OTP purpose");
           try {
             await sendMail({ email, otp, type });

@@ -424,3 +424,26 @@ for (const verified of [false, true]) {
     }
   });
 }
+
+test.each(["ichiro://", "ichiro-stg://", "untrusted-app://"])(
+  "ネイティブの Origin %s を検証する",
+  async (origin) => {
+    const db = await createTestDb();
+    const mails: VerificationMail[] = [];
+    const auth = createAuth(config, db, async (mail) => {
+      mails.push(mail);
+    });
+    // Better Auth はテスト環境で Origin 検証を省略するため、この検証では有効にする。
+    (await auth.$context).skipOriginCheck = false;
+    const response = await auth.handler(
+      new Request(`${config.BETTER_AUTH_URL}/api/auth/sign-up/email`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "expo-origin": origin },
+        body: JSON.stringify(credentials),
+      }),
+    );
+    const trusted = origin !== "untrusted-app://";
+    expect(response.status).toBe(trusted ? 200 : 403);
+    expect(mails).toHaveLength(trusted ? 1 : 0);
+  },
+);

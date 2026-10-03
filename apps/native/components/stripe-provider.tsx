@@ -2,7 +2,7 @@ import { StripeProvider as NativeStripeProvider, useStripe } from "@stripe/strip
 import * as Linking from "expo-linking";
 import { type ReactNode, useEffect } from "react";
 
-import { APPLE_MERCHANT_ID, STRIPE_PUBLISHABLE_KEY } from "@/lib/stripe-config";
+import { APPLE_MERCHANT_ID, APP_URL_SCHEME, STRIPE_PUBLISHABLE_KEY } from "@/lib/stripe-config";
 
 // 本人認証のあとにブラウザから戻ってきた URL を Stripe に渡す
 function UrlHandler() {
@@ -21,7 +21,7 @@ export function StripeProvider({ children }: { children: ReactNode }) {
     <NativeStripeProvider
       publishableKey={STRIPE_PUBLISHABLE_KEY}
       merchantIdentifier={APPLE_MERCHANT_ID}
-      urlScheme="ichiro"
+      urlScheme={APP_URL_SCHEME}
     >
       <>
         <UrlHandler />

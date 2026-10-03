@@ -144,10 +144,10 @@ export function FieldLabel({ children }: { children: ReactNode }) {
   return <Text className="px-[54px] pb-2.5 pt-[22px] text-[17px] text-ink">{children}</Text>;
 }
 
-type FieldProps = TextInputProps & { bold?: boolean };
+type FieldProps = TextInputProps & { bold?: boolean; trailing?: ReactNode };
 
 export const Field = forwardRef<TextInput, FieldProps>(function Field(
-  { bold, style, ...props },
+  { bold, style, trailing, ...props },
   ref,
 ) {
   return (
@@ -163,6 +163,7 @@ export const Field = forwardRef<TextInput, FieldProps>(function Field(
         ]}
         {...props}
       />
+      {trailing}
     </View>
   );
 });

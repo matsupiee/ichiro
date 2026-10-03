@@ -83,6 +83,20 @@ Web版は作成・検証せず、iOS Simulator または実機のネイティブ
 
 ## Deployment
 
+### iOS / App Store Connect
+
+Run from the repository root:
+
+```bash
+bun run ios:submit   # Upload an existing build (select it interactively)
+bun run ios:release  # Build for production, then upload that build
+bun run ios:build    # Build for production only
+```
+
+To upload a specific build, use `bun run ios:submit --id <EAS_BUILD_ID>`.
+These commands upload to App Store Connect; App Review submission and public release are separate steps.
+See [the iOS build and upload guide](docs/development/eas-build.md) for setup and verification.
+
 ### Alchemy
 
 - Target: server on Cloudflare

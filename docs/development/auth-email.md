@@ -113,3 +113,30 @@ maestro test -e NEW_EMAIL=changed@ichiro.example -e OTP=<届いた6桁コード>
 - `bun run check-types`、`bun run check:patterns`、`bunx oxlint`、変更ファイルのフォーマット確認：成功。
 - iPhone 17 Pro Max / iOS 26.4 Simulator：専用 seed ユーザーでログインし、新アドレスの入力、コード送信、変更完了、プロフィールへの反映、変更先アドレスでの再ログインを確認。
 - ローカル console 配信で、新アドレス宛ての `change-email` が1件だけ出力されることを確認。実メール配信や本番デプロイは今回実施していない。
+
+## パスワード再設定
+
+[Better Auth の再設定手順](https://better-auth.com/docs/plugins/email-otp#reset-password-with-otp)に沿って、`emailOtp.requestPasswordReset` と `emailOtp.resetPassword` を使う。ブラウザへ移動せず、ネイティブ画面内で6桁コードと新しいパスワードを入力する。メール送信基盤は登録確認と同じ Resend を利用する。
+
+再設定専用 seed はローカル SQLite のみを受け付ける。
+
+```sh
+bun run --cwd packages/db db:seed:password-reset --url file:/absolute/path/to/local.sqlite --skip-migrations
+maestro --device <SimulatorのUDID> test .maestro/password-visibility.yaml
+maestro --device <SimulatorのUDID> test .maestro/password-reset-request.yaml
+maestro --device <SimulatorのUDID> test -e OTP=<届いた6桁コード> .maestro/password-reset-confirm.yaml
+```
+
+ログアウト状態で開始する。コードの実受信を使わない場合は `AUTH_EMAIL_DELIVERY=console` の開発環境を使い、request 実行後の `local-auth-email` ログからコードを取得する。confirm はコード受信から5分以内に実行する。完了後のパスワードは `reset-native-new-password`。再実行時は seed で専用ユーザーを初期状態に戻す。
+
+- [再設定ストーリー](../user-stories/reset-password.md)は成功・入力不備・再送・期限・用途分離・試行回数・セッション無効化・退会済みユーザーを API 統合テストで検証する。
+- [表示切り替えストーリー](../user-stories/password-visibility.md)は新規登録・ログイン・再設定の3画面を Maestro で検証する。
+- 利用規約に再設定とセッション無効化を追記した。取得情報・利用目的・委託先・保存期間と料金は変更しないため、プライバシーポリシーと特商法表記は変更しない。
+
+### 2026年10月4日の確認結果
+
+- `bun run test`：179件成功（API 147、サーバー13、インフラ14、ネイティブ5）。既存の全ユーザーストーリーに対応する回帰テストを含む。
+- `bun run check-types`、`bun run check:patterns`、`bunx oxlint`：成功。最終変更後もネイティブの型チェックと再設定・メール送信の14テストを再実行して成功。
+- iPhone 17 / iOS 26.4 Simulator：保存した3本の Maestro フローで、新規登録・ログイン・再設定の表示切り替え、入力値の保持、再設定完了、旧パスワードの拒否、新パスワードでホームへ遷移することを確認。
+- 再設定はローカル専用 seed とテスト用メール送信先で検証。起動済み開発サーバーの console 出力をこの検証端末から取得できなかったため、確認ステップでは同じローカルDBに対して Better Auth の再設定APIとテスト用送信関数でコードを再発行した。本番 Resend から実受信箱への到達はこの検証に含めない。
+- iOS の新規パスワード自動補完を使うと、非表示状態から入力した文字が置き換わる現象を Simulator で確認した。新規登録・再設定では `textContentType="none"` と `autoComplete="off"` を指定し、通常入力・追加入力・表示切り替えを確認した。ログイン画面のパスワード自動補完と Android の新規パスワード設定は維持する。
