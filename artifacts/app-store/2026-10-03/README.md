@@ -1,5 +1,11 @@
 # App Store 用スクリーンショット
 
+1284 × 2778 px を要求する提出枠には `iphone-6.5/` の3枚を使用する。透過なしの sRGB PNG。元画像の縦横比を維持して縮小し、上下の余白を約6 pxずつ切り落としている。
+
+```sh
+swift scripts/prepare-app-store-images.swift --iphone-6.5 artifacts/app-store/2026-10-03/iphone-6.9/*.png
+```
+
 iPhone 6.9インチ枠用の3枚。1320 × 2868 px、透過なしの sRGB PNG。
 
 1. `iphone-6.9/01-commitments.png` — 毎日の目標一覧
