@@ -16,6 +16,7 @@ export function useReport() {
   return (c: Reportable) => {
     const today = localToday();
     celebrate({
+      illustration: "lifting",
       message: `「${c.content}」今日も達成！`,
       tiles: [{ label: "連続達成", value: `${c.streak + 1}日` }],
     });

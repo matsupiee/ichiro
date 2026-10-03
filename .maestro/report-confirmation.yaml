@@ -39,7 +39,12 @@ appId: com.anonymous.ichiro
 - extendedWaitUntil:
     visible: "つづける"
     timeout: 10000
+- assertVisible:
+    id: "achievement-dog-animation"
+- takeScreenshot: achievement-dog-loop
 - tapOn: "つづける"
+- assertNotVisible:
+    id: "achievement-dog-animation"
 - tapOn:
     text: ".*Report confirmation test.*"
     index: 0

@@ -27,6 +27,7 @@ import { haptics } from "@/lib/haptics";
 import { colors, fonts } from "@/lib/theme";
 
 import { Confetti } from "./confetti";
+import { LiftingDog } from "./lifting-dog";
 import { Rays } from "./rays";
 
 // 達成を報告したとき・コミットメントを作ったときに出す Duolingo 風のお祝い。
@@ -35,6 +36,7 @@ import { Rays } from "./rays";
 export type Tile = { label: string; value: string };
 
 export type CelebrationInput = {
+  illustration?: "lifting";
   closeLabel?: string;
   title?: string;
   message: string;
@@ -156,7 +158,7 @@ function CelebrationOverlay({ cel, onClose }: { cel: CelebrationState; onClose: 
         overflow: "hidden",
       }}
     >
-      <Rays centerY={top + 220} />
+      {cel.illustration !== "lifting" ? <Rays centerY={top + 220} /> : null}
       <Animated.View
         style={[
           {
@@ -173,7 +175,11 @@ function CelebrationOverlay({ cel, onClose }: { cel: CelebrationState; onClose: 
       >
         <Animated.View style={[{ marginTop: 60 }, dogEnter]}>
           <Pressable accessibilityLabel="ワンちゃん" onPress={haptics.tap}>
-            <Dog size={230} mood="jump" />
+            {cel.illustration === "lifting" ? (
+              <LiftingDog size={280} />
+            ) : (
+              <Dog size={230} mood="jump" />
+            )}
           </Pressable>
         </Animated.View>
         {cel.title ? (
