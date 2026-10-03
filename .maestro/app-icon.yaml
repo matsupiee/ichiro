@@ -1,0 +1,47 @@
+# ログイン済みのネイティブビルドで実行する。最後に標準の青へ戻す。
+appId: com.anonymous.ichiro
+---
+- stopApp
+- launchApp
+- tapOn: "アカウント"
+- scrollUntilVisible:
+    element:
+      id: "app-icon-purple"
+    direction: DOWN
+- tapOn:
+    id: "app-icon-purple"
+- tapOn:
+    text: "OK"
+    optional: true
+- assertVisible: ".*現在：紫.*"
+- pressKey: Home
+- takeScreenshot: app-icon-purple-home
+- stopApp
+- launchApp
+- tapOn: "アカウント"
+- scrollUntilVisible:
+    element:
+      id: "app-icon-purple"
+    direction: DOWN
+- assertVisible: ".*現在：紫.*"
+- tapOn:
+    id: "app-icon-pink"
+- tapOn:
+    text: "OK"
+    optional: true
+- assertVisible: ".*現在：ピンク.*"
+- pressKey: Home
+- takeScreenshot: app-icon-pink-home
+- launchApp:
+    stopApp: false
+- tapOn:
+    id: "app-icon-blue"
+- tapOn:
+    text: "OK"
+    optional: true
+- assertVisible: ".*現在：青.*"
+- takeScreenshot: app-icon-picker
+- pressKey: Home
+- takeScreenshot: app-icon-blue-home
+- launchApp:
+    stopApp: false

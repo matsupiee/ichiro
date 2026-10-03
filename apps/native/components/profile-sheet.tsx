@@ -13,6 +13,7 @@ import Animated, { ZoomIn } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { WithdrawalSheet } from "@/components/withdrawal-sheet";
+import { AppIconPicker } from "@/components/app-icon-picker";
 import { Avatar } from "@/components/avatar";
 import { Chevron, ErrorText, RowButton } from "@/components/ui";
 import { authClient } from "@/lib/auth-client";
@@ -274,6 +275,9 @@ export const ProfileSheet = forwardRef<BottomSheetModal, Props>(function Profile
               {session?.user.email}
             </Text>
           </RowButton>
+
+          <SectionLabel>アプリアイコン</SectionLabel>
+          <AppIconPicker />
 
           <SectionLabel>支払い情報</SectionLabel>
           <PaymentInfo />
