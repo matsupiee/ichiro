@@ -1,14 +1,9 @@
-@font-face {
-  font-family: Ichiro;
-  src: url("/fonts/ichiro-logo.woff") format("woff");
-  font-display: swap;
-}
 :root {
   color-scheme: light;
-  --pink: #ff5cf2;
-  --soft: #ffe6fd;
-  --ink: #1c1c1e;
-  --muted: #626066;
+  --brand: #3dc4f4;
+  --soft: #dcf5ff;
+  --ink: #163447;
+  --muted: #647f90;
   font-family:
     -apple-system, BlinkMacSystemFont, "Hiragino Kaku Gothic ProN", "Noto Sans JP", sans-serif;
   color: var(--ink);
@@ -31,7 +26,7 @@ a {
 }
 a:focus-visible,
 summary:focus-visible {
-  outline: 3px solid #96358e;
+  outline: 3px solid #087da8;
   outline-offset: 6px;
 }
 a {
@@ -61,11 +56,13 @@ p {
   margin-inline: auto;
 }
 .logo {
-  font-family: Ichiro, sans-serif;
-  font-weight: 400;
-  letter-spacing: -0.05em;
+  display: block;
+  line-height: 1;
   text-decoration: none;
-  line-height: 1.2;
+}
+.logo img {
+  width: 100%;
+  height: auto;
 }
 .header {
   position: absolute;
@@ -78,7 +75,7 @@ p {
   gap: 20px;
 }
 .header .logo {
-  font-size: 32px;
+  width: 108px;
 }
 .header nav {
   display: flex;
@@ -99,12 +96,11 @@ p {
   gap: 36px;
   padding: 110px 7% 65px;
   text-align: center;
-  background: #ffe6fd;
+  background: var(--soft);
 }
 .hero h1 {
-  font-size: clamp(90px, 10vw, 140px);
-  margin: 4px 0 20px;
-  color: #1c1c1e;
+  width: min(380px, 100%);
+  margin: 4px auto 20px;
 }
 .eyebrow {
   font-size: 12px;
@@ -121,7 +117,7 @@ p {
 .release {
   font-size: 12px;
   letter-spacing: 0.08em;
-  color: #6b3266;
+  color: #087da8;
   margin: 0;
 }
 .hero-art {
@@ -137,7 +133,7 @@ p {
   border: 6px solid #242426;
   outline: 1px solid #555;
   border-radius: 39px;
-  box-shadow: 0 24px 48px #42183c20;
+  box-shadow: 0 24px 48px #16344720;
   aspect-ratio: 1206/2622;
 }
 .phone img {
@@ -161,135 +157,105 @@ p {
   top: 44px;
   transform: rotate(9deg);
 }
-.stamp {
-  position: absolute;
-  z-index: 2;
-  left: calc(50% - 260px);
-  top: 108px;
-  transform: rotate(-10deg);
-  background: #fff;
-  padding: 15px 21px;
-  border-radius: 50%;
-  font-weight: 900;
-  font-size: 16px;
-  box-shadow: 0 6px 0 #f5b0eb;
-}
-.stamp.second {
-  left: auto;
-  right: calc(50% - 260px);
-  top: 260px;
-  transform: rotate(9deg);
-  background: var(--pink);
-}
 .scroll-cue {
   display: inline-block;
   margin-top: 22px;
   font-size: 12px;
   text-decoration: none;
-  border-bottom: 1px solid #8f668a;
+  border-bottom: 1px solid #087da8;
   padding-bottom: 5px;
 }
 .steps {
-  padding: 105px 0 100px;
+  padding: 80px 0;
   text-align: center;
+  background: var(--brand);
+}
+.how-label {
+  display: inline-block;
+  padding: 8px 28px;
+  border-radius: 999px;
+  background: #fff;
+  color: #087da8;
+  font-size: 15px;
+  font-weight: 800;
+  margin-bottom: 22px;
 }
 .section-title {
-  font-size: clamp(25px, 4vw, 36px);
-  line-height: 1.55;
+  font-size: clamp(28px, 4vw, 40px);
+  line-height: 1.5;
   letter-spacing: 0.02em;
-  margin-bottom: 18px;
+  margin-bottom: 16px;
 }
 .section-intro {
   font-size: 14px;
-  color: var(--muted);
-  margin-bottom: 52px;
+  margin-bottom: 40px;
 }
 .steps-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: 52px;
+  gap: 24px;
 }
 .step {
-  margin: 0;
+  overflow: hidden;
+  border-radius: 28px;
+  background: #fff;
   min-width: 0;
 }
+.step-visual {
+  height: 260px;
+  padding-top: 30px;
+  overflow: hidden;
+}
+.step .phone {
+  width: 210px;
+  margin-inline: auto;
+  box-shadow: none;
+}
+.step-penalty .phone {
+  aspect-ratio: auto;
+  height: 280px;
+}
+.step-penalty .phone img {
+  object-position: bottom;
+}
+.step-copy {
+  position: relative;
+  background: #f4fafd;
+  padding: 48px 16px 30px;
+}
 .step .number {
-  display: block;
-  font-size: 11px;
-  letter-spacing: 0.2em;
+  position: absolute;
+  top: 0;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  border-radius: 999px;
+  padding: 5px 22px;
+  background: var(--ink);
+  color: #fff;
+  font-size: 16px;
   font-weight: 800;
-  color: #ae278d;
-  margin-bottom: 10px;
+  white-space: nowrap;
+  line-height: 1.25;
 }
 .step h3 {
-  font-size: 22px;
-  margin-bottom: 20px;
+  font-size: clamp(19px, 2vw, 24px);
+  margin-bottom: 12px;
+  line-height: 1.5;
 }
 .step p {
   font-size: 13px;
-  margin: 24px auto 0;
-  max-width: 250px;
-  color: var(--muted);
-}
-.step .phone {
-  width: min(100%, 230px);
-  margin: auto;
-}
-.payment {
-  padding: 85px 0;
-  max-width: 760px;
-  text-align: center;
-}
-.payment h2 {
-  font-size: 28px;
-  line-height: 1.6;
-  margin-bottom: 20px;
-}
-.payment > p {
-  font-size: 15px;
-}
-.payment details {
-  text-align: left;
-  border-block: 1px solid #e8e2e7;
-  margin-top: 32px;
-}
-.payment summary {
-  padding: 22px 0;
-  cursor: pointer;
-  font-size: 14px;
-  font-weight: 700;
-}
-.payment dl {
-  margin: 0 0 24px;
-}
-.payment dl > div {
-  display: grid;
-  grid-template-columns: 130px 1fr;
-  gap: 22px;
-  padding: 15px 0;
-  border-top: 1px solid #eee;
-}
-.payment dt,
-.payment dd {
-  font-size: 13px;
-  line-height: 1.9;
   margin: 0;
-}
-.payment dt {
-  font-weight: 700;
-}
-.payment .small {
-  font-size: 12px;
-  color: var(--muted);
+  color: #365466;
 }
 .end {
   padding: 58px 24px;
-  background: var(--pink);
+  background: var(--brand);
   text-align: center;
 }
 .end .logo {
-  font-size: 58px;
-  margin: 0 0 14px;
+  width: 180px;
+  margin: 0 auto 14px;
+  filter: brightness(0) invert(1);
 }
 .end p {
   font-size: 18px;
@@ -334,8 +300,8 @@ p {
 }
 .legal .draft {
   padding: 20px 24px;
-  background: #fff0fd;
-  border-left: 3px solid var(--pink);
+  background: var(--soft);
+  border-left: 3px solid var(--brand);
   font-size: 13px;
   line-height: 1.9;
   margin-bottom: 35px;
@@ -375,12 +341,6 @@ p {
 .hero-art {
   animation: enter 0.9s 0.2s ease-out both;
 }
-.stamp {
-  animation: bob 4s ease-in-out infinite;
-}
-.stamp.second {
-  animation-delay: -2s;
-}
 .step .phone {
   transition: transform 0.25s;
 }
@@ -397,11 +357,6 @@ p {
     translate: 0 0;
   }
 }
-@keyframes bob {
-  50% {
-    translate: 0 -7px;
-  }
-}
 @media (max-width: 700px) {
   .wrap {
     width: calc(100% - 40px);
@@ -410,7 +365,7 @@ p {
     padding: 20px;
   }
   .header .logo {
-    font-size: 26px;
+    width: 96px;
   }
   .header nav {
     gap: 18px;
@@ -422,7 +377,7 @@ p {
     padding: 96px 20px 0;
   }
   .hero h1 {
-    font-size: 105px;
+    width: min(315px, 100%);
   }
   .hero h2 {
     font-size: 24px;
@@ -447,44 +402,30 @@ p {
     left: calc(50% + 0px);
     top: 38px;
   }
-  .stamp {
-    font-size: 12px;
-    padding: 12px 16px;
-    left: calc(50% - 178px);
-    top: 72px;
-  }
-  .stamp.second {
-    right: calc(50% - 178px);
-    top: 245px;
-  }
   .steps {
-    padding: 65px 0;
+    padding: 48px 0;
   }
   .steps-grid {
     grid-template-columns: 1fr;
-    gap: 55px;
+    gap: 24px;
+    max-width: 472px;
+    margin-inline: auto;
+  }
+  .step-visual {
+    height: 230px;
+    padding-top: 24px;
   }
   .step .phone {
-    width: 235px;
+    width: 220px;
   }
   .step h3 {
-    font-size: 25px;
+    font-size: 23px;
   }
-  .step p {
-    margin-top: 22px;
+  .step-copy {
+    padding: 38px 16px 26px;
   }
   .section-intro {
-    margin-bottom: 36px;
-  }
-  .payment {
-    padding: 60px 0;
-  }
-  .payment h2 {
-    font-size: 24px;
-  }
-  .payment dl > div {
-    grid-template-columns: 1fr;
-    gap: 5px;
+    margin-bottom: 32px;
   }
   .footer-inner {
     flex-direction: column;
@@ -501,7 +442,7 @@ p {
     padding: 16px;
   }
   .end .logo {
-    font-size: 52px;
+    width: 165px;
   }
 }
 @media (prefers-reduced-motion: reduce) {

@@ -1,10 +1,12 @@
 import { Hono } from "hono";
 import { legalPages } from "./site/legal";
 
+const logo = `<img src="/images/ichiro-wordmark.png" alt="ichiro" width="2172" height="724">`;
+
 const links = `<a href="/terms">利用規約</a><a href="/privacy">プライバシーポリシー</a><a href="/commerce">特定商取引法に基づく表記</a>`;
 const footer = `<footer class="footer"><div class="wrap footer-inner"><nav aria-label="規約・運営情報">${links}</nav><span class="copyright">© ichiro</span></div></footer>`;
 const header = (legal = false) =>
-  `<header class="header ${legal ? "legal-header" : ""}"><a class="logo" href="/" aria-label="ichiro ホーム">ichiro</a><nav aria-label="メイン"><a href="/#how">使い方</a><a href="/#payment">料金について</a></nav></header>`;
+  `<header class="header ${legal ? "legal-header" : ""}"><a class="logo" href="/" aria-label="ichiro ホーム">${logo}</a><nav aria-label="メイン"><a href="/#how">使い方</a></nav></header>`;
 function document(title: string, content: string, noIndex = false) {
   return `<!doctype html><html lang="ja"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="description" content="目標を宣言して、毎日の達成を報告。ichiro は、続けたいことを応援するネイティブアプリです。公開準備中。">${noIndex ? '<meta name="robots" content="noindex">' : ""}<title>${title} | ichiro</title><link rel="stylesheet" href="/site.css"></head><body>${content}${footer}</body></html>`;
 }
@@ -17,37 +19,23 @@ const page = document(
 <main>
   <section class="hero" aria-labelledby="hero-title">
     <div class="hero-copy">
-    <p class="eyebrow">あなたの「続けたい」を応援。</p>
-    <h1 class="logo" id="hero-title">ichiro</h1>
+    <h1 class="logo" id="hero-title">${logo}</h1>
     <h2>小さな約束。<br>毎日、ちょっとずつ。</h2>
-    <p class="release">ネイティブアプリ · 公開準備中</p>
-    <a class="scroll-cue" href="#how">どんなアプリ？ ↓</a>
     </div>
     <div class="hero-art">
       ${phone("commitments", "朝の読書・英語・運動の目標を並べた ichiro の実際の一覧画面", true)}
       ${phone("celebration", "7日連続の達成をワンちゃんがお祝いする画面", true)}
     </div>
   </section>
-  <section class="steps wrap" id="how" aria-labelledby="how-title">
-    <p class="eyebrow">HOW TO USE</p><h2 class="section-title" id="how-title">続けるって、<br>こんなにシンプル。</h2>
-    <p class="section-intro">読書も、英語も、運動も。あなたのペースで。</p>
+  <section class="steps" id="how" aria-labelledby="how-title">
+    <div class="wrap"><p class="how-label">ichiro の使い方</p><h2 class="section-title" id="how-title">やることを<br>決めて報告する</h2>
     <div class="steps-grid">
-      <article class="step"><span class="number">STEP 01</span><h3>やることを、宣言。</h3>${phone("commitments", "目標と毎日の取り組みが並ぶ一覧画面")}<p>続けたいことを登録。<br>今日やることが、ひと目でわかる。</p></article>
-      <article class="step"><span class="number">STEP 02</span><h3>できたら、報告。</h3>${phone("progress", "連続達成の記録と今日の達成を報告するボタン")}<p>今日もできたら、ボタンをタップ。<br>小さな一歩を、記録に残そう。</p></article>
-      <article class="step"><span class="number">STEP 03</span><h3>がんばりを、お祝い。</h3>${phone("celebration", "朝の読書の7日連続達成を祝うワンちゃん")}<p>がんばった日は、ワンちゃんが祝福。</p></article>
-    </div>
+      <article class="step"><div class="step-visual">${phone("commitments", "目標と毎日の取り組みが並ぶ一覧画面")}</div><div class="step-copy"><span class="number">STEP 1</span><h3>やることを決めよう</h3><p>読書も、英語も、運動も。<br>続けたいことを登録。</p></div></article>
+      <article class="step"><div class="step-visual step-penalty">${phone("penalty", "罰金の金額を設定するアプリ画面")}</div><div class="step-copy"><span class="number">STEP 2</span><h3>罰金を設定</h3><p>続けるきっかけに、金額を決めよう。<br>罰金の設定は任意です。</p></div></article>
+      <article class="step"><div class="step-visual">${phone("progress", "連続達成の記録と今日の達成を報告するボタン")}</div><div class="step-copy"><span class="number">STEP 3</span><h3>できたら報告</h3><p>今日もできたら、ボタンをタップ。<br>毎日の一歩を記録しよう。</p></div></article>
+    </div></div>
   </section>
-  <section class="payment wrap" id="payment" aria-labelledby="payment-title">
-    <p class="eyebrow">もうひと押し、ほしいときに。</p><h2 id="payment-title">自分との約束に、<br>罰金をつけることも。</h2>
-    <p>設定は任意。未報告の日だけ、決めた金額を自動で請求。<br>罰金を設定せずに使うこともできます。</p>
-    <details><summary>金額・請求条件を確認する</summary><dl>
-      <div><dt>金額</dt><dd>報告日1日あたり100円以上で、自分で設定します。</dd></div>
-      <div><dt>請求の条件</dt><dd>コミットメントのタイムゾーンで、報告日の23:59:59までに報告がなかった場合に請求します。</dd></div>
-      <div><dt>支払い方法</dt><dd>Stripe を通じて登録した支払い方法から、締め切り後に自動で請求します。</dd></div>
-      <div><dt>変更・キャンセル</dt><dd>設定の変更は今日の報告分から適用されます。締め切りを過ぎた分は変更前の設定で精算します。アプリの削除やログアウトでは解除されません。</dd></div>
-    </dl><p class="small">返金等の詳細条件は、<a href="/commerce">特定商取引法に基づく表記</a>をご確認ください。</p></details>
-  </section>
-  <section class="end"><p class="logo">ichiro</p><p>あなたの「続けたい」を応援。</p><span>ただいま、アプリ公開準備中。</span></section>
+  <section class="end"><p class="logo">${logo}</p><p>あなたの「続けたい」を応援。</p></section>
 </main>`,
 );
 

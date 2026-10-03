@@ -6,22 +6,13 @@ import { URL } from "node:url";
 import { createPublicPageApp } from "./public-page";
 
 describe("公開紹介ページ", () => {
-  test("認証・DB 接続なしで、日本語の紹介と課金条件を読める", async () => {
+  test("認証・DB 接続なしで、日本語の紹介と規約への案内を読める", async () => {
     const response = await createPublicPageApp().request("/");
     expect(response.status).toBe(200);
     expect(response.headers.get("content-type")).toContain("text/html; charset=UTF-8");
     expect(response.headers.get("set-cookie")).toBeNull();
     const html = await response.text();
-    for (const text of [
-      'lang="ja"',
-      "ichiro",
-      "公開準備中",
-      "100円以上",
-      "23:59:59",
-      "自動で請求",
-      "Stripe",
-      "特定商取引法に基づく表記",
-    ]) {
+    for (const text of ['lang="ja"', "ichiro", "公開準備中", "特定商取引法に基づく表記"]) {
       expect(html).toContain(text);
     }
     expect(html).not.toContain("<script");
@@ -29,7 +20,25 @@ describe("公開紹介ページ", () => {
     expect(response.headers.get("content-security-policy")).toContain("frame-ancestors 'none'");
   });
 
-  test("トップのスクショ・スタイル・フォントが配信対象に存在する", async () => {
+  test("使い方を3つの画像付きステップとして順番に案内する", async () => {
+    const html = await (await createPublicPageApp().request("/")).text();
+    const steps = [...html.matchAll(/<article class="step">([\s\S]*?)<\/article>/g)];
+    expect(steps).toHaveLength(3);
+    for (const [index, step] of steps.entries()) {
+      expect(step[1]).toContain(`STEP ${index + 1}`);
+      expect(step[1]).toMatch(/class="step-visual[^"]*">[\s\S]*<img[\s\S]*class="step-copy"/);
+      expect(step[1]).toContain(
+        `<h3>${["やることを決めよう", "罰金を設定", "できたら報告"][index]}</h3>`,
+      );
+      expect(step[1]).toContain(`/images/${["commitments", "penalty", "progress"][index]}.png`);
+    }
+    for (const target of ["how"]) {
+      expect(html).toContain(`id="${target}"`);
+      expect(html).toContain(`href="/#${target}"`);
+    }
+  });
+
+  test("トップのスクショ・スタイル・ロゴが配信対象に存在する", async () => {
     const html = await (await createPublicPageApp().request("/")).text();
     const images = [...html.matchAll(/<img[^>]+src="([^"]+)"[^>]+alt="([^"]+)"/g)];
     expect(images.length).toBeGreaterThanOrEqual(3);
@@ -40,7 +49,15 @@ describe("公開紹介ページ", () => {
       expect(match[2]!.length).toBeGreaterThan(0);
     }
     await access(new URL("../public/site.css", import.meta.url));
-    await access(new URL("../public/fonts/ichiro-logo.woff", import.meta.url));
+    expect(
+      await readFile(new URL("../public/images/ichiro-wordmark.png", import.meta.url)),
+    ).toEqual(
+      await readFile(new URL("../../native/assets/images/ichiro-wordmark.png", import.meta.url)),
+    );
+    expect(html.match(/src="\/images\/ichiro-wordmark.png"/g)).toHaveLength(3);
+    expect(html).not.toContain('id="payment"');
+    expect(html).not.toContain("/#payment");
+    expect(html).not.toContain("もうひと押し、ほしいときに。");
     expect(html).not.toContain("<script");
     expect(html).not.toContain("草案");
     expect(html).not.toContain("apps.apple.com");

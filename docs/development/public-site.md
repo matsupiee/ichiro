@@ -28,9 +28,9 @@
 
 撮影用 seed と操作手順は [サービス紹介のストーリー](../user-stories/view-service-introduction.md)を参照する。
 画像はネイティブの画面を撮影したもので、個人情報や既存のテストユーザーの内容を含めない。
-`apps/server/public/images/` の3枚を差し替える。スクリーンショットの元サイズは1206×2622。
+`apps/server/public/images/` の画像を差し替える。スクリーンショットの元サイズは1206×2622。
 
-ロゴはアプリと同じ Dela Gothic One を使い、表示に必要なラテン文字だけに絞ったフォントを同梱する。ライセンスは `apps/server/public/fonts/OFL.txt`。
+ロゴはアプリアイコンと同じ筆記体を使う。`apps/native/assets/images/ichiro-wordmark.png` を `apps/server/public/images/ichiro-wordmark.png` にコピーし、アプリ内と同じ画像を配信する。
 
 ## 検証
 
