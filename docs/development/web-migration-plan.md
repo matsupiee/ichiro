@@ -109,6 +109,7 @@ tRPC の呼び出し、日付の計算、エラーメッセージなど、React 
 
 - Stripe の PaymentSheet を、Stripe.js の Payment Element による SetupIntent の確定に置き換える。
 - `payment/start-setup` は ephemeral key を作らず、`setupIntentClientSecret` だけを返す。統合テストも合わせて直す。
+- 登録できる支払い方法はカードだけにする。Apple Pay と Google Pay は使わないので、Stripe でのドメイン登録は不要。
 - 3D セキュアはブラウザ内で完了する。`complete-setup` と Webhook の処理は変えない。
 - アプリ画面の CSP で Stripe.js の読み込みを許可する。紹介ページと規約ページの CSP は今の厳しさを保つ。
 
@@ -131,10 +132,11 @@ Web 版で全ストーリーが通ってから行う。
   - 特定商取引法に基づく表記：「ネイティブアプリ」「ダウンロード」の表現と、動作環境（iOS 16.4 以降の iPhone）を対応ブラウザに変える。
   - 施行日を更新する。
 - `docs/user-stories/` の `change-app-icon.md` と `staging-app-coexistence.md` を削除し、ほかのストーリーは Web の操作に合わせて書き直す。
+  - `register-payment-method.md`、`create-commitment.md`、`profile-sheet.md` から Apple Pay の記述を外し、カードだけにする。デモデータの「Apple Pay（Visa •••• 4242）」もカードに変える。
 - Maestro のフローを Playwright に移し、全ストーリーを通しで確認する。seed は `packages/db/src/seed/` のものを使う。
 
-## 未決定の事項
+## 決定事項
 
-- Web で Apple Pay と Google Pay を使うか。使う場合は Stripe でドメインを登録する。
-- ホーム画面に追加できるよう PWA に対応するか。
-- 移行が必要な既存ユーザーがいないこと（規約上は公開準備中）。
+- Apple Pay と Google Pay は使わない。支払い方法はカードだけにする。
+- PWA には対応しない。
+- 移行が必要な既存ユーザーはいない前提で進める。ネイティブ版のデータ移行や併存期間は設けない。
