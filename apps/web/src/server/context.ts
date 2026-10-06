@@ -1,17 +1,16 @@
 import type { Context as ApiContext } from "@ichiro/api/context";
-import type { Context as HonoContext } from "hono";
 
 import { ENV } from "./env.server";
 import { createAuth, getDb, getStripe } from "./services";
 
 // readSession が false のときは、ログイン状態を読まずに session を null にする
 export async function createContext(
-  context: HonoContext,
+  request: Request,
   { readSession = true }: { readSession?: boolean } = {},
 ): Promise<ApiContext> {
   const db = getDb();
   const session = readSession
-    ? await (await createAuth(db)).api.getSession({ headers: context.req.raw.headers })
+    ? await (await createAuth(db)).api.getSession({ headers: request.headers })
     : null;
   return {
     db,
@@ -20,5 +19,3 @@ export async function createContext(
     avatarStorage: ENV.AVATARS,
   };
 }
-
-export type Context = Awaited<ReturnType<typeof createContext>>;

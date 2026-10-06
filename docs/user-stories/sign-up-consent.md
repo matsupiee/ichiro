@@ -36,7 +36,7 @@
 
 - `.maestro/sign-up-consent.yaml`：注意書き、文書の開閉、入力内容の保持、登録時の入力チェック、ログイン画面での非表示。
 - `packages/api/src/test/auth.integration.test.ts`：既存の登録・メール確認・重複登録の回帰確認。
-- `apps/server/src/public-page.test.ts`：利用規約とプライバシーポリシーの本文配信。
+- `apps/web/src/server/public-page.test.ts`：利用規約とプライバシーポリシーの本文配信。
 - `bun run test`：全ユーザーストーリーに対応する既存の回帰テスト。
 
 文書表示には [Expo の公式ドキュメント](https://docs.expo.dev/versions/latest/sdk/webbrowser/) に沿った既存の `openBrowserAsync` を使用する。

@@ -14,7 +14,7 @@
 API・D1・R2 の定義は `packages/infra/alchemy.run.ts` にまとめ、`alchemy dev` でローカル実行する。起動時にマイグレーションを適用する。
 初回は `packages/infra` で `bunx alchemy profile edit --add Cloudflare` を実行して認証する。
 開発時の状態は `.alchemy` 配下に保存し、デプロイ時は Cloudflare の状態ストアを使う。
-`apps/server/.env` に認証用の環境変数と Stripe のテストキーを設定する。認証画面だけを確認する場合は、Stripe キーに `sk_test_local_unconfigured`・`whsec_local_unconfigured` を入れて起動できるが、決済は利用できない。
+`apps/web/.env` に認証用の環境変数と Stripe のテストキーを設定する。認証画面だけを確認する場合は、Stripe キーに `sk_test_local_unconfigured`・`whsec_local_unconfigured` を入れて起動できるが、決済は利用できない。
 デモデータの作成コマンドは `packages/db/src/seed/run.ts` にある。新規登録の確認はデータが空の状態でも行える。
 
 1. 未ログインの状態でアプリを開く。

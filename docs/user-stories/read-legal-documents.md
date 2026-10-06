@@ -33,7 +33,7 @@
 
 ## 対応するテスト
 
-- `apps/server/src/public-page.test.ts` で3文書の配信を確認する。
+- `apps/web/src/server/public-page.test.ts` で3文書の配信を確認する。
 - アプリ内ブラウザーの表示と開閉はネイティブで確認する。
 - 既存ストーリーの回帰確認は `bun run test` で実行する。
 

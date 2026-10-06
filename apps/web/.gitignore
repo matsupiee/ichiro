@@ -60,3 +60,7 @@ next-env.d.ts
 # Public environment templates (secrets belong in .local or CI)
 !.env.stg
 !.env.prod
+
+# TanStack Start
+.output
+.tanstack

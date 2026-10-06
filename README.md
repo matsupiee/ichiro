@@ -56,7 +56,7 @@ Run the API server and Stripe webhook forwarding together:
 bun run dev:stripe
 ```
 
-Install the Stripe CLI first, and set `STRIPE_SECRET_KEY=sk_test_...` in `apps/server/.env` or the process environment alongside the usual server configuration. The command authenticates the CLI with the same key, obtains the signing secret automatically, and passes it to the server without editing `.env`. No `stripe login` is needed. Press Ctrl+C to stop both processes.
+Install the Stripe CLI first, and set `STRIPE_SECRET_KEY=sk_test_...` in `apps/web/.env` or the process environment alongside the usual server configuration. The command authenticates the CLI with the same key, obtains the signing secret automatically, and passes it to the server without editing `.env`. No `stripe login` is needed. Press Ctrl+C to stop both processes.
 
 Use `bun run dev:stripe --port 3001` if port 3000 is occupied. Start the native app separately with `bun run dev:native`; when using a different port, update its `EXPO_PUBLIC_SERVER_URL` accordingly. Cloud Linux environments need the Linux Stripe CLI and outbound access to Stripe.
 

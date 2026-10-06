@@ -32,5 +32,5 @@
 ## 対応するテスト
 
 - メール作成への遷移と開けない場合の案内はネイティブアプリで確認する。
-- 問い合わせ先と法定文書の案内は `apps/server/src/public-page.test.ts` で確認する。
+- 問い合わせ先と法定文書の案内は `apps/web/src/server/public-page.test.ts` で確認する。
 - 既存ストーリーの回帰確認は `bun run test` で実行する。

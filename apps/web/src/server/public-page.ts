@@ -66,3 +66,10 @@ export function createPublicPageApp() {
   }
   return app;
 }
+
+const publicPageApp = createPublicPageApp();
+
+// 紹介ページと規約は JS を使わない HTML のまま配信し、厳しい CSP を保つ
+export function handlePublicPage({ request }: { request: Request }) {
+  return publicPageApp.fetch(request);
+}

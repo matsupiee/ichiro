@@ -3,7 +3,7 @@
 ## 送信設定
 
 Resend に登録・認証済みの `mail.ichiro.app` を使う。送信元は `ichiro <noreply@mail.ichiro.app>`。
-`apps/server/.env`、`.env.stg.local`、`.env.prod.local` の各環境に `RESEND_API_KEY` を設定する。キーを Git やアプリへ入れない。
+`apps/web/.env`、`.env.stg.local`、`.env.prod.local` の各環境に `RESEND_API_KEY` を設定する。キーを Git やアプリへ入れない。
 `AUTH_EMAIL_FROM` と `AUTH_EMAIL_DELIVERY=resend` は `.env.schema` の既定値を使える。
 Alchemy はキーを秘密情報として Worker に渡す。`bun run deploy:check:stg` / `bun run deploy:check:prod` で事前検証する。
 送信専用キーは `mail.ichiro.app` に限定できる。受信サービスや `noreply` のメールボックス作成は不要。

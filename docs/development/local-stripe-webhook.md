@@ -11,7 +11,7 @@ Bun とプロジェクトの依存パッケージ、Stripe CLI をインスト�
 macOS の Stripe CLI は `brew install stripe/stripe-cli/stripe` で導入する。
 Linux は [Stripe CLI のインストール手順](https://docs.stripe.com/stripe-cli) に従う。
 
-`apps/server/.env` またはプロセスの環境変数に `STRIPE_SECRET_KEY=sk_test_...` を設定する。
+`apps/web/.env` またはプロセスの環境変数に `STRIPE_SECRET_KEY=sk_test_...` を設定する。
 環境変数の値を優先する。CLI にも同じテスト用キーを渡すので、`stripe login` は不要。
 `STRIPE_WEBHOOK_SECRET` は接続時に取得するため、空でもよい。
 
@@ -22,7 +22,7 @@ bun run dev:stripe
 ```
 
 Stripe の接続が完了すると、署名シークレットを環境変数で渡して API サーバーが起動する。
-転送先は `http://localhost:3000/stripe/webhook`。公開 URL の登録は不要。
+転送先は `http://localhost:3000/api/stripe/webhook`。公開 URL の登録は不要。
 `.env` は書き換えず、コマンドの出力ではキーを伏せる。
 
 3000番が使用中なら既存のサーバーを停止するか、別のポートを指定する。

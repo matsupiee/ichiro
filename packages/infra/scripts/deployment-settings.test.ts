@@ -56,12 +56,11 @@ afterEach(() => {
 function fixture() {
   const root = mkdtempSync(join(tmpdir(), "ichiro-deploy-"));
   temporary.push(root);
-  for (const dir of ["apps/server", "packages/infra"])
-    mkdirSync(join(root, dir), { recursive: true });
+  for (const dir of ["apps/web", "packages/infra"]) mkdirSync(join(root, dir), { recursive: true });
   for (const file of [
-    "apps/server/.env.schema",
-    "apps/server/.env.stg",
-    "apps/server/.env.prod",
+    "apps/web/.env.schema",
+    "apps/web/.env.stg",
+    "apps/web/.env.prod",
     "packages/infra/.env.schema",
   ]) {
     writeFileSync(join(root, file), readFileSync(new URL(`../../../${file}`, import.meta.url)));
@@ -77,9 +76,9 @@ function envFile(env: Record<string, string>) {
 test("stage 別ファイルが開発用 .env の秘密情報を遮断し、.local から正しい設定を読む", async () => {
   const root = fixture();
   const basePath = join(root, "packages/infra");
-  writeFileSync(join(root, "apps/server/.env"), envFile(valid));
+  writeFileSync(join(root, "apps/web/.env"), envFile(valid));
   await expect(loadDeployment("stg", {}, basePath)).rejects.toThrow("環境変数");
-  writeFileSync(join(root, "apps/server/.env.stg.local"), envFile(valid));
+  writeFileSync(join(root, "apps/web/.env.stg.local"), envFile(valid));
   const stg = await loadDeployment("stg", {}, basePath);
   expect(stg.APP_ENV).toBe("stg");
   expect(stg.NODE_ENV).toBe("production");

@@ -6,12 +6,12 @@ Alchemy の stage を `stg` と `prod` に固定する。同じ Cloudflare ア�
 
 Varlock の `APP_ENV` で設定ファイルを選ぶ。サーバーの `NODE_ENV` は stg / prod ともに `production`。開発は `APP_ENV=development` のまま使える。
 
-`apps/server/.env.stg` と `.env.prod` は秘密情報を空文字で上書きする公開テンプレート。開発用 `.env` の値を暗黙に使わないために置く。値は Git 管理外の `.env.stg.local` / `.env.prod.local` または CI の環境変数に設定する。
+`apps/web/.env.stg` と `.env.prod` は秘密情報を空文字で上書きする公開テンプレート。開発用 `.env` の値を暗黙に使わないために置く。値は Git 管理外の `.env.stg.local` / `.env.prod.local` または CI の環境変数に設定する。
 
 ## 初回の準備
 
 1. `packages/infra` で `bunx alchemy profile edit --add Cloudflare` を実行し、対象アカウントを設定する。
-2. `apps/server/.env.stg.local` と `.env.prod.local` に次の値を設定する。
+2. `apps/web/.env.stg.local` と `.env.prod.local` に次の値を設定する。
 
 | 変数                    | stg                              | prod                           |
 | ----------------------- | -------------------------------- | ------------------------------ |
@@ -24,7 +24,7 @@ Varlock の `APP_ENV` で設定ファイルを選ぶ。サーバーの `NODE_ENV
 
 `BETTER_AUTH_URL` は Alchemy が Worker の URL を設定するので指定不要。ネイティブの認証では既存の `ichiro://` scheme を使う。
 
-Stripe の Webhook は各 Worker URL の `/stripe/webhook` に作成する。イベントは `setup_intent.succeeded`、`payment_intent.succeeded`、`payment_intent.payment_failed`・`payment_intent.requires_action`。stg と prod で別エンドポイント・署名シークレットにする。
+Stripe の Webhook は各 Worker URL の `/api/stripe/webhook` に作成する。イベントは `setup_intent.succeeded`、`payment_intent.succeeded`、`payment_intent.payment_failed`・`payment_intent.requires_action`。stg と prod で別エンドポイント・署名シークレットにする。
 
 初回に Worker URL がまだ不明なら、任意のランダムな `whsec_...` を一時設定してデプロイする。出力された URL で Stripe の Webhook を作り、実際の署名シークレットへ置き換えて再デプロイする。一時設定の間は署名検証に失敗するため、ユーザーの利用・支払い登録・seed 投入は再デプロイ後に行う。
 

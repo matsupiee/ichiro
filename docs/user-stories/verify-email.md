@@ -44,4 +44,4 @@
 ## 対応するテスト
 
 - `packages/api/src/test/auth.integration.test.ts`：登録、確認、期限、誤入力、再送、並列消費、用途制限、送信失敗、未認証セッション、ログイン制限。
-- `apps/server/src/auth-mail.test.ts`：Resend の送信元、本文、失敗、ローカル専用の送信方法。
+- `apps/web/src/server/auth-mail.test.ts`：Resend の送信元、本文、失敗、ローカル専用の送信方法。

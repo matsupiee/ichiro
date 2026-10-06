@@ -29,15 +29,15 @@
 
 ## データの持ち方
 
-- `apps/server/src/public-page.ts` に公開紹介文を持つ。
-  - DB と認証への接続は不要。規約本文は `apps/server/src/site/legal.ts` に持つ。
-  - 画像と CSS は `apps/server/public/` から Workers の Static Assets で配信する。ロゴはアプリ内と同じ `ichiro-wordmark.png` を配信する。
+- `apps/web/src/server/public-page.ts` に公開紹介文を持つ。
+  - DB と認証への接続は不要。規約本文は `apps/web/src/server/site/legal.ts` に持つ。
+  - 画像と CSS は `apps/web/public/` から Workers の Static Assets で配信する。ロゴはアプリ内と同じ `ichiro-wordmark.png` を配信する。
   - 撮影用データは `packages/db/src/seed/public-page.ts` に持つ。既存のデモユーザーを変更せず、専用アカウントと罰金なしの目標3件を作る。
   - 公開前に Stripe 登録と一致する運営者名、問い合わせ先、返金・キャンセル条件などを確定して反映する。
 
 ## 対応するテスト
 
-- `apps/server/src/public-page.test.ts`
+- `apps/web/src/server/public-page.test.ts`
 - `packages/api/src/test/public-page-seed.integration.test.ts`
 - 既存ストーリーの回帰確認は `bun run test` で実行する。
 

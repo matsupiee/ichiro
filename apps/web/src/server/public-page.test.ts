@@ -1,5 +1,4 @@
 import { describe, expect, test } from "bun:test";
-import { Hono } from "hono";
 import { readFile, access } from "node:fs/promises";
 import { URL } from "node:url";
 
@@ -43,22 +42,22 @@ describe("公開紹介ページ", () => {
     const images = [...html.matchAll(/<img[^>]+src="([^"]+)"[^>]+alt="([^"]+)"/g)];
     expect(images.length).toBeGreaterThanOrEqual(3);
     for (const match of images) {
-      const file = new URL(`../public${match[1]}`, import.meta.url);
+      const file = new URL(`../../public${match[1]}`, import.meta.url);
       const bytes = await readFile(file);
       expect([...bytes.subarray(0, 8)]).toEqual([137, 80, 78, 71, 13, 10, 26, 10]);
       expect(match[2]!.length).toBeGreaterThan(0);
     }
     for (const match of html.matchAll(/<img[^>]+src="([^"]+)"[^>]+width="(\d+)" height="(\d+)"/g)) {
-      const bytes = await readFile(new URL(`../public${match[1]}`, import.meta.url));
+      const bytes = await readFile(new URL(`../../public${match[1]}`, import.meta.url));
       const header = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
       expect(header.getUint32(16)).toBe(Number(match[2]));
       expect(header.getUint32(20)).toBe(Number(match[3]));
     }
-    await access(new URL("../public/site.css", import.meta.url));
+    await access(new URL("../../public/site.css", import.meta.url));
     expect(
-      await readFile(new URL("../public/images/ichiro-wordmark.png", import.meta.url)),
+      await readFile(new URL("../../public/images/ichiro-wordmark.png", import.meta.url)),
     ).toEqual(
-      await readFile(new URL("../../native/assets/images/ichiro-wordmark.png", import.meta.url)),
+      await readFile(new URL("../../../native/assets/images/ichiro-wordmark.png", import.meta.url)),
     );
     expect(html.match(/src="\/images\/ichiro-wordmark.png"/g)).toHaveLength(3);
     expect(html).not.toContain('id="payment"');
@@ -110,19 +109,5 @@ describe("公開紹介ページ", () => {
     expect(response.status).toBe(200);
     expect(response.headers.get("content-type")).toContain("text/html");
     expect(await response.text()).toBe("");
-  });
-
-  test("既存 API のパスと POST リクエストを紹介ページで覆わない", async () => {
-    const app = new Hono().route("/", createPublicPageApp());
-    app.post("/stripe/webhook", (c) => c.json({ received: true }));
-    app.get("/trpc/example", (c) => c.json({ result: "api" }));
-    expect(await (await app.request("/stripe/webhook", { method: "POST" })).text()).toBe(
-      JSON.stringify({ received: true }),
-    );
-    expect(await (await app.request("/trpc/example")).text()).toBe(
-      JSON.stringify({ result: "api" }),
-    );
-    expect((await app.request("/", { method: "POST" })).status).toBe(404);
-    expect((await app.request("/unknown")).status).toBe(404);
   });
 });

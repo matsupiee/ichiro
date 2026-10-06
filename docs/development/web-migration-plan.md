@@ -37,15 +37,15 @@ packages/infra    Alchemy（Worker の main と assets を apps/web のビルド
 
 ### URL
 
-| URL | 未ログイン | ログイン済み |
-|---|---|---|
-| `/` | 紹介ページ | `/app` へリダイレクト |
-| `/app/*` | ログイン画面へ | アプリ本体 |
-| `/terms` `/privacy` `/commerce` | 規約を表示 | 規約を表示 |
-| `/api/auth/*` | better-auth | better-auth |
-| `/api/trpc/*` | tRPC | tRPC |
-| `/api/stripe/webhook` | Stripe Webhook | Stripe Webhook |
-| `/avatars/*` | プロフィール写真 | プロフィール写真 |
+| URL                             | 未ログイン       | ログイン済み          |
+| ------------------------------- | ---------------- | --------------------- |
+| `/`                             | 紹介ページ       | `/app` へリダイレクト |
+| `/app/*`                        | ログイン画面へ   | アプリ本体            |
+| `/terms` `/privacy` `/commerce` | 規約を表示       | 規約を表示            |
+| `/api/auth/*`                   | better-auth      | better-auth           |
+| `/api/trpc/*`                   | tRPC             | tRPC                  |
+| `/api/stripe/webhook`           | Stripe Webhook   | Stripe Webhook        |
+| `/avatars/*`                    | プロフィール写真 | プロフィール写真      |
 
 紹介ページは `/` に置く。`ichiro.app` を開いた初めての人に紹介ページを見せ、Stripe の審査や検索結果にもサービス内容が出るようにするため。
 ログイン済みかどうかは `/` の `beforeLoad` でセッションを確認して判定する。
@@ -72,15 +72,18 @@ export default {
 
 ## フェーズ
 
-### Phase 1: 土台
+### Phase 1: 土台（完了）
 
-1. Alchemy で TanStack Start のビルド出力を Worker としてデプロイできるかを検証する。
-   - 難しい場合は、ビルド後の Worker を Alchemy の `main` と `assets` に渡すか、デプロイだけ wrangler に寄せる（D1 と R2 の作成は Alchemy に残す）。
-2. `apps/web` を作成し、`src/server.ts` で `fetch` と `scheduled` を動かす。
-3. 紹介ページと規約ページを Start のルートに移植する。
-   - `apps/server/src/public-page.test.ts` の確認内容を移す。
-4. tRPC、better-auth、Stripe Webhook、アバター配信をサーバールートに移す。
-   - `packages/api/src/http.ts`（Hono 前提の `createHttpApp`）はサーバールート向けに書き直す。
+1. Alchemy の `Cloudflare.Website.Vite` で、TanStack Start を Worker としてビルド・配信する。
+   - Alchemy が開発・ビルド時に Cloudflare の Vite プラグインを差し込むので、`apps/web/vite.config.ts` には Cloudflare のプラグインを書かない。
+   - `main` に `src/server.ts` を指定し、`fetch` を Start に、`scheduled` を罰金精算に割り当てる。
+2. `apps/server` を `apps/web` に移し、サーバー専用のコードは `apps/web/src/server/` に置く。
+3. 紹介ページと規約ページは、JS を含まない今の HTML（`public-page.ts`）をサーバールートから返す。
+   - React で描画するとハイドレーション用のスクリプトが入り、今の CSP を保てないため。
+4. tRPC、better-auth、Stripe Webhook、アバターの各ルートをサーバールートに移す。
+   - tRPC は `/api/trpc/*` に移す。ネイティブアプリの接続先も合わせて変えた。
+   - アバターのルートは `packages/api/src/http.ts` の Hono アプリをそのまま使い、サーバールートから Request を渡す。Hono は `packages/api` と紹介ページの中だけに残る。
+5. `/app` は Phase 2 で画面を作るまでの仮の入口にする。
 
 ### Phase 2: 認証
 
@@ -91,17 +94,17 @@ export default {
 
 ### Phase 3: 画面の移植
 
-| 現状（ネイティブ） | Web での置き換え |
-|---|---|
-| expo-router | TanStack Router（Start のルート） |
-| heroui-native と uniwind | Tailwind v4 と自前コンポーネント（必要に応じて Radix） |
-| @gorhom/bottom-sheet | ダイアログまたはドロワー |
-| react-native-reanimated | CSS アニメーションまたは Motion |
-| react-native-svg | SVG |
-| expo-image-picker と expo-image-manipulator | `<input type="file">` と Canvas での縮小 |
-| @react-native-community/datetimepicker | `<input type="date">` |
-| expo-haptics | 削除 |
-| アプリアイコンの変更（modules/app-icon） | 機能ごと削除 |
+| 現状（ネイティブ）                          | Web での置き換え                                       |
+| ------------------------------------------- | ------------------------------------------------------ |
+| expo-router                                 | TanStack Router（Start のルート）                      |
+| heroui-native と uniwind                    | Tailwind v4 と自前コンポーネント（必要に応じて Radix） |
+| @gorhom/bottom-sheet                        | ダイアログまたはドロワー                               |
+| react-native-reanimated                     | CSS アニメーションまたは Motion                        |
+| react-native-svg                            | SVG                                                    |
+| expo-image-picker と expo-image-manipulator | `<input type="file">` と Canvas での縮小               |
+| @react-native-community/datetimepicker      | `<input type="date">`                                  |
+| expo-haptics                                | 削除                                                   |
+| アプリアイコンの変更（modules/app-icon）    | 機能ごと削除                                           |
 
 tRPC の呼び出し、日付の計算、エラーメッセージなど、React Native に依存しないロジックは流用する。
 
@@ -134,6 +137,18 @@ Web 版で全ストーリーが通ってから行う。
 - `docs/user-stories/` の `change-app-icon.md` と `staging-app-coexistence.md` を削除し、ほかのストーリーは Web の操作に合わせて書き直す。
   - `register-payment-method.md`、`create-commitment.md`、`profile-sheet.md` から Apple Pay の記述を外し、カードだけにする。デモデータの「Apple Pay（Visa •••• 4242）」もカードに変える。
 - Maestro のフローを Playwright に移し、全ストーリーを通しで確認する。seed は `packages/db/src/seed/` のものを使う。
+
+## ローカルでの起動
+
+`bun run dev:server` で `http://localhost:3000` に画面と API が立ち上がる。`apps/web/.env` に環境変数を設定する。
+
+`alchemy dev` はローカル実行でも Cloudflare の認証情報を要求する。認証情報を置けない環境（クラウドの開発環境など）では、ダミーの値で起動できる。ローカル実行では Cloudflare の API を呼ばない。
+
+```sh
+CI=1 CLOUDFLARE_ACCOUNT_ID=00000000000000000000000000000000 CLOUDFLARE_API_TOKEN=dummy bun run dev:server
+```
+
+cron の処理は `curl "http://localhost:3000/cdn-cgi/handler/scheduled?cron=5+*+*+*+*"` で呼び出せる。
 
 ## 決定事項
 

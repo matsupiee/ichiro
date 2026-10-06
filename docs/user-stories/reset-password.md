@@ -39,5 +39,5 @@
 ## 対応するテスト
 
 - `packages/api/src/test/password-reset.integration.test.ts`
-- `apps/server/src/auth-mail.test.ts`
+- `apps/web/src/server/auth-mail.test.ts`
 - `.maestro/password-reset-request.yaml` と `.maestro/password-reset-confirm.yaml`。ログアウト状態で前者を実行し、ローカルログのコードを `-e OTP=コード` で後者へ渡す。

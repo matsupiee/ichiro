@@ -88,7 +88,7 @@ test("分割された署名シークレットを渡し、キーを表示せず�
     port: String(options.port),
   });
   expect(stripe.key).toBe("sk_test_fixture");
-  expect(stripe.args).toContain(`http://localhost:${options.port}/stripe/webhook`);
+  expect(stripe.args).toContain(`http://localhost:${options.port}/api/stripe/webhook`);
   expect(lines.join("\n")).not.toContain("whsec_fixture");
   for (const pid of [server.pid, stripe.pid]) expect(() => process.kill(pid, 0)).toThrow();
 });
