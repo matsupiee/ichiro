@@ -16,8 +16,14 @@ export async function loadDeployment(stage: string, env = process.env, basePath 
     overrideValues: { ...env, APP_ENV: stage, NODE_ENV: "production" },
   });
   await graph.resolveEnvValues();
-  if (graph.isInvalid)
-    throw new Error(`apps/web/.env.${stage}.local または環境変数を設定してください。`);
+  if (graph.isInvalid) {
+    const problems = Object.entries(graph.configSchema)
+      .filter(([, item]) => !item.isValid)
+      .map(([key, item]) => `- ${key}: ${item.errors.map((error) => error.message).join(" / ")}`);
+    throw new Error(
+      [`apps/web/.env.${stage}.local または環境変数の値が不正です。`, ...problems].join("\n"),
+    );
+  }
   const resolved = {
     ...env,
     ...graph.getResolvedEnvStringObject(),

@@ -110,6 +110,20 @@ test("stage 別ファイルが開発用 .env の秘密情報を遮断し、.loca
   );
 });
 
+test("値が不正なときは項目名と理由を表示し、値そのものは表示しない", async () => {
+  const root = fixture();
+  const basePath = join(root, "packages/infra");
+  writeFileSync(
+    join(root, "apps/web/.env.stg.local"),
+    envFile({ ...valid, BETTER_AUTH_SECRET: "too-short-secret" }),
+  );
+  const error = await loadDeployment("stg", {}, basePath).catch((caught: Error) => caught);
+  expect(error).toBeInstanceOf(Error);
+  expect((error as Error).message).toContain("- BETTER_AUTH_SECRET:");
+  expect((error as Error).message).not.toContain("STRIPE_SECRET_KEY");
+  expect((error as Error).message).not.toContain("too-short-secret");
+});
+
 test("プロセスの環境変数から prod を読み込み、ローカル設定より優先する", async () => {
   const root = fixture();
   const env = {
