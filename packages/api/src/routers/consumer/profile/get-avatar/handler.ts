@@ -1,19 +1,19 @@
-import type { Context as HonoContext } from "hono";
 import type z from "zod";
 
 import type { Context } from "../../../../context";
+import { notFound, type HttpParams } from "../../../../http";
 import type { profileGetAvatarInputSchema } from "./route";
 
 export async function handler({
-  c,
+  params,
   context,
 }: {
-  c: HonoContext;
+  params: HttpParams;
   context: Omit<Context, "session">;
 }) {
-  const { userId, file } = c.req.param() as z.infer<typeof profileGetAvatarInputSchema>;
+  const { userId, file } = params as z.infer<typeof profileGetAvatarInputSchema>;
   const object = await context.avatarStorage.get(`avatars/${userId}/${file}`);
-  if (!object) return c.notFound();
+  if (!object) return notFound();
 
   return new Response(object.body, {
     headers: {

@@ -82,7 +82,7 @@ export default {
    - React で描画するとハイドレーション用のスクリプトが入り、今の CSP を保てないため。
 4. tRPC、better-auth、Stripe Webhook、アバターの各ルートをサーバールートに移す。
    - tRPC は `/api/trpc/*` に移す。ネイティブアプリの接続先も合わせて変えた。
-   - アバターのルートは `packages/api/src/http.ts` の Hono アプリをそのまま使い、サーバールートから Request を渡す。Hono は `packages/api` の中だけに残る。紹介ページも当初は Hono を使っていたが、パスの振り分けはサーバールートで足りるため外した。
+   - アバターのルートは `packages/api/src/http.ts` のルート定義をそのまま使い、サーバールートから Request を渡す。当初は Hono を使っていたが、紹介ページとともに外した。いまは `packages/api/src/http.ts` の `createHttpHandler` がメソッドとパスでルートを選ぶ。
 5. `/app` は Phase 2 で画面を作るまでの仮の入口にする。
 
 ### Phase 2: 認証（完了）
