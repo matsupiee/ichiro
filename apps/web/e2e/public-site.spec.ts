@@ -42,3 +42,19 @@ test("ログインせずに紹介ページと規約を読める", async ({ page,
     "application/json",
   );
 });
+
+// docs/user-stories/view-service-introduction.md・onboarding.md
+test("紹介ページのボタンからアプリのはじめにの画面へ進める", async ({ page }) => {
+  await page.goto("/");
+  await page.locator(".hero").getByRole("link", { name: "さっそくはじめる" }).click();
+  await expect(page).toHaveURL(/\/app\/welcome$/);
+  await expect(page.getByRole("link", { name: "アカウントを作る" })).toBeVisible();
+
+  await page.goto("/");
+  await page.locator("header").getByRole("link", { name: "はじめる" }).click();
+  await expect(page).toHaveURL(/\/app\/welcome$/);
+
+  await page.goto("/");
+  await page.getByRole("link", { name: "アカウントを作ってはじめる" }).click();
+  await expect(page).toHaveURL(/\/app\/welcome$/);
+});

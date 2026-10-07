@@ -1,6 +1,6 @@
 # アプリのサービス内容をログインせず確認できる
 
-> ステータス: 紹介ページと規約類を実装済み。施行日は2026年10月7日。運営者情報と請求・返金の条件は `apps/web/src/server/site/legal.ts` に確定済み。検索エンジンと SNS の共有カードに対応済み。Google Search Console への登録は本番公開後に手作業で行う。
+> ステータス: 紹介ページと規約類を実装済み。紹介ページからアプリのはじめにの画面へ進むボタンを設置済み。施行日は2026年10月7日。運営者情報と請求・返金の条件は `apps/web/src/server/site/legal.ts` に確定済み。検索エンジンと SNS の共有カードに対応済み。Google Search Console への登録は本番公開後に手作業で行う。
 
 ## ストーリー
 
@@ -38,13 +38,19 @@
    - 独立した料金説明セクションと、そのナビゲーションは表示されない。請求条件はフッターの特定商取引法に基づく表記から確認できる。
    - ロゴはアプリ内と同じ筆記体の画像（`ichiro-wordmark.png`）を使う。
    - → [アプリ内で利用条件と個人情報の取り扱いを確認できる](./read-legal-documents.md)
-5. 同じブラウザで http://localhost:3000/app を開いてログインし、もう一度 http://localhost:3000/ を開く。
+5. 同じブラウザで、紹介ページからアプリを始める。
+   - ヘッダーの「はじめる」、最初の画面の「さっそくはじめる」、ページ下部の「アカウントを作ってはじめる」が表示される。規約ページのヘッダーにも「はじめる」がある。
+   - 最初の画面とページ下部のボタンの下に「基本利用料は無料。罰金の設定は任意です。」と表示される。特定商取引法に基づく表記の基本利用料と食い違わない。
+   - どのボタンを押しても、アプリのはじめにの画面（`/app/welcome`）に移り、「アカウントを作る」「ログイン」を選べる。
+   - スマートフォンの幅（390px）でも、ヘッダーのロゴ・「使い方」・「はじめる」が1行に収まる。
+   - → [アプリを開いたら新規登録とログインを選べる](./onboarding.md)
+6. 同じブラウザで http://localhost:3000/app を開いてログインし、もう一度 http://localhost:3000/ を開く。
    - 紹介ページではなく、アプリのホーム（`/app`）にリダイレクトされる。
    - ログインとコミットメント一覧が引き続き使える。
    - → [メインページでコミットメントを一覧できる](./commitment-list.md)
-6. `bun run test` で既存 API と紹介ページのテストを実行する。
+7. `bun run test` で既存 API と紹介ページのテストを実行する。
    - API のパス（`/api/...`）は紹介ページに置き換わらない。
-7. 紹介ページの画像を Web 版の画面に差し替えるときは、撮影用データを作ってブラウザで撮影する。
+8. 紹介ページの画像を Web 版の画面に差し替えるときは、撮影用データを作ってブラウザで撮影する。
    - `bun run --cwd packages/db db:seed:public-page --url file:/絶対パス/対象.sqlite --skip-migrations` で、開発サーバーのローカル D1 に撮影用データを入れる。リモート DB は指定できない。
    - ブラウザで `screenshots@ichiro.example` / `screenshot-demo-only` でログインする。日付は実行日の現地日付になる。
    - スマートフォンの幅で一覧を撮影し、「毎朝、本を10ページ読む」の詳細を撮影する。「今日の達成を報告する」を押すと、7日連続達成のお祝い画面を撮影できる。
@@ -58,6 +64,7 @@
 - `apps/web/src/server/public-page.ts` に公開紹介文を持つ。
   - `apps/web/src/routes/index.ts`・`terms.ts`・`privacy.ts`・`commerce.ts` のサーバールートがこの HTML を返す。`/` だけはログイン済みなら `/app` へリダイレクトする。
   - 紹介文と規約の HTML は DB を使わずに作る。`/` ではログイン状態だけを確かめる。規約本文は `apps/web/src/server/site/legal.ts` に持つ。
+  - アプリを始めるボタンのリンク先は `APP_START_PATH`（`/app/welcome`）。ログイン済みのユーザーが押した場合は、`/app/_guest` のルートがホームへ送る。
   - 画像と CSS は `apps/web/public/` から Workers の Static Assets で配信する。ロゴはアプリ内と同じ `ichiro-wordmark.png` を配信する。
   - 撮影用データは `packages/db/src/seed/public-page.ts` に持つ。
 - 運営者名、運営責任者、問い合わせ先、所在地・電話番号の開示方法、返金・キャンセル条件は `apps/web/src/server/site/legal.ts` に持つ。Stripe に登録した内容と一致させる。
@@ -69,8 +76,8 @@
 
 ## 対応するテスト
 
-- `apps/web/e2e/public-site.spec.ts`：未ログインでの紹介ページ（JavaScript を含まないこと、画像の読み込み、共有カードの情報）、フッターから開く規約、`robots.txt` と `sitemap.xml`、API のパスが紹介ページに置き換わらないこと。
-- ログイン済みで `/` を開いたときのリダイレクトは、手順3でブラウザから確認する。
-- `apps/web/src/server/public-page.test.ts`：公開準備中の表示がないこと、canonical と OGP、共有用画像のサイズ、本番とそれ以外での `robots.txt` の違い、サイトマップの URL。
+- `apps/web/e2e/public-site.spec.ts`：未ログインでの紹介ページ（JavaScript を含まないこと、画像の読み込み、共有カードの情報）、フッターから開く規約、ヘッダー・最初の画面・ページ下部のボタンからはじめにの画面（`/app/welcome`）へ進めること、`robots.txt` と `sitemap.xml`、API のパスが紹介ページに置き換わらないこと。
+- ログイン済みで `/` を開いたときのリダイレクトは、手順6でブラウザから確認する。
+- `apps/web/src/server/public-page.test.ts`：公開準備中の表示がないこと、アプリを始めるボタンのリンク先と料金の注記、canonical と OGP、共有用画像のサイズ、本番とそれ以外での `robots.txt` の違い、サイトマップの URL。
 - `packages/api/src/test/public-page-seed.integration.test.ts`
 - 既存ストーリーの回帰確認は `bun run test` と `bun run test:e2e` で実行する。
