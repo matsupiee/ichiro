@@ -14,7 +14,6 @@ const valid = {
   STRIPE_SECRET_KEY: "sk_test_fixture",
   STRIPE_WEBHOOK_SECRET: "whsec_fixture",
   BETTER_AUTH_SECRET: "x".repeat(32),
-  CORS_ORIGIN: "https://stg.example.com",
 };
 
 test("stg と prod の Stripe キーを取り違えると停止する", () => {

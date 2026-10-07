@@ -55,7 +55,6 @@ test("Varlock が環境変数を優先し、既存の webhook シークレット
     STRIPE_SECRET_KEY: "sk_test_override",
     STRIPE_WEBHOOK_SECRET: "",
     BETTER_AUTH_SECRET: "a".repeat(32),
-    CORS_ORIGIN: "http://localhost:8081",
   });
   expect(settings.STRIPE_SECRET_KEY).toBe("sk_test_override");
   expect(settings.STRIPE_WEBHOOK_SECRET).toBe("whsec_pending_listener");

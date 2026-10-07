@@ -40,7 +40,6 @@
     "BETTER_AUTH_SECRET",
     "BETTER_AUTH_URL",
     "CI",
-    "CORS_ORIGIN",
     "EXPO_PUBLIC_SERVER_URL",
     "NODE_ENV",
     "VERCEL",

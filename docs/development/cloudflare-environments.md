@@ -16,13 +16,12 @@ Varlock の `APP_ENV` で設定ファイルを選ぶ。サーバーの `NODE_ENV
 | 変数                    | stg                              | prod                           |
 | ----------------------- | -------------------------------- | ------------------------------ |
 | `BETTER_AUTH_SECRET`    | stg 専用の32文字以上のランダム値 | prod 専用の別の値              |
-| `CORS_ORIGIN`           | 許可する HTTPS origin            | 許可する HTTPS origin          |
 | `STRIPE_SECRET_KEY`     | `sk_test_...`                    | `sk_live_...`                  |
 | `STRIPE_WEBHOOK_SECRET` | stg の Webhook の `whsec_...`    | prod の Webhook の `whsec_...` |
 
 `RESEND_API_KEY` も各環境に設定する。認証メールは `ichiro <noreply@mail.ichiro.app>` から Resend で送る。GitHub Environments の Secrets にも `RESEND_API_KEY` を追加する。詳細は [認証メール](./auth-email.md)。
 
-`BETTER_AUTH_URL` は Alchemy が Worker の URL を設定するので指定不要。ネイティブの認証では既存の `ichiro://` scheme を使う。
+`BETTER_AUTH_URL` は Alchemy が Worker の URL を設定するので指定不要。画面と API は同じ Worker から同一オリジンで配信するため、認証が信頼するオリジンはこの URL だけになる。
 
 Stripe の Webhook は各 Worker URL の `/api/stripe/webhook` に作成する。イベントは `setup_intent.succeeded`、`payment_intent.succeeded`、`payment_intent.payment_failed`・`payment_intent.requires_action`。stg と prod で別エンドポイント・署名シークレットにする。
 
@@ -76,7 +75,7 @@ Expo のビルドでも `APP_ENV=stg` または `APP_ENV=prod` と `EXPO_NO_DOTE
 
 GitHub Environments に `stg` と `prod` を作成し、それぞれに設定する。
 
-- Variables: `CLOUDFLARE_ACCOUNT_ID`、`CORS_ORIGIN`
+- Variables: `CLOUDFLARE_ACCOUNT_ID`
 - Secrets: `CLOUDFLARE_API_TOKEN`、`BETTER_AUTH_SECRET`、`STRIPE_SECRET_KEY`、`STRIPE_WEBHOOK_SECRET`
 
 Cloudflare のトークンには Worker・D1・R2 と Alchemy の状態ストアを管理する権限が必要。初回はローカルで状態ストアを作成し、CI から使えることを確認する。prod Environment には必要に応じて承認者・ブランチ制限を設定する。

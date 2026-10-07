@@ -34,7 +34,6 @@ export const server = Cloudflare.Website.Vite("server", {
     AUTH_EMAIL_FROM: Config.String("AUTH_EMAIL_FROM"),
     AUTH_EMAIL_DELIVERY: Config.String("AUTH_EMAIL_DELIVERY"),
     AVATARS: avatars,
-    CORS_ORIGIN: Config.String("CORS_ORIGIN"),
     BETTER_AUTH_SECRET: Config.Redacted("BETTER_AUTH_SECRET"),
     BETTER_AUTH_URL: Cloudflare.Worker.URL,
     STRIPE_SECRET_KEY: Config.Redacted("STRIPE_SECRET_KEY"),

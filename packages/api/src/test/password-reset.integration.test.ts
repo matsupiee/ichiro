@@ -15,7 +15,6 @@ async function setup() {
     {
       BETTER_AUTH_URL: "http://localhost:3000",
       BETTER_AUTH_SECRET: "local-password-reset-test-secret-12345",
-      CORS_ORIGIN: "http://localhost:8081",
     },
     db,
     async (mail) => {
@@ -29,7 +28,7 @@ async function setup() {
         method: body ? "POST" : "GET",
         headers: {
           "Content-Type": "application/json",
-          "expo-origin": "ichiro://",
+          Origin: "http://localhost:3000",
           "cf-connecting-ip": "192.0.2.50",
           cookie,
         },

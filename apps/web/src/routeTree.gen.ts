@@ -10,19 +10,34 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as AppRouteRouteImport } from './routes/app/route'
 import { Route as CommerceRouteImport } from './routes/commerce'
 import { Route as PrivacyRouteImport } from './routes/privacy'
 import { Route as TermsRouteImport } from './routes/terms'
-import { Route as AppIndexRouteImport } from './routes/app/index'
+import { Route as AppGuestRouteImport } from './routes/app/_guest'
+import { Route as AppMemberRouteImport } from './routes/app/_member'
 import { Route as AvatarsSplatRouteImport } from './routes/avatars/$'
 import { Route as ApiAuthSplatRouteImport } from './routes/api/auth/$'
 import { Route as ApiProfileAvatarRouteImport } from './routes/api/profile/avatar'
 import { Route as ApiStripeWebhookRouteImport } from './routes/api/stripe/webhook'
 import { Route as ApiTrpcSplatRouteImport } from './routes/api/trpc/$'
+import { Route as AppGuestResetPasswordRouteImport } from './routes/app/_guest/reset-password'
+import { Route as AppGuestSignInRouteImport } from './routes/app/_guest/sign-in'
+import { Route as AppGuestSignUpRouteImport } from './routes/app/_guest/sign-up'
+import { Route as AppGuestVerifyEmailRouteImport } from './routes/app/_guest/verify-email'
+import { Route as AppGuestWelcomeRouteImport } from './routes/app/_guest/welcome'
+import { Route as AppMemberIndexRouteImport } from './routes/app/_member/index'
+import { Route as AppMemberChangeEmailRouteImport } from './routes/app/_member/change-email'
+import { Route as AppMemberWithdrawalRouteImport } from './routes/app/_member/withdrawal'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AppRouteRoute = AppRouteRouteImport.update({
+  id: '/app',
+  path: '/app',
   getParentRoute: () => rootRouteImport,
 } as any)
 const CommerceRoute = CommerceRouteImport.update({
@@ -40,10 +55,13 @@ const TermsRoute = TermsRouteImport.update({
   path: '/terms',
   getParentRoute: () => rootRouteImport,
 } as any)
-const AppIndexRoute = AppIndexRouteImport.update({
-  id: '/app/',
-  path: '/app/',
-  getParentRoute: () => rootRouteImport,
+const AppGuestRoute = AppGuestRouteImport.update({
+  id: '/_guest',
+  getParentRoute: () => AppRouteRoute,
+} as any)
+const AppMemberRoute = AppMemberRouteImport.update({
+  id: '/_member',
+  getParentRoute: () => AppRouteRoute,
 } as any)
 const AvatarsSplatRoute = AvatarsSplatRouteImport.update({
   id: '/avatars/$',
@@ -70,90 +88,180 @@ const ApiTrpcSplatRoute = ApiTrpcSplatRouteImport.update({
   path: '/api/trpc/$',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AppGuestResetPasswordRoute = AppGuestResetPasswordRouteImport.update({
+  id: '/reset-password',
+  path: '/reset-password',
+  getParentRoute: () => AppGuestRoute,
+} as any)
+const AppGuestSignInRoute = AppGuestSignInRouteImport.update({
+  id: '/sign-in',
+  path: '/sign-in',
+  getParentRoute: () => AppGuestRoute,
+} as any)
+const AppGuestSignUpRoute = AppGuestSignUpRouteImport.update({
+  id: '/sign-up',
+  path: '/sign-up',
+  getParentRoute: () => AppGuestRoute,
+} as any)
+const AppGuestVerifyEmailRoute = AppGuestVerifyEmailRouteImport.update({
+  id: '/verify-email',
+  path: '/verify-email',
+  getParentRoute: () => AppGuestRoute,
+} as any)
+const AppGuestWelcomeRoute = AppGuestWelcomeRouteImport.update({
+  id: '/welcome',
+  path: '/welcome',
+  getParentRoute: () => AppGuestRoute,
+} as any)
+const AppMemberIndexRoute = AppMemberIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => AppMemberRoute,
+} as any)
+const AppMemberChangeEmailRoute = AppMemberChangeEmailRouteImport.update({
+  id: '/change-email',
+  path: '/change-email',
+  getParentRoute: () => AppMemberRoute,
+} as any)
+const AppMemberWithdrawalRoute = AppMemberWithdrawalRouteImport.update({
+  id: '/withdrawal',
+  path: '/withdrawal',
+  getParentRoute: () => AppMemberRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/app': typeof AppRouteRouteWithChildren
   '/commerce': typeof CommerceRoute
   '/privacy': typeof PrivacyRoute
   '/terms': typeof TermsRoute
   '/avatars/$': typeof AvatarsSplatRoute
-  '/app/': typeof AppIndexRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
   '/api/profile/avatar': typeof ApiProfileAvatarRoute
   '/api/stripe/webhook': typeof ApiStripeWebhookRoute
   '/api/trpc/$': typeof ApiTrpcSplatRoute
+  '/app/reset-password': typeof AppGuestResetPasswordRoute
+  '/app/sign-in': typeof AppGuestSignInRoute
+  '/app/sign-up': typeof AppGuestSignUpRoute
+  '/app/verify-email': typeof AppGuestVerifyEmailRoute
+  '/app/welcome': typeof AppGuestWelcomeRoute
+  '/app/change-email': typeof AppMemberChangeEmailRoute
+  '/app/withdrawal': typeof AppMemberWithdrawalRoute
+  '/app/': typeof AppMemberIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/app': typeof AppMemberIndexRoute
   '/commerce': typeof CommerceRoute
   '/privacy': typeof PrivacyRoute
   '/terms': typeof TermsRoute
   '/avatars/$': typeof AvatarsSplatRoute
-  '/app': typeof AppIndexRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
   '/api/profile/avatar': typeof ApiProfileAvatarRoute
   '/api/stripe/webhook': typeof ApiStripeWebhookRoute
   '/api/trpc/$': typeof ApiTrpcSplatRoute
+  '/app/reset-password': typeof AppGuestResetPasswordRoute
+  '/app/sign-in': typeof AppGuestSignInRoute
+  '/app/sign-up': typeof AppGuestSignUpRoute
+  '/app/verify-email': typeof AppGuestVerifyEmailRoute
+  '/app/welcome': typeof AppGuestWelcomeRoute
+  '/app/change-email': typeof AppMemberChangeEmailRoute
+  '/app/withdrawal': typeof AppMemberWithdrawalRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/app': typeof AppRouteRouteWithChildren
   '/commerce': typeof CommerceRoute
   '/privacy': typeof PrivacyRoute
   '/terms': typeof TermsRoute
+  '/app/_guest': typeof AppGuestRouteWithChildren
+  '/app/_member': typeof AppMemberRouteWithChildren
   '/avatars/$': typeof AvatarsSplatRoute
-  '/app/': typeof AppIndexRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
   '/api/profile/avatar': typeof ApiProfileAvatarRoute
   '/api/stripe/webhook': typeof ApiStripeWebhookRoute
   '/api/trpc/$': typeof ApiTrpcSplatRoute
+  '/app/_guest/reset-password': typeof AppGuestResetPasswordRoute
+  '/app/_guest/sign-in': typeof AppGuestSignInRoute
+  '/app/_guest/sign-up': typeof AppGuestSignUpRoute
+  '/app/_guest/verify-email': typeof AppGuestVerifyEmailRoute
+  '/app/_guest/welcome': typeof AppGuestWelcomeRoute
+  '/app/_member/change-email': typeof AppMemberChangeEmailRoute
+  '/app/_member/withdrawal': typeof AppMemberWithdrawalRoute
+  '/app/_member/': typeof AppMemberIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/app'
     | '/commerce'
     | '/privacy'
     | '/terms'
     | '/avatars/$'
-    | '/app/'
     | '/api/auth/$'
     | '/api/profile/avatar'
     | '/api/stripe/webhook'
     | '/api/trpc/$'
+    | '/app/reset-password'
+    | '/app/sign-in'
+    | '/app/sign-up'
+    | '/app/verify-email'
+    | '/app/welcome'
+    | '/app/change-email'
+    | '/app/withdrawal'
+    | '/app/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/app'
     | '/commerce'
     | '/privacy'
     | '/terms'
     | '/avatars/$'
-    | '/app'
     | '/api/auth/$'
     | '/api/profile/avatar'
     | '/api/stripe/webhook'
     | '/api/trpc/$'
+    | '/app/reset-password'
+    | '/app/sign-in'
+    | '/app/sign-up'
+    | '/app/verify-email'
+    | '/app/welcome'
+    | '/app/change-email'
+    | '/app/withdrawal'
   id:
     | '__root__'
     | '/'
+    | '/app'
     | '/commerce'
     | '/privacy'
     | '/terms'
+    | '/app/_guest'
+    | '/app/_member'
     | '/avatars/$'
-    | '/app/'
     | '/api/auth/$'
     | '/api/profile/avatar'
     | '/api/stripe/webhook'
     | '/api/trpc/$'
+    | '/app/_guest/reset-password'
+    | '/app/_guest/sign-in'
+    | '/app/_guest/sign-up'
+    | '/app/_guest/verify-email'
+    | '/app/_guest/welcome'
+    | '/app/_member/change-email'
+    | '/app/_member/withdrawal'
+    | '/app/_member/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  AppRouteRoute: typeof AppRouteRouteWithChildren
   CommerceRoute: typeof CommerceRoute
   PrivacyRoute: typeof PrivacyRoute
   TermsRoute: typeof TermsRoute
   AvatarsSplatRoute: typeof AvatarsSplatRoute
-  AppIndexRoute: typeof AppIndexRoute
   ApiAuthSplatRoute: typeof ApiAuthSplatRoute
   ApiProfileAvatarRoute: typeof ApiProfileAvatarRoute
   ApiStripeWebhookRoute: typeof ApiStripeWebhookRoute
@@ -167,6 +275,13 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/app': {
+      id: '/app'
+      path: '/app'
+      fullPath: '/app'
+      preLoaderRoute: typeof AppRouteRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/commerce': {
@@ -190,12 +305,19 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof TermsRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/app/': {
-      id: '/app/'
-      path: '/app'
-      fullPath: '/app/'
-      preLoaderRoute: typeof AppIndexRouteImport
-      parentRoute: typeof rootRouteImport
+    '/app/_guest': {
+      id: '/app/_guest'
+      path: ''
+      fullPath: '/app'
+      preLoaderRoute: typeof AppGuestRouteImport
+      parentRoute: typeof AppRouteRoute
+    }
+    '/app/_member': {
+      id: '/app/_member'
+      path: ''
+      fullPath: '/app'
+      preLoaderRoute: typeof AppMemberRouteImport
+      parentRoute: typeof AppRouteRoute
     }
     '/avatars/$': {
       id: '/avatars/$'
@@ -232,16 +354,122 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiTrpcSplatRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/app/_guest/reset-password': {
+      id: '/app/_guest/reset-password'
+      path: '/reset-password'
+      fullPath: '/app/reset-password'
+      preLoaderRoute: typeof AppGuestResetPasswordRouteImport
+      parentRoute: typeof AppGuestRoute
+    }
+    '/app/_guest/sign-in': {
+      id: '/app/_guest/sign-in'
+      path: '/sign-in'
+      fullPath: '/app/sign-in'
+      preLoaderRoute: typeof AppGuestSignInRouteImport
+      parentRoute: typeof AppGuestRoute
+    }
+    '/app/_guest/sign-up': {
+      id: '/app/_guest/sign-up'
+      path: '/sign-up'
+      fullPath: '/app/sign-up'
+      preLoaderRoute: typeof AppGuestSignUpRouteImport
+      parentRoute: typeof AppGuestRoute
+    }
+    '/app/_guest/verify-email': {
+      id: '/app/_guest/verify-email'
+      path: '/verify-email'
+      fullPath: '/app/verify-email'
+      preLoaderRoute: typeof AppGuestVerifyEmailRouteImport
+      parentRoute: typeof AppGuestRoute
+    }
+    '/app/_guest/welcome': {
+      id: '/app/_guest/welcome'
+      path: '/welcome'
+      fullPath: '/app/welcome'
+      preLoaderRoute: typeof AppGuestWelcomeRouteImport
+      parentRoute: typeof AppGuestRoute
+    }
+    '/app/_member/': {
+      id: '/app/_member/'
+      path: '/'
+      fullPath: '/app/'
+      preLoaderRoute: typeof AppMemberIndexRouteImport
+      parentRoute: typeof AppMemberRoute
+    }
+    '/app/_member/change-email': {
+      id: '/app/_member/change-email'
+      path: '/change-email'
+      fullPath: '/app/change-email'
+      preLoaderRoute: typeof AppMemberChangeEmailRouteImport
+      parentRoute: typeof AppMemberRoute
+    }
+    '/app/_member/withdrawal': {
+      id: '/app/_member/withdrawal'
+      path: '/withdrawal'
+      fullPath: '/app/withdrawal'
+      preLoaderRoute: typeof AppMemberWithdrawalRouteImport
+      parentRoute: typeof AppMemberRoute
+    }
   }
 }
 
+interface AppGuestRouteChildren {
+  AppGuestResetPasswordRoute: typeof AppGuestResetPasswordRoute
+  AppGuestSignInRoute: typeof AppGuestSignInRoute
+  AppGuestSignUpRoute: typeof AppGuestSignUpRoute
+  AppGuestVerifyEmailRoute: typeof AppGuestVerifyEmailRoute
+  AppGuestWelcomeRoute: typeof AppGuestWelcomeRoute
+}
+
+const AppGuestRouteChildren: AppGuestRouteChildren = {
+  AppGuestResetPasswordRoute: AppGuestResetPasswordRoute,
+  AppGuestSignInRoute: AppGuestSignInRoute,
+  AppGuestSignUpRoute: AppGuestSignUpRoute,
+  AppGuestVerifyEmailRoute: AppGuestVerifyEmailRoute,
+  AppGuestWelcomeRoute: AppGuestWelcomeRoute,
+}
+
+const AppGuestRouteWithChildren = AppGuestRoute._addFileChildren(
+  AppGuestRouteChildren,
+)
+
+interface AppMemberRouteChildren {
+  AppMemberChangeEmailRoute: typeof AppMemberChangeEmailRoute
+  AppMemberWithdrawalRoute: typeof AppMemberWithdrawalRoute
+  AppMemberIndexRoute: typeof AppMemberIndexRoute
+}
+
+const AppMemberRouteChildren: AppMemberRouteChildren = {
+  AppMemberChangeEmailRoute: AppMemberChangeEmailRoute,
+  AppMemberWithdrawalRoute: AppMemberWithdrawalRoute,
+  AppMemberIndexRoute: AppMemberIndexRoute,
+}
+
+const AppMemberRouteWithChildren = AppMemberRoute._addFileChildren(
+  AppMemberRouteChildren,
+)
+
+interface AppRouteRouteChildren {
+  AppGuestRoute: typeof AppGuestRouteWithChildren
+  AppMemberRoute: typeof AppMemberRouteWithChildren
+}
+
+const AppRouteRouteChildren: AppRouteRouteChildren = {
+  AppGuestRoute: AppGuestRouteWithChildren,
+  AppMemberRoute: AppMemberRouteWithChildren,
+}
+
+const AppRouteRouteWithChildren = AppRouteRoute._addFileChildren(
+  AppRouteRouteChildren,
+)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  AppRouteRoute: AppRouteRouteWithChildren,
   CommerceRoute: CommerceRoute,
   PrivacyRoute: PrivacyRoute,
   TermsRoute: TermsRoute,
   AvatarsSplatRoute: AvatarsSplatRoute,
-  AppIndexRoute: AppIndexRoute,
   ApiAuthSplatRoute: ApiAuthSplatRoute,
   ApiProfileAvatarRoute: ApiProfileAvatarRoute,
   ApiStripeWebhookRoute: ApiStripeWebhookRoute,

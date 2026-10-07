@@ -85,12 +85,20 @@ export default {
    - アバターのルートは `packages/api/src/http.ts` の Hono アプリをそのまま使い、サーバールートから Request を渡す。Hono は `packages/api` と紹介ページの中だけに残る。
 5. `/app` は Phase 2 で画面を作るまでの仮の入口にする。
 
-### Phase 2: 認証
+### Phase 2: 認証（完了）
 
-- `packages/auth` から `@better-auth/expo` を外し、`tanstackStartCookies` を追加する。
-- `trustedOrigins` から `ichiro://`、`ichiro-stg://`、`exp://`、`http://localhost:8081` を削除し、自分のオリジンだけにする。
-- Cookie の `sameSite` を `none` から `lax` にする。
-- 新規登録、ログイン、メール確認、パスワード再設定、メールアドレス変更、退会の画面を作る。
+- `packages/auth` から `@better-auth/expo` を外した。`createAuth` の第4引数で追加のプラグインを受け取り、`apps/web` から `tanstackStartCookies` を最後に渡す。
+  - `packages/api` のテストは TanStack Start なしで動かすため、Start に依存するプラグインは `packages/auth` に直接書かない。
+- `trustedOrigins` と `CORS_ORIGIN` を削除した。Better Auth は `BETTER_AUTH_URL` のオリジンだけを信頼する。
+  - 計画では Phase 5 で削除する予定だったが、`CORS_ORIGIN` を使っていたのは認証だけなので、このフェーズで環境変数・デプロイの検証・GitHub Actions からも外した。
+- Cookie の属性は Better Auth の既定（`SameSite=Lax`、`HttpOnly`、HTTPS では `Secure`）に戻した。
+- 画面と URL
+  - 未ログイン：`/app/welcome`、`/app/sign-up`、`/app/sign-in`、`/app/verify-email`、`/app/reset-password`
+  - ログイン済み：`/app`（仮のホーム）、`/app/change-email`、`/app/withdrawal`
+  - `/app` の `beforeLoad` でセッションを読み、`_guest` と `_member` の2つのレイアウトで出し分ける。メール未確認のセッションはメール確認画面へ送る。
+- 退会はネイティブ版ではプロフィールのシートの中の画面だったが、Web では `/app/withdrawal` の1画面にした。プロフィールの画面は Phase 3 で作り、そこから開く。
+- ネイティブ版はこのフェーズから認証できない（Expo のプラグインを外したため）。Phase 5 で削除する。
+- ワンちゃんは、ネイティブ版の reanimated の値をそのまま CSS のキーフレームに写した。タップ時の振動は Web にはないので行わない。
 
 ### Phase 3: 画面の移植
 
@@ -123,7 +131,6 @@ Web 版で全ストーリーが通ってから行う。
 - `apps/native`、`apps/server`、`.maestro/`、App Store 用のスクリーンショットを削除する。
 - ルートの `package.json` から `ios:*` と `dev:native*` を削除し、`dev`、`postinstall`、`env:generate` の対象を `apps/web` に変える。
 - 使わなくなった `@better-auth/expo` をカタログから削除し、`bun install` で lockfile を作り直す。
-- 同一オリジンになるため、`CORS_ORIGIN` を環境変数と `deployment-settings.ts` の検証から削除する。
 - README、`docs/development/eas-build.md`、`docs/development/app-icons.md`、`docs/development/public-site.md` を更新または削除する。
 
 ### Phase 6: ドキュメント、規約、テスト

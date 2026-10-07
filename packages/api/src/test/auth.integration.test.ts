@@ -8,7 +8,6 @@ const credentials = { email: "auth-test@example.com", password: "password123", n
 const config = {
   BETTER_AUTH_URL: "http://localhost:3000",
   BETTER_AUTH_SECRET: "local-auth-integration-test-secret-12345",
-  CORS_ORIGIN: "http://localhost:8081",
 };
 function cookies(response: Response) {
   return response.headers
@@ -29,7 +28,7 @@ async function setup() {
         method: body ? "POST" : "GET",
         headers: {
           "Content-Type": "application/json",
-          "expo-origin": "ichiro://",
+          Origin: "http://localhost:3000",
           cookie,
           "cf-connecting-ip": ip,
         },
@@ -179,7 +178,7 @@ test("送信失敗でも未認証のままで、再送して登録を再開で�
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        "expo-origin": "ichiro://",
+        Origin: "http://localhost:3000",
         "cf-connecting-ip": "192.0.2.1",
       },
       body: JSON.stringify(credentials),
@@ -425,25 +424,24 @@ for (const verified of [false, true]) {
   });
 }
 
-test.each(["ichiro://", "ichiro-stg://", "untrusted-app://"])(
-  "ネイティブの Origin %s を検証する",
-  async (origin) => {
-    const db = await createTestDb();
-    const mails: VerificationMail[] = [];
-    const auth = createAuth(config, db, async (mail) => {
-      mails.push(mail);
-    });
-    // Better Auth はテスト環境で Origin 検証を省略するため、この検証では有効にする。
-    (await auth.$context).skipOriginCheck = false;
-    const response = await auth.handler(
-      new Request(`${config.BETTER_AUTH_URL}/api/auth/sign-up/email`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json", "expo-origin": origin },
-        body: JSON.stringify(credentials),
-      }),
-    );
-    const trusted = origin !== "untrusted-app://";
-    expect(response.status).toBe(trusted ? 200 : 403);
-    expect(mails).toHaveLength(trusted ? 1 : 0);
-  },
-);
+test.each([
+  ["http://localhost:3000", true],
+  ["https://attacker.example", false],
+])("Origin %s からの登録を検証する（自分のオリジンだけを信頼する）", async (origin, trusted) => {
+  const db = await createTestDb();
+  const mails: VerificationMail[] = [];
+  const auth = createAuth(config, db, async (mail) => {
+    mails.push(mail);
+  });
+  // Better Auth はテスト環境で Origin 検証を省略するため、この検証では有効にする。
+  (await auth.$context).skipOriginCheck = false;
+  const response = await auth.handler(
+    new Request(`${config.BETTER_AUTH_URL}/api/auth/sign-up/email`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", Origin: origin },
+      body: JSON.stringify(credentials),
+    }),
+  );
+  expect(response.status).toBe(trusted ? 200 : 403);
+  expect(mails).toHaveLength(trusted ? 1 : 0);
+});

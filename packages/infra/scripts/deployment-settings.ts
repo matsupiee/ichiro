@@ -23,7 +23,4 @@ export function validateDeployment(stage: string, env: Record<string, string | u
       "AUTH_EMAIL_FROM は認証済みの ichiro <noreply@mail.ichiro.app> を指定してください。",
     );
   }
-  if (!env.CORS_ORIGIN || new URL(env.CORS_ORIGIN).protocol !== "https:") {
-    throw new Error("CORS_ORIGIN に HTTPS の URL を設定してください。");
-  }
 }
