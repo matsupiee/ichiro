@@ -159,6 +159,8 @@ cron の処理は `curl "http://localhost:3000/cdn-cgi/handler/scheduled?cron=5+
 
 ## 決定事項
 
+- GitHub Actions による自動デプロイ（`.github/workflows/deploy.yml`）は使わないので削除した。デプロイは手元から `bun run deploy:stg`・`bun run deploy:prod` で行う。
+
 - Apple Pay と Google Pay は使わない。支払い方法はカードだけにする。
 - PWA には対応しない。
 - 移行が必要な既存ユーザーはいない前提で進める。ネイティブ版のデータ移行や併存期間は設けない。

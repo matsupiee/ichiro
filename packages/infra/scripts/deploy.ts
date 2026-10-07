@@ -17,7 +17,7 @@ export async function loadDeployment(stage: string, env = process.env, basePath 
   });
   await graph.resolveEnvValues();
   if (graph.isInvalid)
-    throw new Error(`apps/web/.env.${stage}.local または CI の環境変数を設定してください。`);
+    throw new Error(`apps/web/.env.${stage}.local または環境変数を設定してください。`);
   const resolved = {
     ...env,
     ...graph.getResolvedEnvStringObject(),

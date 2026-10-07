@@ -53,7 +53,7 @@ bun run deploy:check:prod
 bun run deploy:prod
 ```
 
-`main` への push で GitHub Actions が stg にデプロイする。
+デプロイは手元から上のコマンドで行う。GitHub Actions による自動デプロイはない。
 
 ## 環境変数
 

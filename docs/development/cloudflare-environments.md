@@ -24,7 +24,7 @@ Varlock の `APP_ENV` で設定ファイルを選ぶ。サーバーの `NODE_ENV
 
 `STRIPE_PUBLISHABLE_KEY` はブラウザの Payment Element で支払い方法を登録するときに使う公開可能キー。ビルドには埋め込まず、Worker の環境変数からサーバーが画面へ渡す。`STRIPE_SECRET_KEY` と同じ Stripe アカウントのキーにする。
 
-`RESEND_API_KEY` も各環境に設定する。認証メールは `ichiro <noreply@mail.ichiro.app>` から Resend で送る。GitHub Environments の Secrets にも `RESEND_API_KEY` を追加する。詳細は [認証メール](./auth-email.md)。
+`RESEND_API_KEY` も各環境に設定する。認証メールは `ichiro <noreply@mail.ichiro.app>` から Resend で送る。詳細は [認証メール](./auth-email.md)。
 
 `BETTER_AUTH_URL` は Alchemy が Worker の URL を設定するので指定不要。画面と API は同じ Worker から同一オリジンで配信するため、認証が信頼するオリジンはこの URL だけになる。`CORS_ORIGIN` は廃止したので設定しない。
 
@@ -55,21 +55,6 @@ D1 のマイグレーションは `packages/db/src/migrations` からデプロ�
 prod は `https://ichiro.app` で配信する。`packages/infra/alchemy.run.ts` の `domain` を prod にだけ設定し、Alchemy が Custom Domain を管理する。Cloudflare の同じアカウントに Active な `ichiro.app` のゾーンが必要。`BETTER_AUTH_URL` は `Cloudflare.Worker.URL` から独自ドメインの URL に解決される。stg は Alchemy が出力する Worker の URL を使う。
 
 画面も同じ Worker から配信するので、接続先を切り替える設定はない。stg のアプリは stg の Worker の URL、prod のアプリは https://ichiro.app をブラウザで開く。紹介ページは `/`、アプリは `/app`。
-
-## GitHub Actions
-
-`.github/workflows/deploy.yml` は `main` への push で stg にデプロイする。prod は workflow_dispatch で `stage=prod` と検証済みの40文字コミット SHA を指定する。同じ SHA の main push による stg デプロイが成功していない場合は停止する。
-
-GitHub Environments に `stg` と `prod` を作成し、それぞれに設定する。
-
-- Variables: `CLOUDFLARE_ACCOUNT_ID`、`STRIPE_PUBLISHABLE_KEY`
-- Secrets: `CLOUDFLARE_API_TOKEN`、`BETTER_AUTH_SECRET`、`STRIPE_SECRET_KEY`、`STRIPE_WEBHOOK_SECRET`、`RESEND_API_KEY`
-
-公開可能キーは秘密情報ではないため、Secrets ではなく Variables に置く。
-
-Cloudflare のトークンには Worker・D1・R2 と Alchemy の状態ストアを管理する権限が必要。初回はローカルで状態ストアを作成し、CI から使えることを確認する。prod Environment には必要に応じて承認者・ブランチ制限を設定する。
-
-型検査・API とインフラのテストを通してからデプロイする。同じ環境のデプロイは直列化し、途中キャンセルによる状態不整合を避ける。
 
 ## 確認
 

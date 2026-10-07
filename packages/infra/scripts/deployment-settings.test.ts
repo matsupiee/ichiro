@@ -110,7 +110,7 @@ test("stage 別ファイルが開発用 .env の秘密情報を遮断し、.loca
   );
 });
 
-test("CI の環境変数から prod を読み込み、ローカル設定より優先する", async () => {
+test("プロセスの環境変数から prod を読み込み、ローカル設定より優先する", async () => {
   const root = fixture();
   const env = {
     ...valid,
