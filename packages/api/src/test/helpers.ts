@@ -8,7 +8,7 @@ import { eq } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/libsql";
 import { migrate } from "drizzle-orm/libsql/migrator";
 
-import { createHttpApp } from "../http";
+import { createHttpHandler } from "../http";
 import { appRouter, httpRoutes } from "../routers/index";
 import { createFakeStripe, type FakeStripe } from "./fake-stripe";
 import { memoryAvatarStorage } from "./memory-avatar-storage";
@@ -71,18 +71,23 @@ export function callerFor(
   });
 }
 
-// 素の HTTP のルートをまとめたアプリ。Cookie ヘッダーの値で sessions からログイン中のユーザーを選ぶ
+// 素の HTTP のルートをまとめたアプリ。Cookie ヘッダーの値で sessions からログイン中のユーザーを選ぶ。
+// request はパスだけを受け取り、本番と同じ createHttpHandler の振り分けを通す
 export function httpAppFor(
   db: Database,
   sessions: Map<string, Session>,
   { stripe = createFakeStripe(), avatars = memoryAvatarStorage() }: TestServices = {},
 ) {
-  return createHttpApp(httpRoutes, async (c, { readSession }) => ({
+  const handle = createHttpHandler(httpRoutes, async (request, { readSession }) => ({
     db,
-    session: readSession ? (sessions.get(c.req.header("Cookie") ?? "") ?? null) : null,
+    session: readSession ? (sessions.get(request.headers.get("Cookie") ?? "") ?? null) : null,
     stripe: stripe.client,
     avatarStorage: avatars.storage,
   }));
+  return {
+    request: (path: string, init?: RequestInit) =>
+      handle(new Request(new URL(path, "http://localhost"), init)),
+  };
 }
 
 export async function setupDemo() {

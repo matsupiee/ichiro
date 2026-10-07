@@ -64,7 +64,6 @@
         "@trpc/client": "catalog:",
         "@trpc/server": "catalog:",
         "drizzle-orm": "catalog:",
-        "hono": "^4.13.7",
         "stripe": "22.6.2",
         "zod": "catalog:",
       },
