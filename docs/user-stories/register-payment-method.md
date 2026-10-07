@@ -35,6 +35,7 @@ Webhook も受け取るときは `bun run dev:stripe` で開発サーバーを�
 7. コミットメント作成ページで「罰金を設定する」をオンにする。
    - 「支払い方法」に、登録した支払い方法がラジオボタンで並び、最初に登録したものが選ばれている。
    - 下の「＋ 支払い方法を追加」から、同じダイアログでその場で追加もできる。追加したものが選ばれた状態になる。
+   - コミット内容などを入力したあとで追加しても、ダイアログを閉じたときに入力は消えず、ページも読み込み直されない。そのまま「宣言する」で作成できる。コミットメントの詳細ページで変更しているときも同じ。
    - → [コミットメントを作成できる](./create-commitment.md)
 8. 支払い方法をひとつも登録していないアカウントで、罰金ありのコミットメントを宣言しようとする。
    - 「カードを登録してください。登録は Stripe で安全に行われます。」と出る。
@@ -62,7 +63,7 @@ Webhook も受け取るときは `bun run dev:stripe` で開発サーバーを�
 
 ## 対応するテスト
 
-- `apps/web/e2e/payment.spec.ts`：Stripe.js の代わりの偽物（`apps/web/e2e/support/fake-stripe.ts`）で、追加するまで Stripe.js を読み込まないこと、公開可能キーをサーバーから受け取ること、Payment Element のダイアログの表示・キャンセル・拒否・登録完了（画面遷移なしの確定）と登録後の表示、支払い方法がないまま罰金ありでは宣言できないことを確かめる。実際のカード入力と 3D セキュアは Stripe のテスト環境で手動で確認する。
+- `apps/web/e2e/payment.spec.ts`：Stripe.js の代わりの偽物（`apps/web/e2e/support/fake-stripe.ts`）で、追加するまで Stripe.js を読み込まないこと、公開可能キーをサーバーから受け取ること、Payment Element のダイアログの表示・キャンセル・拒否・登録完了（画面遷移なしの確定）と登録後の表示、支払い方法がないまま罰金ありでは宣言できないこと、コミットメント作成の途中でカードを登録しても入力が消えずにそのまま宣言できることを確かめる。実際のカード入力と 3D セキュアは Stripe のテスト環境で手動で確認する。
 - 削除制約は `packages/api/src/shared/payment/payment-method-deletion.integration.test.ts`。`packages/db/src/seed/run.ts` の既存デモデータを使って確かめる。
 - `packages/api/src/routers/consumer/payment/start-setup/handler.integration.test.ts` と `packages/api/src/routers/consumer/payment/complete-setup/handler.integration.test.ts`
 - Webhook での保存は `packages/api/src/shared/payment/handle-stripe-event.integration.test.ts`

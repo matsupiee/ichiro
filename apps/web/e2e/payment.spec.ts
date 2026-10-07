@@ -86,3 +86,59 @@ test("支払い方法がないまま罰金ありでは宣言できない", async
   await page.getByRole("button", { name: "宣言する" }).click();
   await expect(page.getByRole("alert")).toHaveText("支払い方法を選んでください");
 });
+
+test("コミットメント作成の途中でカードを登録しても、入力した内容は消えずにそのまま宣言できる", async ({
+  page,
+}) => {
+  let completed = false;
+  let created: { values?: { content?: string; paymentMethodId?: string | null } } | null = null;
+  await page.route("https://js.stripe.com/**", (route) =>
+    route.fulfill({ contentType: "application/javascript", body: FAKE_STRIPE_JS }),
+  );
+  await page.route("**/api/trpc/**", async (route) => {
+    const url = route.request().url();
+    if (url.includes("consumer.payment.listMethods")) {
+      const data = completed ? [{ id: "pm_e2e", brand: "jcb", last4: "0000", wallet: null }] : [];
+      return route.fulfill({ json: [{ result: { data } }] });
+    }
+    if (url.includes("consumer.payment.startSetup")) {
+      return route.fulfill({
+        json: [{ result: { data: { setupIntentClientSecret: "seti_e2e_secret_x" } } }],
+      });
+    }
+    if (url.includes("consumer.payment.completeSetup")) {
+      completed = true;
+      return route.fulfill({
+        json: [{ result: { data: { id: "pm_e2e", brand: "jcb", last4: "0000", wallet: null } } }],
+      });
+    }
+    if (url.includes("consumer.commitment.create")) {
+      created = route.request().postDataJSON()[0];
+      return route.abort();
+    }
+    return route.continue();
+  });
+
+  await signIn(page, DEMO.email, DEMO.password);
+  await page.getByRole("link", { name: "コミットメントを作成" }).click();
+  await hydrated(page);
+  await page.getByLabel("コミット内容").fill("カードを登録してから宣言する");
+  await page.getByRole("switch", { name: "罰金を設定する" }).check({ force: true });
+
+  await page.getByRole("button", { name: "支払い方法を追加" }).click();
+  const dialog = page.getByRole("dialog", { name: "支払い方法を追加" });
+  await expect(dialog.getByLabel("カード番号（テスト用）")).toBeVisible();
+  await dialog.getByRole("button", { name: "登録する" }).click();
+  await expect(dialog).toBeHidden();
+
+  // ダイアログの送信で、コミットメントのフォームが送信されたり画面が読み込み直されたりしない
+  expect(created).toBeNull();
+  await expect(page.getByLabel("コミット内容")).toHaveValue("カードを登録してから宣言する");
+  await expect(page.getByRole("switch", { name: "罰金を設定する" })).toBeChecked();
+  await expect(page.getByRole("radio", { name: "JCB •••• 0000" })).toBeChecked();
+  await expect(page.getByRole("alert")).toBeHidden();
+
+  await page.getByRole("button", { name: "宣言する" }).click();
+  await expect.poll(() => created?.values?.content).toBe("カードを登録してから宣言する");
+  expect(created?.values?.paymentMethodId).toBe("pm_e2e");
+});

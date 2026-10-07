@@ -1,6 +1,7 @@
 import { Elements, PaymentElement, useElements, useStripe } from "@stripe/react-stripe-js";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { type FormEvent, type ReactNode, useEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 
 import type { PaymentMethodSummary } from "../lib/payments";
 import { getStripePublishableKey, loadStripeOnce } from "../lib/stripe";
@@ -77,7 +78,9 @@ function SetupDialog({
   useEffect(() => {
     ref.current?.showModal();
   }, []);
-  return (
+  // コミットメントのフォームの中から開くこともある。<form> が入れ子になるとブラウザが外側のフォームを送信して
+  // 画面ごと読み込み直してしまうので、ダイアログは body の直下に出す
+  return createPortal(
     <dialog
       ref={ref}
       aria-labelledby="payment-dialog-title"
@@ -116,7 +119,8 @@ function SetupDialog({
           onCancel={() => onClose(null)}
         />
       </Elements>
-    </dialog>
+    </dialog>,
+    document.body,
   );
 }
 
@@ -142,6 +146,8 @@ function SetupForm({
 
   const submit = async (event: FormEvent) => {
     event.preventDefault();
+    // ポータルの中でも React のイベントは呼び出し元のコンポーネントへ伝わる。外側のフォームの送信にしない
+    event.stopPropagation();
     if (!stripe || !elements || busy) return;
     setBusy(true);
     onBusyChange(true);
