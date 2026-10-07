@@ -27,7 +27,7 @@ bun run dev
 
 `http://localhost:3000` で紹介ページ、`http://localhost:3000/app` でアプリが開く。
 `alchemy dev` は D1 のマイグレーションを適用し、ローカルの D1・R2 で動く。
-初回は `packages/infra` で `bunx alchemy profile edit --add Cloudflare` を実行する。Cloudflare の認証情報を置けない環境での起動方法は [移行計画の「ローカルでの起動」](docs/development/web-migration-plan.md#ローカルでの起動) を参照する。
+初回はリポジトリのルートで `bun run cloudflare:login` を実行し、Cloudflare にログインする。Cloudflare の認証情報を置けない環境での起動方法は [移行計画の「ローカルでの起動」](docs/development/web-migration-plan.md#ローカルでの起動) を参照する。
 
 デモデータは `bun run db:seed -- --url file:/絶対パス/対象.sqlite --skip-migrations` で作る。ローカル D1 のパスは [ローカル D1 の確認](docs/development/local-d1-studio.md) を参照する。
 
@@ -41,10 +41,11 @@ bun run dev
 - `bun run check`: Oxlint と Oxfmt
 - `bun run db:generate`: マイグレーションの生成
 - `bun run db:studio`: ローカル D1 を Drizzle Studio で開く
+- `bun run cloudflare:login`: Cloudflare へのログイン（`cloudflare:refresh` で期限切れのログインを更新）
 
 ## デプロイ
 
-stg と prod を明示してデプロイする。設定は [Cloudflare の環境設定](docs/development/cloudflare-environments.md) を参照する。
+stg と prod を明示してデプロイする。手順は [stg / prod へのデプロイ](docs/development/deploy.md) を参照する。
 
 ```bash
 bun run deploy:check:stg

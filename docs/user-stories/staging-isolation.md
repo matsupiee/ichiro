@@ -8,7 +8,7 @@
 
 ## 動作確認の手順
 
-1. [Cloudflare の環境設定](../development/cloudflare-environments.md) に従って stg を設定し、`bun run deploy:check:stg` を実行する。
+1. [stg / prod へのデプロイ](../development/deploy.md) に従って stg を設定し、`bun run deploy:check:stg` を実行する。
    - stg に本番 Stripe キーを設定すると、Cloudflare に接続する前にエラーになる。
    - 設定が足りないと開発用 `.env` へフォールバックせずエラーになる。
 2. `bun run deploy:stg` を実行する。
