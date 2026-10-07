@@ -34,6 +34,7 @@
         "@trpc/server": "catalog:",
         "@trpc/tanstack-react-query": "^11.18.0",
         "better-auth": "catalog:",
+        "hono": "^4.13.7",
         "react": "19.2.3",
         "react-dom": "19.2.3",
         "varlock": "catalog:",

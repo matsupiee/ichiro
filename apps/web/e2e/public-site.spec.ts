@@ -8,6 +8,13 @@ test("ログインせずに紹介ページと規約を読める", async ({ page,
   await expect(page.locator("html")).toHaveAttribute("lang", "ja");
   await expect(page.locator("script")).toHaveCount(0);
   await expect(page.getByRole("heading", { name: "やることを決めよう" })).toBeVisible();
+  await expect(page.getByText("公開準備中")).toHaveCount(0);
+  await expect(page.locator('meta[name="robots"]')).toHaveCount(0);
+  await expect(page.locator('meta[property="og:image"]')).toHaveAttribute(
+    "content",
+    "https://ichiro.app/images/og.png",
+  );
+  expect((await request.get("/images/og.png")).headers()["content-type"]).toContain("image/png");
   for (const image of await page.locator("main img").all()) {
     expect(await image.evaluate((img: HTMLImageElement) => img.naturalWidth)).toBeGreaterThan(0);
   }
@@ -23,6 +30,12 @@ test("ログインせずに紹介ページと規約を読める", async ({ page,
     await expect(page.getByRole("heading", { level: 1, name: title })).toBeVisible();
     await expect(page.getByText("施行日：", { exact: false })).toBeVisible();
   }
+
+  // 開発環境は本番のドメインではないので、巡回を拒否する
+  expect(await (await request.get("/robots.txt")).text()).toContain("Disallow: /\n");
+  expect(await (await request.get("/sitemap.xml")).text()).toContain(
+    "<loc>https://ichiro.app/commerce</loc>",
+  );
 
   // API のパスは紹介ページで覆わない
   expect((await request.get("/api/auth/get-session")).headers()["content-type"]).toContain(

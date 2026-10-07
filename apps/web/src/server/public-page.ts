@@ -7,14 +7,42 @@ const links = `<a href="/terms">利用規約</a><a href="/privacy">プライバ�
 const footer = `<footer class="footer"><div class="wrap footer-inner"><nav aria-label="規約・運営情報">${links}</nav><span class="copyright">© ichiro</span></div></footer>`;
 const header = (legal = false) =>
   `<header class="header ${legal ? "legal-header" : ""}"><a class="logo" href="/" aria-label="ichiro ホーム">${logo}</a><nav aria-label="メイン"><a href="/#how">使い方</a></nav></header>`;
-function document(title: string, content: string, noIndex = false) {
-  return `<!doctype html><html lang="ja"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="description" content="目標を宣言して、毎日の達成を報告。ichiro は、続けたいことを応援する Web サービスです。公開準備中。">${noIndex ? '<meta name="robots" content="noindex">' : ""}<title>${title} | ichiro</title><link rel="stylesheet" href="/site.css"></head><body>${content}${footer}</body></html>`;
+// 検索結果と SNS の共有カードに使う本番の URL。stg や開発環境でも本番を正規の URL として示す
+export const SITE_URL = "https://ichiro.app";
+const description =
+  "続けたいことを宣言して、毎日の達成を報告する Web サービス。報告できなかった日だけ、自分で決めた罰金（任意・100円から）がかかります。";
+function escapeAttribute(value: string) {
+  return value.replaceAll("&", "&amp;").replaceAll('"', "&quot;").replaceAll("<", "&lt;");
+}
+function document(path: string, title: string, content: string) {
+  const url = `${SITE_URL}${path}`;
+  const fullTitle = `${title} | ichiro`;
+  const meta = [
+    ["description", description],
+    ["twitter:card", "summary_large_image"],
+  ].map(([name, value]) => `<meta name="${name}" content="${escapeAttribute(value!)}">`);
+  const og = [
+    ["og:type", "website"],
+    ["og:site_name", "ichiro"],
+    ["og:locale", "ja_JP"],
+    ["og:title", fullTitle],
+    ["og:description", description],
+    ["og:url", url],
+    ["og:image", `${SITE_URL}/images/og.png`],
+    ["og:image:width", "1200"],
+    ["og:image:height", "630"],
+    ["og:image:alt", "ichiro：続けたいことを、毎日の約束に。"],
+  ].map(
+    ([property, value]) => `<meta property="${property}" content="${escapeAttribute(value!)}">`,
+  );
+  return `<!doctype html><html lang="ja"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">${meta.join("")}${og.join("")}<link rel="canonical" href="${url}"><title>${fullTitle}</title><link rel="stylesheet" href="/site.css"></head><body>${content}${footer}</body></html>`;
 }
 function phone(file: string, alt: string, eager = false) {
   const [width, height] = file === "penalty" ? [1206, 2622] : [1320, 2868];
   return `<div class="phone"><img src="/images/${file}.png" alt="${alt}" width="${width}" height="${height}" ${eager ? 'fetchpriority="high"' : 'loading="lazy"'} decoding="async"></div>`;
 }
 const page = document(
+  "/",
   "続けたいことを、毎日の約束に。",
   `${header()}
 <main>
@@ -47,9 +75,9 @@ export function createPublicPageApp() {
     pages.set(
       path,
       document(
+        path,
         entry.title,
         `${header(true)}<main class="legal wrap"><p class="meta">施行日：2026年10月7日</p><h1>${entry.title}</h1>${entry.sections.map(([heading, body]) => `<section><h2>${heading}</h2><p>${body}</p></section>`).join("")}${path === "/privacy" ? '<p class="external">外部サービスの方針：<a href="https://stripe.com/jp/privacy">Stripe</a> / <a href="https://www.cloudflare.com/privacypolicy/">Cloudflare</a> / <a href="https://resend.com/legal/privacy-policy">Resend</a></p><p class="external">データ処理契約・再委託先：<a href="https://stripe.com/legal/dpa">Stripe の契約</a> / <a href="https://stripe.com/legal/service-providers">Stripe の委託先</a> / <a href="https://www.cloudflare.com/cloudflare-customer-dpa/">Cloudflare の契約</a> / <a href="https://www.cloudflare.com/cloudflare-subprocessors/">Cloudflare の委託先</a> / <a href="https://resend.com/legal/dpa">Resend の契約</a> / <a href="https://resend.com/legal/subprocessors">Resend の委託先</a></p>' : ""}</main>`,
-        true,
       ),
     );
   }
@@ -72,4 +100,23 @@ const publicPageApp = createPublicPageApp();
 // 紹介ページと規約は JS を使わない HTML のまま配信し、厳しい CSP を保つ
 export function handlePublicPage({ request }: { request: Request }) {
   return publicPageApp.fetch(request);
+}
+
+// 本番のドメインだけを検索の対象にする。stg の Worker の URL や開発環境は巡回させない
+export function handleRobots({ request }: { request: Request }) {
+  const production = new URL(request.url).origin === SITE_URL;
+  const body = production
+    ? `User-agent: *\nDisallow: /api/\n\nSitemap: ${SITE_URL}/sitemap.xml\n`
+    : "User-agent: *\nDisallow: /\n";
+  return new Response(body, { headers: { "Content-Type": "text/plain; charset=utf-8" } });
+}
+
+export const sitemapPaths = ["/", ...Object.keys(legalPages)];
+
+export function handleSitemap() {
+  const urls = sitemapPaths.map((path) => `<url><loc>${SITE_URL}${path}</loc></url>`).join("");
+  return new Response(
+    `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">${urls}</urlset>\n`,
+    { headers: { "Content-Type": "application/xml; charset=utf-8" } },
+  );
 }

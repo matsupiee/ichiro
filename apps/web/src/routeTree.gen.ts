@@ -13,6 +13,8 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as AppRouteRouteImport } from './routes/app/route'
 import { Route as CommerceRouteImport } from './routes/commerce'
 import { Route as PrivacyRouteImport } from './routes/privacy'
+import { Route as RobotsDottxtRouteImport } from './routes/robots[.]txt'
+import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
 import { Route as TermsRouteImport } from './routes/terms'
 import { Route as AppGuestRouteImport } from './routes/app/_guest'
 import { Route as AppMemberRouteImport } from './routes/app/_member'
@@ -51,6 +53,16 @@ const CommerceRoute = CommerceRouteImport.update({
 const PrivacyRoute = PrivacyRouteImport.update({
   id: '/privacy',
   path: '/privacy',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const RobotsDottxtRoute = RobotsDottxtRouteImport.update({
+  id: '/robots.txt',
+  path: '/robots.txt',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
+  id: '/sitemap.xml',
+  path: '/sitemap.xml',
   getParentRoute: () => rootRouteImport,
 } as any)
 const TermsRoute = TermsRouteImport.update({
@@ -152,6 +164,8 @@ export interface FileRoutesByFullPath {
   '/app': typeof AppRouteRouteWithChildren
   '/commerce': typeof CommerceRoute
   '/privacy': typeof PrivacyRoute
+  '/robots.txt': typeof RobotsDottxtRoute
+  '/sitemap.xml': typeof SitemapDotxmlRoute
   '/terms': typeof TermsRoute
   '/avatars/$': typeof AvatarsSplatRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
@@ -175,6 +189,8 @@ export interface FileRoutesByTo {
   '/app': typeof AppMemberIndexRoute
   '/commerce': typeof CommerceRoute
   '/privacy': typeof PrivacyRoute
+  '/robots.txt': typeof RobotsDottxtRoute
+  '/sitemap.xml': typeof SitemapDotxmlRoute
   '/terms': typeof TermsRoute
   '/avatars/$': typeof AvatarsSplatRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
@@ -198,6 +214,8 @@ export interface FileRoutesById {
   '/app': typeof AppRouteRouteWithChildren
   '/commerce': typeof CommerceRoute
   '/privacy': typeof PrivacyRoute
+  '/robots.txt': typeof RobotsDottxtRoute
+  '/sitemap.xml': typeof SitemapDotxmlRoute
   '/terms': typeof TermsRoute
   '/app/_guest': typeof AppGuestRouteWithChildren
   '/app/_member': typeof AppMemberRouteWithChildren
@@ -225,6 +243,8 @@ export interface FileRouteTypes {
     | '/app'
     | '/commerce'
     | '/privacy'
+    | '/robots.txt'
+    | '/sitemap.xml'
     | '/terms'
     | '/avatars/$'
     | '/api/auth/$'
@@ -248,6 +268,8 @@ export interface FileRouteTypes {
     | '/app'
     | '/commerce'
     | '/privacy'
+    | '/robots.txt'
+    | '/sitemap.xml'
     | '/terms'
     | '/avatars/$'
     | '/api/auth/$'
@@ -270,6 +292,8 @@ export interface FileRouteTypes {
     | '/app'
     | '/commerce'
     | '/privacy'
+    | '/robots.txt'
+    | '/sitemap.xml'
     | '/terms'
     | '/app/_guest'
     | '/app/_member'
@@ -296,6 +320,8 @@ export interface RootRouteChildren {
   AppRouteRoute: typeof AppRouteRouteWithChildren
   CommerceRoute: typeof CommerceRoute
   PrivacyRoute: typeof PrivacyRoute
+  RobotsDottxtRoute: typeof RobotsDottxtRoute
+  SitemapDotxmlRoute: typeof SitemapDotxmlRoute
   TermsRoute: typeof TermsRoute
   AvatarsSplatRoute: typeof AvatarsSplatRoute
   ApiAuthSplatRoute: typeof ApiAuthSplatRoute
@@ -332,6 +358,20 @@ declare module '@tanstack/react-router' {
       path: '/privacy'
       fullPath: '/privacy'
       preLoaderRoute: typeof PrivacyRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/robots.txt': {
+      id: '/robots.txt'
+      path: '/robots.txt'
+      fullPath: '/robots.txt'
+      preLoaderRoute: typeof RobotsDottxtRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/sitemap.xml': {
+      id: '/sitemap.xml'
+      path: '/sitemap.xml'
+      fullPath: '/sitemap.xml'
+      preLoaderRoute: typeof SitemapDotxmlRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/terms': {
@@ -531,6 +571,8 @@ const rootRouteChildren: RootRouteChildren = {
   AppRouteRoute: AppRouteRouteWithChildren,
   CommerceRoute: CommerceRoute,
   PrivacyRoute: PrivacyRoute,
+  RobotsDottxtRoute: RobotsDottxtRoute,
+  SitemapDotxmlRoute: SitemapDotxmlRoute,
   TermsRoute: TermsRoute,
   AvatarsSplatRoute: AvatarsSplatRoute,
   ApiAuthSplatRoute: ApiAuthSplatRoute,
