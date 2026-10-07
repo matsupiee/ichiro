@@ -14,38 +14,31 @@
       "@trpc/server": "^11.18.0",
       "better-auth": "1.7.5",
       "@trpc/client": "^11.18.0",
-      "@better-auth/expo": "1.7.5",
       "drizzle-orm": "1.0.0-rc.4"
     }
   },
   "type": "module",
   "scripts": {
-    "dev": "turbo run dev -F native -F @ichiro/infra",
+    "dev": "turbo run dev -F @ichiro/infra",
     "dev:stop": "bun scripts/dev-stop.mjs",
     "build": "turbo run build",
-    "ios:build": "bun run --cwd apps/native ios:build",
-    "ios:submit": "bun run --cwd apps/native ios:submit",
-    "ios:release": "bun run --cwd apps/native ios:release",
     "check-types": "turbo run check-types",
     "test": "turbo run test",
-    "dev:native": "turbo run dev -F native --",
     "dev:server": "bun run --cwd packages/infra dev",
     "db:generate": "turbo run db:generate -F @ichiro/db --",
     "db:studio": "bun run --cwd packages/db db:studio",
     "db:seed": "turbo run db:seed -F @ichiro/db --",
     "deploy": "turbo run deploy -F @ichiro/infra --",
     "destroy": "turbo run destroy -F @ichiro/infra --",
-    "env:generate": "varlock codegen --path ./apps/web/ && varlock codegen --path ./apps/native/ && varlock codegen --path ./packages/db/",
-    "postinstall": "varlock codegen --path ./apps/web/ && varlock codegen --path ./apps/native/ && varlock codegen --path ./packages/db/",
+    "env:generate": "varlock codegen --path ./apps/web/ && varlock codegen --path ./packages/db/",
+    "postinstall": "varlock codegen --path ./apps/web/ && varlock codegen --path ./packages/db/",
     "check": "oxlint && oxfmt --write",
     "check:patterns": "bun run --cwd packages/api check:patterns",
     "dev:stripe": "bun run packages/infra/scripts/dev-stripe.mjs",
     "deploy:stg": "bun run --cwd packages/infra deploy:stg",
     "deploy:prod": "bun run --cwd packages/infra deploy:prod",
     "deploy:check:stg": "bun run --cwd packages/infra deploy:stg --check",
-    "deploy:check:prod": "bun run --cwd packages/infra deploy:prod --check",
-    "dev:native:stg": "bun run --cwd apps/native dev:stg",
-    "dev:native:prod": "bun run --cwd apps/native dev:prod"
+    "deploy:check:prod": "bun run --cwd packages/infra deploy:prod --check"
   },
   "dependencies": {
     "zod": "catalog:"

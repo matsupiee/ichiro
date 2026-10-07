@@ -54,11 +54,11 @@ describe("公開紹介ページ", () => {
       expect(header.getUint32(20)).toBe(Number(match[3]));
     }
     await access(new URL("../../public/site.css", import.meta.url));
-    expect(
-      await readFile(new URL("../../public/images/ichiro-wordmark.png", import.meta.url)),
-    ).toEqual(
-      await readFile(new URL("../../../native/assets/images/ichiro-wordmark.png", import.meta.url)),
+    // ロゴは紹介ページとアプリの画面（BrandLogo）で同じ画像を使う
+    const logo = await readFile(
+      new URL("../../public/images/ichiro-wordmark.png", import.meta.url),
     );
+    expect([...logo.subarray(0, 8)]).toEqual([137, 80, 78, 71, 13, 10, 26, 10]);
     expect(html.match(/src="\/images\/ichiro-wordmark.png"/g)).toHaveLength(3);
     expect(html).not.toContain('id="payment"');
     expect(html).not.toContain("/#payment");

@@ -1,113 +1,50 @@
 # ichiro
 
-This project was created with [Better-T-Stack](https://github.com/AmanVarshney01/create-better-t-stack), a modern TypeScript stack that combines React Native, Expo, Hono, TRPC, and more.
+続けたいことを宣言して、毎日の達成を報告する Web アプリ。報告できなかった日には、任意で設定した罰金を Stripe で徴収する。
 
-## Features
+画面と API は1つの Cloudflare Worker から同じオリジンで配信する。
 
-- **TypeScript** - For type safety and improved developer experience
-- **React Native** - Build mobile apps using React
-- **Expo** - Tools for React Native development
-- **TailwindCSS** - Utility-first CSS for rapid UI development
-- **Hono** - Lightweight, performant server framework
-- **tRPC** - End-to-end type-safe APIs
-- **workers** - Runtime environment
-- **Drizzle** - TypeScript-first ORM
-- **Cloudflare D1** - Database engine
-- **Authentication** - Better-Auth
-- **Oxlint** - Oxlint + Oxfmt (linting & formatting)
-- **Turborepo** - Optimized monorepo build system
+- `apps/web`: TanStack Start。画面（`/app`）、紹介ページと規約（`/`、`/terms` など）、API（`/api/*`）、罰金精算の cron
+- `packages/api`: tRPC のルーターとビジネスロジック
+- `packages/auth`: Better Auth の設定（メールアドレスとパスワード、メールの確認コード）
+- `packages/db`: Drizzle のスキーマ、マイグレーション、デモデータ（seed）
+- `packages/infra`: Alchemy による Cloudflare の構成（Worker、D1、R2）
 
-## Getting Started
+移行の経緯と設計の判断は [Web 版への移行計画](docs/development/web-migration-plan.md) にまとめている。
 
-First, install the dependencies:
+## はじめに
 
 ```bash
 bun install
 ```
 
-## Database Setup
-
-This project uses Cloudflare D1 (SQLite) with Drizzle ORM.
-
-Runtime database access uses the Cloudflare `DB` binding from `packages/infra/alchemy.run.ts`. If a local `DATABASE_URL` is present, it is only for database tooling.
-
-Alchemy provisions the D1 database and applies migrations during `deploy`.
-
-1. Generate migration files:
-
-```bash
-bun run db:generate
-```
-
-Then, run the development server:
+`apps/web/.env` に開発用の環境変数を設定する。項目と説明は `apps/web/.env.schema` にある。
+認証メールを実際に送らずに確認する場合は `AUTH_EMAIL_DELIVERY=console` にする（[認証メール](docs/development/auth-email.md)）。
 
 ```bash
 bun run dev
 ```
 
-Use the Expo Go app to run the mobile application.
-The API is running at [http://localhost:3000](http://localhost:3000).
+`http://localhost:3000` で紹介ページ、`http://localhost:3000/app` でアプリが開く。
+`alchemy dev` は D1 のマイグレーションを適用し、ローカルの D1・R2 で動く。
+初回は `packages/infra` で `bunx alchemy profile edit --add Cloudflare` を実行する。Cloudflare の認証情報を置けない環境での起動方法は [移行計画の「ローカルでの起動」](docs/development/web-migration-plan.md#ローカルでの起動) を参照する。
 
-## Local Stripe webhooks
+デモデータは `bun run db:seed -- --url file:/絶対パス/対象.sqlite --skip-migrations` で作る。ローカル D1 のパスは [ローカル D1 の確認](docs/development/local-d1-studio.md) を参照する。
 
-Run the API server and Stripe webhook forwarding together:
+## 主なコマンド
 
-```bash
-bun run dev:stripe
-```
+- `bun run dev`: 開発サーバー（画面と API）
+- `bun run dev:stripe`: 開発サーバーと Stripe の Webhook の転送（[手順](docs/development/local-stripe-webhook.md)）
+- `bun run check-types`: 型チェック
+- `bun run test`: テスト（API、Web、インフラ）
+- `bun run test:e2e`: ブラウザでユーザーストーリーを通しで確認する E2E テスト（[手順](docs/development/e2e.md)）
+- `bun run check`: Oxlint と Oxfmt
+- `bun run db:generate`: マイグレーションの生成
+- `bun run db:studio`: ローカル D1 を Drizzle Studio で開く
 
-Install the Stripe CLI first, and set `STRIPE_SECRET_KEY=sk_test_...` in `apps/web/.env` or the process environment alongside the usual server configuration. The command authenticates the CLI with the same key, obtains the signing secret automatically, and passes it to the server without editing `.env`. No `stripe login` is needed. Press Ctrl+C to stop both processes.
+## デプロイ
 
-Use `bun run dev:stripe --port 3001` if port 3000 is occupied. Start the native app separately with `bun run dev:native`; when using a different port, update its `EXPO_PUBLIC_SERVER_URL` accordingly. Cloud Linux environments need the Linux Stripe CLI and outbound access to Stripe.
-
-See [the webhook development guide](docs/development/local-stripe-webhook.md) for setup, seed data, and verification.
-
-## Environment Configuration
-
-Each app owns its environment schema in `.env.schema`. Varlock generates `src/env.ts` during installation; run `bun run env:generate` after changing a schema. Commit schemas, and keep secrets in ignored env files or your deployment platform.
-
-Import the generated `ENV` accessor in application code. Shared database and auth packages receive configuration or initialized clients from the application. See [Varlock's monorepo guide](https://varlock.dev/guides/monorepos/).
-
-For Cloudflare, Alchemy loads and validates deployment inputs with `varlock/auto-load` in its Node/Bun deployment process. Worker code reads native bindings; web clients use the framework's public env API through `src/env.public.ts` where needed. Alchemy supplies resource URLs and managed database credentials. In-Worker Varlock protections are deferred until an official Alchemy integration is available; see [the non-Wrangler deployment guidance](https://varlock.dev/integrations/cloudflare/#non-wrangler-deploy-tools-alchemy-sst-pulumi).
-
-Bun's automatic env loading is disabled in `bunfig.toml`; the framework integration or server bootstrap loads Varlock. Node deployments must include Varlock and its dependencies alongside the app schema.
-
-Run standalone Node/Bun tools that use Varlock from the owning app directory so they load that app's schema and env files. `env:generate` only generates TypeScript files; it does not initialize environment values in a subsequent command.
-
-## Requesting a checker
-
-作成時は自分で判定する設定です。「宣言したワン！」画面の「チェックを友達に依頼する」を押すと、依頼方法を選べます。
-「依頼リンクを共有」は iPhone の共有シートを開きます。リンクは ichiro アプリ内で開き、受取人がログインして引き受けるとチェック者になります。
-「友達から選ぶ」は、別のコミットメントで依頼済みの友達を選べます。編集シートの「チェック者」からも変更できます。
-Web版は作成・検証せず、iOS Simulator または実機のネイティブアプリで確認します。
-
-## Deployment
-
-### iOS / App Store Connect
-
-Run from the repository root:
-
-```bash
-bun run ios:submit   # Upload an existing build (select it interactively)
-bun run ios:release  # Build for production, then upload that build
-bun run ios:build    # Build for production only
-```
-
-To upload a specific build, use `bun run ios:submit --id <EAS_BUILD_ID>`.
-These commands upload to App Store Connect; App Review submission and public release are separate steps.
-See [the iOS build and upload guide](docs/development/eas-build.md) for setup and verification.
-
-### Alchemy
-
-- Target: server on Cloudflare
-- Configure provider accounts: `cd packages/infra && bunx alchemy profile edit`
-- Dev: bun run dev
-- Deploy: bun run deploy
-- Destroy: bun run destroy
-
-`alchemy profile edit` stores the selected Axiom, Cloudflare, Neon, PlanetScale, and/or Prisma provider profiles under `~/.alchemy`; no provider-specific setup command is required by this scaffold.
-
-Deploy staging and production with explicit environment commands:
+stg と prod を明示してデプロイする。設定は [Cloudflare の環境設定](docs/development/cloudflare-environments.md) を参照する。
 
 ```bash
 bun run deploy:check:stg
@@ -116,32 +53,15 @@ bun run deploy:check:prod
 bun run deploy:prod
 ```
 
-Configure environment-specific secrets first. See [the Cloudflare environment guide](docs/development/cloudflare-environments.md) for setup, Stripe webhooks, native app configuration, and GitHub Actions.
+`main` への push で GitHub Actions が stg にデプロイする。
 
-## Git Hooks and Formatting
+## 環境変数
 
-- Run checks: `bun run check`
+各アプリの `.env.schema` に定義し、Varlock が `src/env.ts` を生成する。スキーマを変えたら `bun run env:generate` を実行する。
+秘密情報は Git に入れず、`.env.*.local` か CI の環境変数に置く。Worker のコードは Cloudflare のバインディング（`cloudflare:workers` の `env`）から読む。
 
-## Project Structure
+## ドキュメント
 
-```
-ichiro/
-├── apps/
-│   ├── native/      # Mobile application (React Native, Expo)
-│   └── server/      # Backend API (Hono, TRPC)
-├── packages/
-│   ├── api/         # API layer / business logic
-│   ├── auth/        # Authentication configuration & logic
-│   └── db/          # Database schema & queries
-```
-
-## Available Scripts
-
-- `bun run dev`: Start all applications in development mode
-- `bun run build`: Build all applications
-- `bun run dev:server`: Start only the server
-- `bun run dev:stripe`: Start the server with Stripe webhook forwarding
-- `bun run check-types`: Check TypeScript types across all apps
-- `bun run dev:native`: Start the React Native/Expo development server
-- `bun run db:generate`: Generate database client/types
-- `bun run check`: Run Oxlint and Oxfmt
+- `docs/user-stories/`: ユーザーストーリーと動作確認の手順
+- `docs/development/`: 開発・検証の手順
+- `docs/rules/`: 実装とドキュメントのルール

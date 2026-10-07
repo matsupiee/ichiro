@@ -40,12 +40,7 @@
     "BETTER_AUTH_SECRET",
     "BETTER_AUTH_URL",
     "CI",
-    "EXPO_PUBLIC_SERVER_URL",
     "NODE_ENV",
-    "VERCEL",
-    "VERCEL_ENV",
-    "VERCEL_PROJECT_PRODUCTION_URL",
-    "VERCEL_URL",
     "_VARLOCK_ENV_KEY",
     "APP_ENV"
   ],

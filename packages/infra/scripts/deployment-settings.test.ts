@@ -92,13 +92,17 @@ function envFile(env: Record<string, string>) {
 test("stage 別ファイルが開発用 .env の秘密情報を遮断し、.local から正しい設定を読む", async () => {
   const root = fixture();
   const basePath = join(root, "packages/infra");
-  writeFileSync(join(root, "apps/web/.env"), envFile(valid));
+  writeFileSync(
+    join(root, "apps/web/.env"),
+    envFile({ ...valid, STRIPE_PUBLISHABLE_KEY: "pk_test_development" }),
+  );
   await expect(loadDeployment("stg", {}, basePath)).rejects.toThrow("環境変数");
   writeFileSync(join(root, "apps/web/.env.stg.local"), envFile(valid));
   const stg = await loadDeployment("stg", {}, basePath);
   expect(stg.APP_ENV).toBe("stg");
   expect(stg.NODE_ENV).toBe("production");
   expect(stg.STRIPE_SECRET_KEY).toBe("sk_test_fixture");
+  expect(stg.STRIPE_PUBLISHABLE_KEY).toBe("pk_test_fixture");
   await expect(loadDeployment("prod", {}, basePath)).rejects.toThrow("環境変数");
   await expect(loadDeployment("stg", { APP_ENV: "prod" }, basePath)).rejects.toThrow("異なります");
   await expect(loadDeployment("stg", { ALCHEMY_STAGE: "prod" }, basePath)).rejects.toThrow(
@@ -117,44 +121,6 @@ test("CI の環境変数から prod を読み込み、ローカル設定より�
   expect((await loadDeployment("prod", env, join(root, "packages/infra"))).STRIPE_SECRET_KEY).toBe(
     "sk_live_ci",
   );
-});
-
-test("ネイティブの stg/prod が開発用 URL を引き継がず各環境の URL を読む", async () => {
-  const { internal } = await import("varlock");
-  const root = fixture();
-  const path = join(root, "apps/native");
-  mkdirSync(path);
-  for (const name of [".env.schema", ".env.stg", ".env.prod"]) {
-    writeFileSync(
-      join(path, name),
-      readFileSync(new URL(`../../../apps/native/${name}`, import.meta.url)),
-    );
-  }
-  writeFileSync(
-    join(path, ".env"),
-    "EXPO_PUBLIC_SERVER_URL=http://localhost:3000\nEXPO_PUBLIC_STRIPE_PUBLISHABLE_KEY=pk_test_development\n",
-  );
-  for (const stage of ["stg", "prod"]) {
-    const missing = await internal.loadEnvGraph({
-      basePath: path,
-      overrideValues: { APP_ENV: stage },
-    });
-    await missing.resolveEnvValues();
-    expect(missing.isInvalid).toBe(true);
-    writeFileSync(
-      join(path, `.env.${stage}.local`),
-      `EXPO_PUBLIC_SERVER_URL=https://${stage}.example.com\nEXPO_PUBLIC_STRIPE_PUBLISHABLE_KEY=pk_${stage === "stg" ? "test" : "live"}_fixture\n`,
-    );
-    const configured = await internal.loadEnvGraph({
-      basePath: path,
-      overrideValues: { APP_ENV: stage },
-    });
-    await configured.resolveEnvValues();
-    expect(configured.isInvalid).toBe(false);
-    expect(configured.getResolvedEnvStringObject().EXPO_PUBLIC_SERVER_URL).toBe(
-      `https://${stage}.example.com`,
-    );
-  }
 });
 
 test("デプロイでメールの未設定・ローカル送信を拒否する", () => {
