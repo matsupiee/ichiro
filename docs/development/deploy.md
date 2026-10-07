@@ -1,4 +1,4 @@
-# Cloudflare の stg / prod デプロイ
+# stg / prod へのデプロイ
 
 ## 構成
 
@@ -12,7 +12,9 @@ Varlock の `APP_ENV` で設定ファイルを選ぶ。サーバーの `NODE_ENV
 
 ## 初回の準備
 
-1. `packages/infra` で `bunx alchemy profile edit --add Cloudflare` を実行し、対象アカウントを設定する。
+1. リポジトリのルートで `bun run cloudflare:login` を実行し、ブラウザで対象の Cloudflare アカウントを認可する。
+   - ログイン専用のエントリ `packages/infra/alchemy.profile.ts` を使うので、開発用の `apps/web/.env` が無くても実行できる。
+   - `alchemy.run.ts` は読み込み時に Varlock で開発用の環境変数を検証するため、`bunx alchemy profile edit` を直接実行すると `.env` が無いときに止まる。
 2. `apps/web/.env.stg.local` と `.env.prod.local` に次の値を設定する。
 
 | 変数                     | stg                              | prod                           |
@@ -43,6 +45,8 @@ bun run deploy:stg
 bun run deploy:check:prod
 bun run deploy:prod
 ```
+
+デプロイが `Cloudflare OAuth refresh failed` で止まったら、ログインの期限が切れている。`bun run cloudflare:refresh` で更新する。更新できないときは `bun run cloudflare:login` でログインし直す。
 
 `--check` は設定検証だけで、Cloudflare に接続しない。`bun run deploy:stg --dry-run` は Alchemy の変更計画を確認する。Alchemy の状態ストアの初期化が必要になる場合があるため、完全なオフライン検証ではない。
 

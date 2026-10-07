@@ -9,7 +9,9 @@
     "destroy": "alchemy destroy",
     "test": "bun test scripts",
     "deploy:stg": "bun scripts/deploy.ts stg",
-    "deploy:prod": "bun scripts/deploy.ts prod"
+    "deploy:prod": "bun scripts/deploy.ts prod",
+    "cloudflare:login": "alchemy profile edit --add Cloudflare --config alchemy.profile.ts",
+    "cloudflare:refresh": "alchemy profile refresh --provider Cloudflare --config alchemy.profile.ts"
   },
   "dependencies": {
     "zod": "catalog:"
