@@ -169,7 +169,7 @@ function SetupForm({
   };
 
   return (
-    <form noValidate onSubmit={(event) => void submit(event)}>
+    <form method="post" noValidate onSubmit={(event) => void submit(event)}>
       <div className="min-h-[180px] px-6">
         <PaymentElement onReady={() => setReady(true)} />
       </div>

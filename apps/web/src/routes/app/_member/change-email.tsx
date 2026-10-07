@@ -104,7 +104,7 @@ function ChangeEmailScreen() {
               ? `現在のメールアドレス：${user.email}\n新しいメールアドレスに認証コードを送ります。`
               : `${newEmail} に送信した6桁コードを入力してください。有効期限は5分です。`}
           </p>
-          <form noValidate onSubmit={submit}>
+          <form method="post" noValidate onSubmit={submit}>
             {step === "address" ? (
               <Field
                 label="新しいメールアドレス"

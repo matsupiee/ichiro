@@ -100,50 +100,50 @@ export default {
 - ネイティブ版はこのフェーズから認証できない（Expo のプラグインを外したため）。Phase 5 で削除する。
 - ワンちゃんは、ネイティブ版の reanimated の値をそのまま CSS のキーフレームに写した。タップ時の振動は Web にはないので行わない。
 
-### Phase 3: 画面の移植
+### Phase 3: 画面の移植（完了）
 
-| 現状（ネイティブ）                          | Web での置き換え                                       |
-| ------------------------------------------- | ------------------------------------------------------ |
-| expo-router                                 | TanStack Router（Start のルート）                      |
-| heroui-native と uniwind                    | Tailwind v4 と自前コンポーネント（必要に応じて Radix） |
-| @gorhom/bottom-sheet                        | ダイアログまたはドロワー                               |
-| react-native-reanimated                     | CSS アニメーションまたは Motion                        |
-| react-native-svg                            | SVG                                                    |
-| expo-image-picker と expo-image-manipulator | `<input type="file">` と Canvas での縮小               |
-| @react-native-community/datetimepicker      | `<input type="date">`                                  |
-| expo-haptics                                | 削除                                                   |
-| アプリアイコンの変更（modules/app-icon）    | 機能ごと削除                                           |
+| ネイティブ版                                | Web 版                                                                 |
+| ------------------------------------------- | ---------------------------------------------------------------------- |
+| expo-router                                 | TanStack Router（Start のルート）                                      |
+| heroui-native と uniwind                    | Tailwind v4 と自前のコンポーネント（`apps/web/src/components/ui.tsx`） |
+| @gorhom/bottom-sheet                        | `<dialog>`（確認・お知らせ・罰金の履歴・名前の編集）と1画面            |
+| react-native-reanimated                     | CSS のキーフレーム（ワンちゃん・お祝い）                               |
+| react-native-svg                            | SVG と HTML                                                            |
+| expo-image-picker と expo-image-manipulator | `<input type="file">` と Canvas での切り抜き・縮小                     |
+| @react-native-community/datetimepicker      | `<input type="date">`                                                  |
+| Alert.alert                                 | アプリ内のダイアログ（`apps/web/src/components/dialog.tsx`）           |
+| expo-haptics                                | 削除                                                                   |
+| アプリアイコンの変更（modules/app-icon）    | 機能ごと削除                                                           |
 
-tRPC の呼び出し、日付の計算、エラーメッセージなど、React Native に依存しないロジックは流用する。
+- プロフィールのシートは、ホーム右上のアイコンから開く1画面（`/app/account`）にした。退会とメールアドレス変更はそこから開く。
+- お祝いの見出しのフォント（Dela Gothic One）は、見出しの文字だけに絞ったサブセット（約1KB）にした。
+- フォームはすべて `method="post"` にした。ハイドレーションの前に送信されても、パスワードなどが URL・履歴・ログに載らないようにするため。
 
-### Phase 4: 決済
+### Phase 4: 決済（完了）
 
-- Stripe の PaymentSheet を、Stripe.js の Payment Element による SetupIntent の確定に置き換える。
-- `payment/start-setup` は ephemeral key を作らず、`setupIntentClientSecret` だけを返す。統合テストも合わせて直す。
-- 登録できる支払い方法はカードだけにする。Apple Pay と Google Pay は使わないので、Stripe でのドメイン登録は不要。
-- 3D セキュアはブラウザ内で完了する。`complete-setup` と Webhook の処理は変えない。
-- アプリ画面の CSP で Stripe.js の読み込みを許可する。紹介ページと規約ページの CSP は今の厳しさを保つ。
+- Stripe の PaymentSheet を、Stripe.js の Payment Element による SetupIntent の確定に置き換えた（`apps/web/src/components/add-payment-method.tsx`）。
+- `consumer.payment.startSetup` は ephemeral key を作らず、`setupIntentClientSecret` だけを返す。
+- 登録できる支払い方法はカードだけ。Apple Pay と Google Pay は使わない。
+- 3D セキュアは Stripe がその画面の上で行う。`completeSetup` と Webhook の処理は変えていない。
+- 公開可能キーは環境変数 `STRIPE_PUBLISHABLE_KEY` に置き、サーバー関数で画面に渡す。ビルドに埋め込まないので、stg と prod で同じビルドの手順のまま切り替えられる。stg は `pk_test_`、prod は `pk_live_` で始まることをデプロイ前に確かめる。
+- Stripe.js は `@stripe/stripe-js/pure` で、支払い方法を追加するときだけ読み込む。プライバシーポリシーに記載した。
+- アプリの画面には、ほかのサイトへの埋め込みを禁止する CSP と基本のセキュリティヘッダーを付ける（`apps/web/src/server/security-headers.ts`）。TanStack Start のインラインスクリプトと Stripe.js を使うため、スクリプトの制限は行わない。紹介ページと規約は、スクリプトを許可しない今の CSP のまま。
 
-### Phase 5: ネイティブの削除
+### Phase 5: ネイティブの削除（完了）
 
-Web 版で全ストーリーが通ってから行う。
+- `apps/native`、`.maestro/`、App Store 用の画像とスクリプト、EAS とアプリアイコンの手順、アプリアイコンと stg・本番アプリの併存のストーリーを削除した。
+- ルートのスクリプト・Varlock・turbo の設定から native を外し、`@better-auth/expo` をカタログから除いた。
+- デモデータの1つめの支払い方法を「Apple Pay（Visa •••• 4242）」から「Visa •••• 4242」に変えた。DB の `payment_method.wallet` 列は残す。
 
-- `apps/native`、`apps/server`、`.maestro/`、App Store 用のスクリーンショットを削除する。
-- ルートの `package.json` から `ios:*` と `dev:native*` を削除し、`dev`、`postinstall`、`env:generate` の対象を `apps/web` に変える。
-- 使わなくなった `@better-auth/expo` をカタログから削除し、`bun install` で lockfile を作り直す。
-- README、`docs/development/eas-build.md`、`docs/development/app-icons.md`、`docs/development/public-site.md` を更新または削除する。
+### Phase 6: ドキュメント、規約、テスト（完了）
 
-### Phase 6: ドキュメント、規約、テスト
-
-- `AGENTS.md` の「ネイティブ専用」「ブラウザで確認しない」「iOS Simulator で確認する」のルールを、Web 版の方針（Playwright と Chromium で動作確認する）に書き換える。
-- `apps/server/src/site/legal.ts` の規約を見直す。
-  - 利用規約：「目標管理アプリ」「アプリの削除やログアウト」の表現。
-  - プライバシーポリシー：「端末の安全な保存領域」を認証用 Cookie の説明に変える。
-  - 特定商取引法に基づく表記：「ネイティブアプリ」「ダウンロード」の表現と、動作環境（iOS 16.4 以降の iPhone）を対応ブラウザに変える。
-  - 施行日を更新する。
-- `docs/user-stories/` の `change-app-icon.md` と `staging-app-coexistence.md` を削除し、ほかのストーリーは Web の操作に合わせて書き直す。
-  - `register-payment-method.md`、`create-commitment.md`、`profile-sheet.md` から Apple Pay の記述を外し、カードだけにする。デモデータの「Apple Pay（Visa •••• 4242）」もカードに変える。
-- Maestro のフローを Playwright に移し、全ストーリーを通しで確認する。seed は `packages/db/src/seed/` のものを使う。
+- `AGENTS.md` を Web 版の方針（開発サーバーを起動し、Playwright の Chromium で確認する）に書き換えた。
+- 規約（`apps/web/src/server/site/legal.ts`）の施行日を2026年10月7日にし、次を変えた。
+  - 利用規約：「目標管理アプリ」を Web サービスに、「アプリの削除」をブラウザのデータの削除に。
+  - プライバシーポリシー：「端末の安全な保存領域」を認証用の Cookie に。支払い方法の登録画面で Stripe.js を読み込むことを追記。
+  - 特定商取引法に基づく表記：「ネイティブアプリ」「ダウンロード」を Web サービスに、動作環境を対応ブラウザに。
+- `docs/user-stories/` と `docs/development/` を Web の操作に合わせて書き直した。
+- Maestro のフローの代わりに、Playwright の E2E（`apps/web/e2e/`、`bun run test:e2e`）を追加した。手順は [E2E テスト](./e2e.md)。データは `packages/db/src/seed/e2e.ts` で毎回作り直す。
 
 ## ローカルでの起動
 

@@ -14,7 +14,8 @@
     "db:seed:withdrawal": "bun run src/seed/withdrawal.ts",
     "db:seed:public-page": "bun run src/seed/public-page.ts",
     "db:seed:password-reset": "bun run src/seed/password-reset.ts",
-    "db:seed:email-verification": "bun run src/seed/email-verification.ts"
+    "db:seed:email-verification": "bun run src/seed/email-verification.ts",
+    "db:seed:e2e": "bun run src/seed/e2e.ts"
   },
   "dependencies": {
     "@libsql/client": "0.18.0",

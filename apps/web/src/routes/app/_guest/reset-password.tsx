@@ -100,7 +100,7 @@ function ResetPasswordScreen() {
             ? "登録したメールアドレスに、パスワードを再設定するための認証コードを送信します。"
             : "登録されているメールアドレスの場合、認証コードを送信しました。届いた最新の6桁コードと新しいパスワードを入力してください。コードの有効期限は5分です。"}
       </p>
-      <form noValidate onSubmit={submit}>
+      <form method="post" noValidate onSubmit={submit}>
         {step === "email" ? (
           <Field
             label="メールアドレス"

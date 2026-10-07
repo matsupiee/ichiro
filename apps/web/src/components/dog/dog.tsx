@@ -1,6 +1,6 @@
 import type { CSSProperties } from "react";
 
-// ichiro の愛犬をモチーフにしたキャラクター。ネイティブ版（apps/native/components/dog/dog.tsx）と同じ形と動き。
+// ichiro の愛犬をモチーフにしたキャラクター。
 // 200×200 の座標で組み立て、size に合わせて拡大縮小する。動きは dog.css のキーフレーム。
 
 export type DogMood = "idle" | "jump";

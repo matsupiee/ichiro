@@ -8,7 +8,7 @@ import {
   useState,
 } from "react";
 
-// ネイティブ版（apps/native/components/ui.tsx）の大きな角丸パーツ。寸法はデザイン（393pt 幅）の値そのまま。
+// 大きな角丸のパーツ。寸法はデザイン（393pt 幅）の値そのまま。
 
 const primary =
   "flex h-[60px] w-full items-center justify-center rounded-full bg-brand text-[18px] font-bold text-white transition-colors hover:bg-brand-pressed active:bg-brand-pressed disabled:cursor-not-allowed disabled:opacity-60";

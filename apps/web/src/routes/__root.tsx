@@ -1,5 +1,5 @@
 import { HeadContent, Outlet, Scripts, createRootRoute } from "@tanstack/react-router";
-import type { ReactNode } from "react";
+import { type ReactNode, useEffect } from "react";
 
 import appCss from "../styles/app.css?url";
 
@@ -18,6 +18,10 @@ export const Route = createRootRoute({
 });
 
 function RootComponent() {
+  // ハイドレーションが済んだ印。E2E テストは入力の前にこれを待つ
+  useEffect(() => {
+    document.documentElement.dataset.hydrated = "true";
+  }, []);
   return (
     <RootDocument>
       <Outlet />

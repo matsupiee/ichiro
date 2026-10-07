@@ -102,7 +102,7 @@ export function CommitmentForm({
   };
 
   return (
-    <form noValidate onSubmit={submit}>
+    <form method="post" noValidate onSubmit={submit}>
       {header}
 
       <Label htmlFor={`${id}-content`}>コミット内容</Label>

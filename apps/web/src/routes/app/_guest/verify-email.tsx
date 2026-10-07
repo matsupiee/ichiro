@@ -117,7 +117,7 @@ function VerifyEmailScreen() {
           {notice}。届いた6桁のコードを入力してください。有効期限は5分です。
         </p>
       </div>
-      <form noValidate onSubmit={submit}>
+      <form method="post" noValidate onSubmit={submit}>
         <OtpField value={otp} onChange={setOtp} disabled={busy} autoFocus />
         <ErrorText message={error} />
         <div className="px-[30px] pt-8">

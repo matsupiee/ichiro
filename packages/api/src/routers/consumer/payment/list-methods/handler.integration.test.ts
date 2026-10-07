@@ -6,7 +6,7 @@ describe("登録ずみの支払い方法を一覧できる", () => {
   test("自分の支払い方法だけを、登録した順に返す", async () => {
     const { db, caller } = await setupDemo();
     expect(await caller.consumer.payment.listMethods()).toEqual([
-      expect.objectContaining({ brand: "visa", last4: "4242", wallet: "apple_pay" }),
+      expect.objectContaining({ brand: "visa", last4: "4242", wallet: null }),
       expect.objectContaining({ brand: "mastercard", last4: "4444", wallet: null }),
     ]);
 

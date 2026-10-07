@@ -8,5 +8,5 @@
     // TanStack Start の推奨。有効だとサーバー用のコードがクライアントのバンドルに混ざることがある
     "verbatimModuleSyntax": false
   },
-  "include": ["src", "cloudflare-env.d.ts", "vite.config.ts"]
+  "include": ["src", "e2e", "cloudflare-env.d.ts", "vite.config.ts", "playwright.config.ts"]
 }

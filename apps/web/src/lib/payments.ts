@@ -15,7 +15,7 @@ const BRANDS: Record<string, string> = {
   unionpay: "UnionPay",
 };
 
-// 「Visa •••• 4242」のような表示。ネイティブ版で Apple Pay・Google Pay 経由で登録したものはそれと分かるようにする
+// 「Visa •••• 4242」のような表示。Stripe がウォレット経由と返したものはそれと分かるようにする
 export function paymentMethodLabel(m: PaymentMethodSummary): string {
   const card = `${BRANDS[m.brand] ?? m.brand} •••• ${m.last4}`;
   if (m.wallet === "apple_pay") return `Apple Pay（${card}）`;

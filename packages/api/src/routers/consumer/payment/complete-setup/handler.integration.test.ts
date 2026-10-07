@@ -10,7 +10,7 @@ describe("PaymentSheet で登録した支払い方法を保存できる", () => 
     const caller = callerFor(db, await createUser(db, "new@example.com"), { stripe });
 
     const setup = await caller.consumer.payment.startSetup();
-    // ユーザーが PaymentSheet で Apple Pay を選んで登録し終えた
+    // Stripe がウォレット（Apple Pay など）経由と返した支払い方法は、ウォレットとして保存する
     const setupIntentId = setup.setupIntentClientSecret.split("_secret_")[0]!;
     stripe.completeSetup(setupIntentId, { brand: "jcb", last4: "0000", wallet: "apple_pay" });
 

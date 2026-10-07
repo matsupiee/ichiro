@@ -109,7 +109,8 @@ export function AuthForm({
       <div className="flex justify-center pt-4">
         <Dog size={120} />
       </div>
-      <form noValidate onSubmit={(event) => void submit(event)}>
+      {/* ハイドレーション前に送信されても、入力内容が URL（履歴・ログ）に載らないよう POST にする */}
+      <form method="post" noValidate onSubmit={(event) => void submit(event)}>
         {mode === "sign-up" ? (
           <Field
             label="名前"

@@ -1,9 +1,8 @@
-- このプロジェクトはネイティブアプリ専用です。Web版は作りません。
-- 実装後は、必ず iOS Simulator または実機でネイティブアプリを起動し、動作確認までしてください。
-- Safari・Chrome などのブラウザや Expo Web で動作確認しないでください。共有リンクの導線もネイティブアプリで確認し、ブラウザでの確認を代用にしないでください。
+- このプロジェクトは Web アプリ専用です（`apps/web`、TanStack Start）。ネイティブアプリ（iOS・Android）は作りません。画面と API は1つの Cloudflare Worker から同一オリジンで配信します。
+- 実装後は、必ず開発サーバー（`bun run dev:server`）を起動し、ブラウザで動作確認までしてください。確認は Playwright の Chromium で、スマートフォンの幅（390px）を基本にします。
 - API側はテストも書いてください。
-- docs/user-stories にユーザーストーリーを書いておいてください。1ストーリー1ファイルです。実装が終わったら、全ストーリーについて動作が破綻してないかを確認するテストを行なってください。ストーリーのテストをしやすいようにseedデータ作成コマンドを、packages/db/src/seed/ に作っておいてください
+- docs/user-stories にユーザーストーリーを書いておいてください。1ストーリー1ファイルです。実装が終わったら、全ストーリーについて動作が破綻してないかを確認するテストを行なってください（`bun run test` と、ブラウザでストーリーを通しで確かめる `bun run test:e2e`。手順は docs/development/e2e.md）。ストーリーのテストをしやすいようにseedデータ作成コマンドを、packages/db/src/seed/ に作っておいてください
 - docs 配下のドキュメントを書くときは docs/rules/document-style.md に従ってください。とくに太字・斜体での強調は使いません
 - 仕様を変更した際、利用規約・プライバシーポリシー・特定商取引法に基づく表記などに変更が必要になってないかを確認し、必要があれば修正を行なってください。
-- better-auth や drizzle や expo や cloudflare などの公式 docs を読み込み、なるべく公式 docs の案内に沿った実装や設計を行なってください。
-- 複数エージェントが並列作業する際に ios simulator の競合が起きないようにする必要があります。worktreeごとに異なる ios simulator を起動して作業を行うように注意してください。
+- better-auth や drizzle や TanStack Start や cloudflare や alchemy や stripe などの公式 docs を読み込み、なるべく公式 docs の案内に沿った実装や設計を行なってください。
+- 複数エージェントが並列作業する際に開発サーバーのポートが競合しないようにする必要があります。worktreeごとに異なるポートで開発サーバーを起動し（`ICHIRO_DEV_PORT=3001 bun run dev:server`）、E2E もそのポートに向けて実行してください（`E2E_BASE_URL=http://localhost:3001 bun run test:e2e`）。ローカルの D1・R2 は worktree ごとの `packages/infra/.alchemy` に分かれます。

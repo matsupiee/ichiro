@@ -5,7 +5,8 @@
   "scripts": {
     "test": "bun test src",
     "check-types": "tsc --noEmit",
-    "env:generate": "varlock codegen"
+    "env:generate": "varlock codegen",
+    "test:e2e": "playwright test"
   },
   "dependencies": {
     "@ichiro/api": "workspace:*",
@@ -29,6 +30,7 @@
     "@cloudflare/workers-types": "catalog:",
     "@ichiro/config": "workspace:*",
     "@ichiro/infra": "workspace:*",
+    "@playwright/test": "1.56.1",
     "@tailwindcss/vite": "^4.3.3",
     "@types/bun": "^1.4.2",
     "@types/node": "catalog:",

@@ -1,6 +1,6 @@
 /*
  * 達成の報告・コミットメントの作成のときに出すお祝い。
- * 値はネイティブ版（apps/native/components/celebration/*.tsx）の reanimated の値を写したもの。
+ * ワンちゃんが下から跳ねて出て、着地で画面が揺れ、見出し・タイル・ボタンが順に現れる。
  */
 @font-face {
   font-family: "Dela Gothic One";

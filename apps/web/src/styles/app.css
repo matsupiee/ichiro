@@ -2,7 +2,7 @@
 @import "../components/dog/dog.css";
 @import "../components/celebration/celebration.css";
 
-/* ichiro のデザイントークン。値はネイティブ版（apps/native/global.css）と揃える */
+/* ichiro のデザイントークン。紹介ページ（public/site.css）と同じ水色を基調にする */
 @theme {
   --color-brand: #3dc4f4;
   --color-brand-pressed: #29afe1;

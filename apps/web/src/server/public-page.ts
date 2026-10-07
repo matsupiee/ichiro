@@ -8,7 +8,7 @@ const footer = `<footer class="footer"><div class="wrap footer-inner"><nav aria-
 const header = (legal = false) =>
   `<header class="header ${legal ? "legal-header" : ""}"><a class="logo" href="/" aria-label="ichiro ホーム">${logo}</a><nav aria-label="メイン"><a href="/#how">使い方</a></nav></header>`;
 function document(title: string, content: string, noIndex = false) {
-  return `<!doctype html><html lang="ja"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="description" content="目標を宣言して、毎日の達成を報告。ichiro は、続けたいことを応援するネイティブアプリです。公開準備中。">${noIndex ? '<meta name="robots" content="noindex">' : ""}<title>${title} | ichiro</title><link rel="stylesheet" href="/site.css"></head><body>${content}${footer}</body></html>`;
+  return `<!doctype html><html lang="ja"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="description" content="目標を宣言して、毎日の達成を報告。ichiro は、続けたいことを応援する Web サービスです。公開準備中。">${noIndex ? '<meta name="robots" content="noindex">' : ""}<title>${title} | ichiro</title><link rel="stylesheet" href="/site.css"></head><body>${content}${footer}</body></html>`;
 }
 function phone(file: string, alt: string, eager = false) {
   const [width, height] = file === "penalty" ? [1206, 2622] : [1320, 2868];
@@ -48,7 +48,7 @@ export function createPublicPageApp() {
       path,
       document(
         entry.title,
-        `${header(true)}<main class="legal wrap"><p class="meta">施行日：2026年10月3日</p><h1>${entry.title}</h1>${entry.sections.map(([heading, body]) => `<section><h2>${heading}</h2><p>${body}</p></section>`).join("")}${path === "/privacy" ? '<p class="external">外部サービスの方針：<a href="https://stripe.com/jp/privacy">Stripe</a> / <a href="https://www.cloudflare.com/privacypolicy/">Cloudflare</a> / <a href="https://resend.com/legal/privacy-policy">Resend</a></p><p class="external">データ処理契約・再委託先：<a href="https://stripe.com/legal/dpa">Stripe の契約</a> / <a href="https://stripe.com/legal/service-providers">Stripe の委託先</a> / <a href="https://www.cloudflare.com/cloudflare-customer-dpa/">Cloudflare の契約</a> / <a href="https://www.cloudflare.com/cloudflare-subprocessors/">Cloudflare の委託先</a> / <a href="https://resend.com/legal/dpa">Resend の契約</a> / <a href="https://resend.com/legal/subprocessors">Resend の委託先</a></p>' : ""}</main>`,
+        `${header(true)}<main class="legal wrap"><p class="meta">施行日：2026年10月7日</p><h1>${entry.title}</h1>${entry.sections.map(([heading, body]) => `<section><h2>${heading}</h2><p>${body}</p></section>`).join("")}${path === "/privacy" ? '<p class="external">外部サービスの方針：<a href="https://stripe.com/jp/privacy">Stripe</a> / <a href="https://www.cloudflare.com/privacypolicy/">Cloudflare</a> / <a href="https://resend.com/legal/privacy-policy">Resend</a></p><p class="external">データ処理契約・再委託先：<a href="https://stripe.com/legal/dpa">Stripe の契約</a> / <a href="https://stripe.com/legal/service-providers">Stripe の委託先</a> / <a href="https://www.cloudflare.com/cloudflare-customer-dpa/">Cloudflare の契約</a> / <a href="https://www.cloudflare.com/cloudflare-subprocessors/">Cloudflare の委託先</a> / <a href="https://resend.com/legal/dpa">Resend の契約</a> / <a href="https://resend.com/legal/subprocessors">Resend の委託先</a></p>' : ""}</main>`,
         true,
       ),
     );

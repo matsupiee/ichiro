@@ -64,3 +64,7 @@ next-env.d.ts
 # TanStack Start
 .output
 .tanstack
+
+# Playwright
+/test-results/
+/playwright-report/

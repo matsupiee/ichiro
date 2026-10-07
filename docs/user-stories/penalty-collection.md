@@ -10,32 +10,40 @@
 ## 動作確認の手順
 
 この手順は、昨日の分の罰金がまだ精算されていない状態から始める。
-`bun run db:seed -- --url file:./local.db --today <昨日の日付>` でデモデータを入れ、demo@ichiro.app / password123 でログインしておく。
-デモデータは、指定した日付の前日までを精算ずみにして作る。昨日を指定すると、昨日の「広東語マスター」が未報告・未精算のまま残る。
+リポジトリのルートで開発サーバーを起動し、開発サーバーのローカル D1 の SQLite ファイルの絶対パスを指定してデモデータを入れる。
+
+```sh
+bun run db:seed -- --url file:/絶対パス/対象.sqlite --skip-migrations --today <昨日の日付>
+```
+
+ブラウザで http://localhost:3000/app を開き、demo@ichiro.app / password123 でログインしておく。
+デモデータは、指定した日付の前日までを精算ずみにして作る。昨日を指定すると、昨日の「毎日30分広東語を練習する」が未報告・未精算のまま残る。
 デモデータの支払い方法は Stripe に実在しない ID なので、そのままでは引き落としに失敗する。本当に引き落とすところまで確かめるときは、Stripe のテスト環境に Customer を作ってテストカードをつけ、その ID を渡してデモデータを入れる。
+Stripe の結果を Webhook で受け取るため、開発サーバーは `bun run dev:stripe` で起動する。→ [Stripe の webhook を開発サーバーで受け取る](../development/local-stripe-webhook.md)
 
 ```sh
 stripe customers create                                          # cus_... が返る
 stripe payment_methods attach pm_card_visa --customer cus_...    # pm_... が返る
-bun run db:seed -- --url file:./local.db --today <昨日の日付> --stripe-customer cus_... --stripe-payment-method pm_...
+bun run db:seed -- --url file:/絶対パス/対象.sqlite --skip-migrations --today <昨日の日付> --stripe-customer cus_... --stripe-payment-method pm_...
 ```
 
-「禁煙」と「広東語マスター」の引き落とし先が、このテストカード（Visa •••• 4242）になる。
+「禁煙する」と「毎日30分広東語を練習する」の引き落とし先が、このテストカード（Visa •••• 4242）になる。
 
-1. メインページで「広東語マスター」のカードを押して、詳細ページを開く。
-   - 連続達成のカードの下に「これまでの罰金」の1行の導線が出る。合計や履歴はまだ出ない。押すと罰金の履歴シートが開く。
+1. メインページで「毎日30分広東語を練習する」のカードを押して、詳細ページを開く。
+   - 連続達成のカードの下に「これまでの罰金」の1行の導線が出る。合計や履歴はまだ出ない。押すと罰金の履歴のシートが開く。
    - 昨日の日付の行に「徴収待ち」と ¥500 が出る。開いた時点で締め切りを過ぎた分が精算され、cron を待たずに履歴に出る。
    - それより前に報告できなかった2日分が「徴収ずみ」で出て、合計は ¥1,500、回数は3回になる。
    - 連続達成は、昨日が途切れたので0日になる。
-2. 1時間ごとの cron（毎時5分）が動いたあとに、もう一度詳細ページを開き、「これまでの罰金」を押す。
-   - 「徴収待ち」だった行が「徴収ずみ」に変わる。Stripe のダッシュボードに ¥500 の支払いが「ichiro 罰金「広東語マスター」<日付>」という説明で出る。
+   - → [必要なときだけ罰金の履歴を開く](./view-penalty-history.md)
+2. 1時間ごとの cron（毎時5分）が動いたあとに、ブラウザで詳細ページを再読み込みし、「これまでの罰金」を押す。
+   - 「徴収待ち」だった行が「徴収ずみ」に変わる。Stripe のダッシュボードに ¥500 の支払いが「ichiro 罰金「毎日30分広東語を練習する」<日付>」という説明で出る。
    - 昨日が報告日（月・水・金）で未報告だった「週3でジムに行って、筋トレ45分と有酸素運動20分をやる」にも、¥1,000 の罰金ができて徴収される。
-   - 報告ずみの「禁煙」には罰金ができない。
+   - 報告ずみの「禁煙する」には罰金ができない。
 3. `pm_card_visa` の代わりに `pm_card_chargeCustomerFail`（登録はできるが、請求は必ず拒否される）をつけてデモデータを入れ直し、同じように cron を待つ。
    - 行が赤い「徴収できませんでした」になり、その下に「カードが拒否されました」と理由が出る。
    - 失敗した罰金も「これまでの罰金」の合計に入る。
    - 次の cron で試し直す。3回失敗したらそれ以上は試さない。
-4. 履歴シートの戻るボタンで閉じ、詳細ページで「今日の達成を報告する」を押す。
+4. 履歴のシートの戻るボタンで閉じ、詳細ページで「今日の達成を報告する」を押す。
    - 今日の分は締め切り前なので、ふつうに報告できる。
    - → [今日の達成を報告すると、ワンちゃんが祝福してくれる](./report-achievement.md)
 5. 罰金の金額を変えて「変更を保存」を押す。
@@ -46,10 +54,9 @@ bun run db:seed -- --url file:./local.db --today <昨日の日付> --stripe-cust
    - 「これまでの罰金」の導線は出ない。報告できなくても罰金はできない。
 7. 罰金を設定したばかりのコミットメントの詳細ページを開き、「これまでの罰金」を押す。
    - 「これまでの罰金」は ¥0 で、「まだ罰金はないワン。この調子でつづけよう。」と出る。
-
 8. 追加認証による請求停止の履歴を、実決済なしで確認する。
    - `bun run --cwd packages/db src/seed/payment-authentication.ts --url file:/絶対パス/対象.sqlite --skip-migrations` で確認用データを作る。同名ユーザーがいるときは `--email auth-stop-2@ichiro.example` を指定する。
-   - `auth-stop@ichiro.example` / `withdrawal-demo-password` でネイティブアプリにログインし、「追加認証で請求停止」の詳細を開いて「これまでの罰金」を押す。
+   - ブラウザで `auth-stop@ichiro.example` / `withdrawal-demo-password` でログインし、「追加認証で請求停止」の詳細を開いて「これまでの罰金」を押す。
    - 「この報告日分の自動請求を停止しました」が表示され、認証・再支払いを求めるボタンがない。実カードや Stripe Customer は作らない。
 9. API テストで追加認証の同期応答・Webhook と、その後の定期処理を確認する。
    - 停止した報告日分は再請求されず、別の報告日分は通常どおり処理される。
@@ -68,19 +75,18 @@ bun run db:seed -- --url file:./local.db --today <昨日の日付> --stripe-cust
   - 作成したときは前日にする。今日の分から精算の対象になる。
   - null はこの機能より前に作られた行。初めて精算するときは昨日までを精算ずみにするだけで、過去の分はさかのぼらない。
   - 設定を変えるときは、先に変更前の設定で精算してから、昨日までを精算ずみにする。
-  - 報告は、精算ずみの日には受け付けない（「締め切りを過ぎたため報告できません」）。端末の日付をずらして、締め切り後に報告して罰金を逃れることはできない。
+  - 報告は、精算ずみの日には受け付けない（「締め切りを過ぎたため報告できません」）。パソコンやスマートフォンの日付をずらして、締め切り後に報告して罰金を逃れることはできない。
 - `commitment.time_zone` に、締め切りを判定するタイムゾーン（IANA 名）を持つ。
-  - アプリが作成・変更のたびに端末のタイムゾーンを送る。送られなかったときは `Asia/Tokyo`。
+  - ブラウザが作成・変更のたびに自分のタイムゾーンを送る。送られなかったときは `Asia/Tokyo`。
 - 精算と徴収は Cloudflare Workers の cron（`packages/infra/alchemy.run.ts` の `crons`）で1時間ごとに動く。
   - 精算は詳細ページを開いたとき・設定を変えたとき・報告したときにも、そのコミットメントについて行う。
 - 引き落としは Stripe の PaymentIntent で行う（`packages/api/src/shared/payment/charge-penalty.ts`）。
   - ユーザーがアプリを開いていないときの決済なので、登録ずみの支払い方法に `off_session: true`・`confirm: true` で請求する。通貨は円（`jpy`）。
   - 冪等キーは `penalty:<罰金のID>:<何回目か>`。cron が重なっても同じ試行で二重に請求しない。試し直すときはキーを変える。
   - PaymentIntent の ID を `charge_reference` に、罰金の ID を PaymentIntent の `metadata.penalty_id` に持つ。
-  - 通信断などで結果が不明な場合は、その罰金を `processing` として再請求を保留し、運用でStripeの結果を確認する。→ [退会機能の動作確認](../development/withdrawal-verification.md)
+  - 通信断などで結果が不明な場合は、その罰金を `processing` として再請求を保留し、運用で Stripe の結果を確認する。→ [退会機能の動作確認](../development/withdrawal-verification.md)
   - 退会後は罰金の生成・請求・再試行の対象にしない。→ [退会できる](./withdrawal.md)
-  - Stripe 側で処理中（`processing`）になったものは試し直さず、Webhook（`/stripe/webhook`）の `payment_intent.succeeded`・`payment_intent.payment_failed` で結果を反映する。先に成功が届いていたら、あとから届いた失敗で上書きしない。
-
+  - Stripe 側で処理中（`processing`）になったものは試し直さず、Webhook（`/api/stripe/webhook`）の `payment_intent.succeeded`・`payment_intent.payment_failed` で結果を反映する。先に成功が届いていたら、あとから届いた失敗で上書きしない。
 - カード登録時の本人認証は従来どおり。保存済みカードへの自動請求時に `authentication_required`（code / decline_code）または `requires_action` を受けた報告日分は再請求しない。
   - `penalty.retryStoppedAt` に停止日時を保存し、実際の試行回数は水増ししない。通常のカード拒否は引き続き合計3回まで試す。
 
@@ -91,5 +97,5 @@ bun run db:seed -- --url file:./local.db --today <昨日の日付> --stripe-cust
 - 設定を変えたときの扱いは `packages/api/src/routers/consumer/commitment/update/handler.integration.test.ts` の「設定を変えても、過去の分の罰金は変わらない」
 - Webhook での反映は `packages/api/src/shared/payment/handle-stripe-event.integration.test.ts`
 - 締め切りの判定と、罰金の対象になる日の計算は `packages/api/src/shared/penalty/penalty.test.ts`
-
 - 追加認証の停止は `run-penalty-job.integration.test.ts`、`handle-stripe-event.integration.test.ts`、`payment-authentication-seed.integration.test.ts`、`payment-authentication-migration.integration.test.ts` で確認する。
+- E2E テストはない。cron と実際の引き落としは、上の手順で Stripe のテスト環境に対して手動で確認する。

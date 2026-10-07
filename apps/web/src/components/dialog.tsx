@@ -9,7 +9,7 @@ import {
   useState,
 } from "react";
 
-// ネイティブ版の Alert.alert の代わり。確認とお知らせのダイアログを <dialog> で出す
+// 確認とお知らせのダイアログ。<dialog> で出す
 
 type DialogInput = {
   title: string;

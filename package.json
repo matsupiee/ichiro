@@ -38,7 +38,8 @@
     "deploy:stg": "bun run --cwd packages/infra deploy:stg",
     "deploy:prod": "bun run --cwd packages/infra deploy:prod",
     "deploy:check:stg": "bun run --cwd packages/infra deploy:stg --check",
-    "deploy:check:prod": "bun run --cwd packages/infra deploy:prod --check"
+    "deploy:check:prod": "bun run --cwd packages/infra deploy:prod --check",
+    "test:e2e": "bun run --cwd apps/web test:e2e"
   },
   "dependencies": {
     "zod": "catalog:"

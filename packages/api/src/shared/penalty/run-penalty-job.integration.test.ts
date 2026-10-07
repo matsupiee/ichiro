@@ -51,7 +51,7 @@ describe("報告できなかった日は罰金が徴収される", () => {
       amount: 500,
       currency: "jpy",
       customer: `cus_demo_${seeded.userId}`,
-      payment_method: `pm_demo_apple_pay_${seeded.userId}`,
+      payment_method: `pm_demo_visa_${seeded.userId}`,
       off_session: true,
       confirm: true,
     });

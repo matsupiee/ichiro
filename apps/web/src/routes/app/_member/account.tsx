@@ -73,7 +73,7 @@ function NameDialog({ initial, onClose }: { initial: string; onClose: () => void
       }}
       className="m-auto w-[calc(100%-44px)] max-w-[400px] rounded-[36px] bg-canvas px-[18px] pt-7 pb-[18px] text-ink shadow-[0_20px_50px_rgba(0,0,0,0.18)] backdrop:bg-black/20"
     >
-      <form noValidate onSubmit={(event) => void save(event)}>
+      <form method="post" noValidate onSubmit={(event) => void save(event)}>
         <h2 id="name-dialog-title" className="px-3 text-[20px] font-extrabold">
           名前を編集
         </h2>
@@ -150,7 +150,7 @@ function ExternalRow({ href, children }: { href: string; children: ReactNode }) 
   );
 }
 
-// アカウントの管理。ネイティブ版では右上のアイコンから開くシートだった
+// アカウントの管理。ホーム右上のアイコンから開く
 function AccountScreen() {
   const { user } = Route.useRouteContext();
   const navigate = useNavigate();
