@@ -1,0 +1,37 @@
+@import "tailwindcss";
+@import "../components/dog/dog.css";
+@import "../components/celebration/celebration.css";
+
+/* ichiro のデザイントークン。紹介ページ（public/site.css）と同じ水色を基調にする */
+@theme {
+  --color-brand: #3dc4f4;
+  --color-brand-pressed: #29afe1;
+  --color-brand-ink: #087da8;
+  --color-brand-soft: #dcf5ff;
+  --color-canvas: #f4fafd;
+  --color-card: #eaf3f8;
+  --color-card-pressed: #dcecf5;
+  --color-card-line: #ddebf3;
+  --color-field: #deeaf1;
+  --color-field-pressed: #ccdfea;
+  --color-ink: #163447;
+  --color-ink-2: #365466;
+  --color-mute: #647f90;
+  --color-faint: #8098a7;
+  --color-line: #c4d8e4;
+  --color-alert: #ff3b30;
+  --color-danger: #d93646;
+
+  --font-sans:
+    "Hiragino Sans", "Hiragino Kaku Gothic ProN", "Noto Sans JP", system-ui, -apple-system,
+    sans-serif;
+}
+
+@layer base {
+  html {
+    -webkit-text-size-adjust: 100%;
+  }
+  body {
+    @apply bg-canvas font-sans text-ink antialiased;
+  }
+}

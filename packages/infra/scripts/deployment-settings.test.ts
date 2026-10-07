@@ -12,9 +12,9 @@ const valid = {
   AUTH_EMAIL_FROM: "ichiro <noreply@mail.ichiro.app>",
   NODE_ENV: "production",
   STRIPE_SECRET_KEY: "sk_test_fixture",
+  STRIPE_PUBLISHABLE_KEY: "pk_test_fixture",
   STRIPE_WEBHOOK_SECRET: "whsec_fixture",
   BETTER_AUTH_SECRET: "x".repeat(32),
-  CORS_ORIGIN: "https://stg.example.com",
 };
 
 test("stg と prod の Stripe キーを取り違えると停止する", () => {
@@ -28,6 +28,17 @@ test("stg と prod の Stripe キーを取り違えると停止する", () => {
       ...valid,
       APP_ENV: "prod",
       STRIPE_SECRET_KEY: "sk_live_fixture",
+    }),
+  ).toThrow("pk_live_");
+  expect(() =>
+    validateDeployment("stg", { ...valid, STRIPE_PUBLISHABLE_KEY: "pk_live_fixture" }),
+  ).toThrow("pk_test_");
+  expect(() =>
+    validateDeployment("prod", {
+      ...valid,
+      APP_ENV: "prod",
+      STRIPE_SECRET_KEY: "sk_live_fixture",
+      STRIPE_PUBLISHABLE_KEY: "pk_live_fixture",
     }),
   ).not.toThrow();
 });
@@ -45,7 +56,12 @@ test("暗黙の stage、環境不一致、未設定の秘密情報を拒否す�
     "32文字",
   );
   expect(() =>
-    validateDeployment("prod", { ...valid, APP_ENV: "prod", STRIPE_SECRET_KEY: "sk_live_fixture" }),
+    validateDeployment("prod", {
+      ...valid,
+      APP_ENV: "prod",
+      STRIPE_SECRET_KEY: "sk_live_fixture",
+      STRIPE_PUBLISHABLE_KEY: "pk_live_fixture",
+    }),
   ).not.toThrow();
 });
 
@@ -56,12 +72,11 @@ afterEach(() => {
 function fixture() {
   const root = mkdtempSync(join(tmpdir(), "ichiro-deploy-"));
   temporary.push(root);
-  for (const dir of ["apps/server", "packages/infra"])
-    mkdirSync(join(root, dir), { recursive: true });
+  for (const dir of ["apps/web", "packages/infra"]) mkdirSync(join(root, dir), { recursive: true });
   for (const file of [
-    "apps/server/.env.schema",
-    "apps/server/.env.stg",
-    "apps/server/.env.prod",
+    "apps/web/.env.schema",
+    "apps/web/.env.stg",
+    "apps/web/.env.prod",
     "packages/infra/.env.schema",
   ]) {
     writeFileSync(join(root, file), readFileSync(new URL(`../../../${file}`, import.meta.url)));
@@ -77,13 +92,17 @@ function envFile(env: Record<string, string>) {
 test("stage 別ファイルが開発用 .env の秘密情報を遮断し、.local から正しい設定を読む", async () => {
   const root = fixture();
   const basePath = join(root, "packages/infra");
-  writeFileSync(join(root, "apps/server/.env"), envFile(valid));
+  writeFileSync(
+    join(root, "apps/web/.env"),
+    envFile({ ...valid, STRIPE_PUBLISHABLE_KEY: "pk_test_development" }),
+  );
   await expect(loadDeployment("stg", {}, basePath)).rejects.toThrow("環境変数");
-  writeFileSync(join(root, "apps/server/.env.stg.local"), envFile(valid));
+  writeFileSync(join(root, "apps/web/.env.stg.local"), envFile(valid));
   const stg = await loadDeployment("stg", {}, basePath);
   expect(stg.APP_ENV).toBe("stg");
   expect(stg.NODE_ENV).toBe("production");
   expect(stg.STRIPE_SECRET_KEY).toBe("sk_test_fixture");
+  expect(stg.STRIPE_PUBLISHABLE_KEY).toBe("pk_test_fixture");
   await expect(loadDeployment("prod", {}, basePath)).rejects.toThrow("環境変数");
   await expect(loadDeployment("stg", { APP_ENV: "prod" }, basePath)).rejects.toThrow("異なります");
   await expect(loadDeployment("stg", { ALCHEMY_STAGE: "prod" }, basePath)).rejects.toThrow(
@@ -91,54 +110,17 @@ test("stage 別ファイルが開発用 .env の秘密情報を遮断し、.loca
   );
 });
 
-test("CI の環境変数から prod を読み込み、ローカル設定より優先する", async () => {
+test("プロセスの環境変数から prod を読み込み、ローカル設定より優先する", async () => {
   const root = fixture();
   const env = {
     ...valid,
     APP_ENV: "prod",
     STRIPE_SECRET_KEY: "sk_live_ci",
+    STRIPE_PUBLISHABLE_KEY: "pk_live_ci",
   };
   expect((await loadDeployment("prod", env, join(root, "packages/infra"))).STRIPE_SECRET_KEY).toBe(
     "sk_live_ci",
   );
-});
-
-test("ネイティブの stg/prod が開発用 URL を引き継がず各環境の URL を読む", async () => {
-  const { internal } = await import("varlock");
-  const root = fixture();
-  const path = join(root, "apps/native");
-  mkdirSync(path);
-  for (const name of [".env.schema", ".env.stg", ".env.prod"]) {
-    writeFileSync(
-      join(path, name),
-      readFileSync(new URL(`../../../apps/native/${name}`, import.meta.url)),
-    );
-  }
-  writeFileSync(
-    join(path, ".env"),
-    "EXPO_PUBLIC_SERVER_URL=http://localhost:3000\nEXPO_PUBLIC_STRIPE_PUBLISHABLE_KEY=pk_test_development\n",
-  );
-  for (const stage of ["stg", "prod"]) {
-    const missing = await internal.loadEnvGraph({
-      basePath: path,
-      overrideValues: { APP_ENV: stage },
-    });
-    await missing.resolveEnvValues();
-    expect(missing.isInvalid).toBe(true);
-    writeFileSync(
-      join(path, `.env.${stage}.local`),
-      `EXPO_PUBLIC_SERVER_URL=https://${stage}.example.com\nEXPO_PUBLIC_STRIPE_PUBLISHABLE_KEY=pk_${stage === "stg" ? "test" : "live"}_fixture\n`,
-    );
-    const configured = await internal.loadEnvGraph({
-      basePath: path,
-      overrideValues: { APP_ENV: stage },
-    });
-    await configured.resolveEnvValues();
-    expect(configured.isInvalid).toBe(false);
-    expect(configured.getResolvedEnvStringObject().EXPO_PUBLIC_SERVER_URL).toBe(
-      `https://${stage}.example.com`,
-    );
-  }
 });
 
 test("デプロイでメールの未設定・ローカル送信を拒否する", () => {

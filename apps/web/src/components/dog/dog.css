@@ -1,0 +1,143 @@
+/*
+ * ワンちゃんの動き（待機中の上下、跳ねる、尻尾・耳・首・まばたき）。
+ * 200×200 の座標で組み立て、外側の要素で size に合わせて拡大縮小する。
+ */
+.dog {
+  --dog-wag: 600ms;
+  --dog-ear: 2400ms;
+  --dog-tilt: 3000ms;
+}
+.dog[data-mood="jump"] {
+  --dog-wag: 220ms;
+  --dog-ear: 400ms;
+  --dog-tilt: 800ms;
+}
+
+.dog-shadow {
+  animation: none;
+}
+.dog-body {
+  transform-origin: 100px 190px;
+  animation: dog-bob 2400ms ease-in-out infinite;
+}
+.dog[data-mood="jump"] .dog-body {
+  animation: dog-hop 800ms linear infinite;
+}
+.dog[data-mood="jump"] .dog-shadow {
+  animation: dog-hop-shadow 800ms linear infinite;
+}
+.dog-tail {
+  /* パスの根元を支点にし、体の内側に重ねて振っても離れないようにする */
+  transform-origin: 8px 40px;
+  animation: dog-wag var(--dog-wag) ease-in-out infinite;
+}
+.dog-head {
+  transform-origin: 100px 130px;
+  animation: dog-tilt var(--dog-tilt) ease-in-out infinite;
+}
+.dog-ear-left {
+  transform-origin: 90% 8%;
+  animation: dog-ear-left var(--dog-ear) ease-in-out infinite;
+}
+.dog-ear-right {
+  transform-origin: 10% 8%;
+  animation: dog-ear-right var(--dog-ear) ease-in-out infinite;
+}
+.dog-eye {
+  animation: dog-blink 4000ms linear infinite;
+}
+
+@keyframes dog-bob {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-5px);
+  }
+}
+@keyframes dog-hop {
+  0% {
+    transform: translateY(0) scale(1, 1);
+  }
+  12% {
+    transform: translateY(0) scale(1.1, 0.88);
+  }
+  40% {
+    transform: translateY(-54px) scale(0.94, 1.08);
+  }
+  62% {
+    transform: translateY(0) scale(1.08, 0.9);
+  }
+  78% {
+    transform: translateY(0) scale(0.98, 1.02);
+  }
+  100% {
+    transform: translateY(0) scale(1, 1);
+  }
+}
+@keyframes dog-hop-shadow {
+  0%,
+  12%,
+  62%,
+  100% {
+    opacity: 0.16;
+    transform: scale(1);
+  }
+  40% {
+    opacity: 0.06;
+    transform: scale(0.55);
+  }
+}
+@keyframes dog-wag {
+  0%,
+  100% {
+    transform: rotate(-24deg);
+  }
+  50% {
+    transform: rotate(26deg);
+  }
+}
+@keyframes dog-ear-left {
+  0%,
+  100% {
+    transform: rotate(12deg);
+  }
+  50% {
+    transform: rotate(44deg);
+  }
+}
+@keyframes dog-ear-right {
+  0%,
+  100% {
+    transform: rotate(-12deg);
+  }
+  50% {
+    transform: rotate(-44deg);
+  }
+}
+@keyframes dog-tilt {
+  0%,
+  100% {
+    transform: rotate(-5deg);
+  }
+  50% {
+    transform: rotate(5deg);
+  }
+}
+@keyframes dog-blink {
+  0%,
+  90%,
+  100% {
+    transform: scaleY(1);
+  }
+  95% {
+    transform: scaleY(0.1);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .dog * {
+    animation: none !important;
+  }
+}

@@ -15,7 +15,7 @@
   "orm": "drizzle",
   "backend": "hono",
   "runtime": "workers",
-  "frontend": ["native-uniwind"],
+  "frontend": ["tanstack-start"],
   "addons": ["lefthook", "oxlint", "turborepo"],
   "examples": [],
   "auth": "better-auth",

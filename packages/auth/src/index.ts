@@ -1,8 +1,7 @@
 import { drizzleAdapter } from "@better-auth/drizzle-adapter/relations-v2";
-import { expo } from "@better-auth/expo";
 import type { Database } from "@ichiro/db";
 import * as schema from "@ichiro/db/schema/auth";
-import { betterAuth } from "better-auth";
+import { type BetterAuthPlugin, betterAuth } from "better-auth";
 import { APIError, createAuthMiddleware } from "better-auth/api";
 import { emailOTP } from "better-auth/plugins";
 import { eq } from "drizzle-orm";
@@ -11,7 +10,6 @@ import { z } from "zod";
 export type AuthConfig = {
   BETTER_AUTH_URL: string;
   BETTER_AUTH_SECRET: string;
-  CORS_ORIGIN: string;
 };
 export type VerificationMail = {
   email: string;
@@ -20,7 +18,14 @@ export type VerificationMail = {
 };
 export type SendVerificationMail = (mail: VerificationMail) => Promise<void>;
 
-export function createAuth(env: AuthConfig, database: Database, sendMail: SendVerificationMail) {
+// extraPlugins は末尾に足す。TanStack Start の Cookie 連携（tanstackStartCookies）は最後に置く必要があるため
+// https://www.better-auth.com/docs/integrations/tanstack
+export function createAuth(
+  env: AuthConfig,
+  database: Database,
+  sendMail: SendVerificationMail,
+  extraPlugins: BetterAuthPlugin[] = [],
+) {
   const assertActive = async (id: string) => {
     const [row] = await database.select().from(schema.user).where(eq(schema.user.id, id));
     if (!row || row.withdrawnAt)
@@ -47,18 +52,11 @@ export function createAuth(env: AuthConfig, database: Database, sendMail: SendVe
       },
     },
     database: drizzleAdapter(database, { provider: "sqlite", schema }),
-    trustedOrigins: [
-      env.CORS_ORIGIN,
-      "ichiro://",
-      "ichiro-stg://",
-      "exp://",
-      "http://localhost:8081",
-    ],
     emailAndPassword: {
       enabled: true,
       requireEmailVerification: true,
       revokeSessionsOnPasswordReset: true,
-      // 登録済みの場合は成功扱いにせず、ネイティブのログイン画面へ案内する。
+      // 登録済みの場合は成功扱いにせず、ログイン画面へ案内する。
       // await-auth-delivery がこのコールバックのエラーも応答へ伝播する。
       onExistingUserSignUp: async () => {
         throw new APIError("UNPROCESSABLE_ENTITY", {
@@ -102,7 +100,6 @@ export function createAuth(env: AuthConfig, database: Database, sendMail: SendVe
     advanced: {
       // Cloudflare が付与する IP のみ信頼し、任意の X-Forwarded-For は使わない。
       ipAddress: { ipAddressHeaders: ["cf-connecting-ip"] },
-      defaultCookieAttributes: { sameSite: "none", secure: true, httpOnly: true },
     },
     hooks: {
       before: createAuthMiddleware(async (ctx) => {
@@ -163,7 +160,6 @@ export function createAuth(env: AuthConfig, database: Database, sendMail: SendVe
       }),
     },
     plugins: [
-      expo(),
       {
         id: "await-auth-delivery",
         // Better Auth の既定処理は送信失敗を握りつぶすため、応答まで待って失敗を返す。
@@ -203,6 +199,7 @@ export function createAuth(env: AuthConfig, database: Database, sendMail: SendVe
           }
         },
       }),
+      ...extraPlugins,
     ],
   });
 }

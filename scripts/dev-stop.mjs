@@ -17,7 +17,7 @@ const targets = new Set();
 for (const { pid, command } of processes) {
   if (
     pid === process.pid ||
-    !/(?:\bturbo(?: run)? dev\b|\bexpo start\b|\balchemy(?:\.ts)? dev\b|\bbun(?:\.exe)? (?:run )?dev(?::(?:native|server))?(?:\s|$))/.test(
+    !/(?:\bturbo(?: run)? dev\b|\balchemy(?:\.ts)? dev\b|\bbun(?:\.exe)? (?:run )?dev(?::server)?(?:\s|$))/.test(
       command,
     )
   )

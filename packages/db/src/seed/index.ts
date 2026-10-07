@@ -87,14 +87,14 @@ export async function seedDemo(
   await db
     .insert(paymentCustomer)
     .values({ userId, stripeCustomerId: stripe?.customerId ?? `cus_demo_${userId}` });
-  const [applePay] = await db
+  const [visa] = await db
     .insert(paymentMethod)
     .values({
       userId,
-      stripePaymentMethodId: stripe?.paymentMethodId ?? `pm_demo_apple_pay_${userId}`,
+      stripePaymentMethodId: stripe?.paymentMethodId ?? `pm_demo_visa_${userId}`,
       brand: "visa",
       last4: "4242",
-      wallet: stripe ? null : "apple_pay",
+      wallet: null,
     })
     .returning();
   const [card] = await db
@@ -121,7 +121,7 @@ export async function seedDemo(
       startDate: addDays(today, -41),
       untilDate: addDays(today, 186),
       penaltyAmount: 3000,
-      paymentMethodId: applePay!.id,
+      paymentMethodId: visa!.id,
       ...settled,
     })
     .returning();
@@ -156,7 +156,7 @@ export async function seedDemo(
       startDate: addDays(today, -25),
       untilDate: addDays(today, 96),
       penaltyAmount: 500,
-      paymentMethodId: applePay!.id,
+      paymentMethodId: visa!.id,
       ...settled,
     })
     .returning();
@@ -183,7 +183,7 @@ export async function seedDemo(
       commitmentId: cantonese!.id,
       dueDate: addDays(today, d),
       amount: 500,
-      paymentMethodId: applePay!.id,
+      paymentMethodId: visa!.id,
       status: "paid" as const,
       attempts: 1,
       chargeReference: `seed_${d}`,
@@ -194,6 +194,6 @@ export async function seedDemo(
   return {
     userId,
     commitmentIds: [cantonese!.id, gym!.id, smoking!.id],
-    paymentMethodIds: [applePay!.id, card!.id],
+    paymentMethodIds: [visa!.id, card!.id],
   };
 }

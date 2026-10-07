@@ -48,11 +48,6 @@ export function createFakeStripe() {
         return { id: customers.get(key)! };
       }) as StripeClient["customers"]["create"],
     },
-    ephemeralKeys: {
-      create: (async () => ({
-        secret: next("ek_test"),
-      })) as StripeClient["ephemeralKeys"]["create"],
-    },
     setupIntents: {
       create: (async (params) => {
         const id = next("seti");

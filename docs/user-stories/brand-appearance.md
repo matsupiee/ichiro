@@ -8,35 +8,37 @@
 
 ## 動作確認の手順
 
-1. iOS Simulator または実機で未ログインのアプリを開く。
+`bun run db:seed -- --url file:/絶対パス/対象.sqlite --skip-migrations` で移行済みのローカル D1 にデモデータを入れ、`bun run dev:server` を起動する。
+
+1. 未ログインのブラウザで http://localhost:3000/app を開く。
    - ロゴは添付画像をもとにした筆記体と右側の3本の飾り線で表示され、上下が欠けない。
-   - 水色 `#3DC4F4` のボタンと淡い青の背景が表示される。
-2. 「ログイン」を押し、確認用アカウントでログインする。
+   - 水色 `#3DC4F4` のボタンと淡い青の背景（`#F4FAFD`）が表示される。
+   - スマートフォンの幅では1カラムで表示される。PC の広い画面では幅 440px までの列が中央に寄る。
+2. 「ログイン」を押し、demo@ichiro.app / password123 でログインする。
    - ホームにも同じ水色のロゴが表示される。
-   - 一覧・プロフィール・作成・編集画面の背景と選択色が青系で統一される。
+   - 一覧・アカウント・作成・詳細の画面の背景と選択色が青系で統一される。
 3. コミットメントを作成し、今日の達成を報告する。
    - 選択状態・達成マーク・作成時のお祝いの光に水色が使われる。達成報告のお祝い画面は白背景になる。
-   - 水色のボタンと選択済みの日付・曜日の文字は白で表示される。
+   - 水色のボタンと選択済みの曜日・日の文字は白で表示される。
    - 報告済みの文言は淡い青の背景に濃い青で表示される。
-   - お祝いの日本語は従来の日本語フォントで表示される。
+   - お祝いの見出しは Dela Gothic One で表示され、文字が欠けない。
    - → [達成を報告できる](./report-achievement.md)
-4. プロフィールからログアウトする。
-   - ログイン前の画面に戻り、ロゴとボタンを引き続き表示できる。
+4. アカウント画面からログアウトする。
+   - はじめにの画面に戻り、ロゴとボタンを引き続き表示できる。
 
 ## データの持ち方
 
-- 色は `apps/native/lib/theme.ts` と `apps/native/global.css` で管理する。
-- ロゴは `apps/native/assets/images/ichiro-wordmark.png` に透過画像として同梱する。
-  - `BrandLogo` で開始画面とホームに表示する。
-  - 画像生成の組み込みツールで、添付画像から文字と3本の飾り線を抽出し、水色に変更した素材を使う。
+- 色と寸法は `apps/web/src/styles/app.css` の `@theme` で管理する。値はネイティブ版のときのトークンと同じ。
+- ロゴは `apps/web/public/images/ichiro-wordmark.png` の透過画像をマスクにして、水色で塗る。
+  - `apps/web/src/components/ui.tsx` の `BrandLogo` で、はじめにの画面とホームに表示する。
+  - 画像生成の組み込みツールで、添付画像から文字と3本の飾り線を抽出した素材を使う。
   - 最終プロンプト: "Extract the ichiro wordmark and three rays; preserve original letter silhouettes; solid cyan #3DC4F4 on transparent background; no dog, book, square, shadows or texture."
+- お祝いの見出しのフォントは、Dela Gothic One を見出しの文字だけに絞ったサブセット（`apps/web/public/fonts/dela-gothic-one-celebration.woff2`）。
 - 新しいデータや API は追加しない。
   - 確認用データは既存の `packages/db/src/seed/run.ts` で作成する。
-  - `bun run db:seed -- --url file:/absolute/path/to/local.sqlite --skip-migrations` で移行済みのローカル DB に投入する。
-- 機能、料金、個人情報の取り扱いは変わらないため、利用規約・プライバシーポリシー・特商法表記の変更は不要。
 
 ## 対応するテスト
 
-- 既存の全ユーザーストーリーに対応する回帰テストは `bun run test` で実行する。
-- `.maestro/report-confirmation.yaml` でネイティブの作成・報告・達成表示を確認する。
-- フォント、配色、文字の欠けは iOS Simulator のスクリーンショットで確認する。
+- `apps/web/e2e/onboarding.spec.ts`：はじめにの画面のロゴとボタンの表示。
+- 既存の全ユーザーストーリーに対応する回帰テストは `bun run test` と `bun run test:e2e` で実行する。
+- フォント、配色、文字の欠けはブラウザのスクリーンショットで確認する。

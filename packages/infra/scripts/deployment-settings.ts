@@ -9,6 +9,12 @@ export function validateDeployment(stage: string, env: Record<string, string | u
   if (!env.STRIPE_SECRET_KEY?.startsWith(prefix)) {
     throw new Error(`${stage} の STRIPE_SECRET_KEY は ${prefix} で始まるキーが必要です。`);
   }
+  const publishablePrefix = stage === "stg" ? "pk_test_" : "pk_live_";
+  if (!env.STRIPE_PUBLISHABLE_KEY?.startsWith(publishablePrefix)) {
+    throw new Error(
+      `${stage} の STRIPE_PUBLISHABLE_KEY は ${publishablePrefix} で始まるキーが必要です。`,
+    );
+  }
   if (!env.STRIPE_WEBHOOK_SECRET?.startsWith("whsec_")) {
     throw new Error("環境専用の STRIPE_WEBHOOK_SECRET が必要です。");
   }
@@ -22,8 +28,5 @@ export function validateDeployment(stage: string, env: Record<string, string | u
     throw new Error(
       "AUTH_EMAIL_FROM は認証済みの ichiro <noreply@mail.ichiro.app> を指定してください。",
     );
-  }
-  if (!env.CORS_ORIGIN || new URL(env.CORS_ORIGIN).protocol !== "https:") {
-    throw new Error("CORS_ORIGIN に HTTPS の URL を設定してください。");
   }
 }

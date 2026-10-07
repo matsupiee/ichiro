@@ -10,7 +10,7 @@
 // 昨日の日付を渡すと、昨日の分が未精算のまま残るので、罰金が発生するところを確かめられる。
 // コミットメントのタイムゾーンはこのマシンのもの（TZ で変えられる）。
 // --stripe-customer cus_... --stripe-payment-method pm_... を渡すと、デモの1つめの支払い方法
-// （「禁煙」「広東語マスター」の引き落とし先）を Stripe のテスト環境に実在するものにする。
+// （「禁煙する」「毎日30分広東語を練習する」の引き落とし先）を Stripe のテスト環境に実在するものにする。
 // 例: stripe customers create → stripe payment_methods attach pm_card_visa --customer <cus_...>
 import { parseArgs } from "node:util";
 

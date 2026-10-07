@@ -15,14 +15,17 @@ export const db = Cloudflare.D1.Database("database", {
 // プロフィール写真の置き場所。配信は Worker の /avatars/* から行うので、バケットは公開しない
 export const avatars = Cloudflare.R2.Bucket("avatars");
 
-export const server = Cloudflare.Worker("server", {
+// 画面と API を1つの Worker で配信する。Vite で apps/web（TanStack Start）をビルドし、
+// サーバー側のバンドルを Worker に、クライアント側と public/ を Static Assets にする
+export const server = Cloudflare.Website.Vite("server", {
+  rootDir: "../../apps/web",
+  // fetch は TanStack Start に任せ、cron の scheduled を足した自前のエントリ
+  main: "src/server.ts",
   domain: process.env.APP_ENV === "prod" ? "ichiro.app" : undefined,
-  main: "../../apps/server/src/index.ts",
-  assets: "../../apps/server/public",
   compatibility: {
     flags: ["nodejs_compat"],
   },
-  // 罰金の精算と徴収（apps/server/src/index.ts の scheduled）
+  // 罰金の精算と徴収（apps/web/src/server.ts の scheduled）
   crons: ["5 * * * *"],
   env: {
     DB: db,
@@ -31,10 +34,10 @@ export const server = Cloudflare.Worker("server", {
     AUTH_EMAIL_FROM: Config.String("AUTH_EMAIL_FROM"),
     AUTH_EMAIL_DELIVERY: Config.String("AUTH_EMAIL_DELIVERY"),
     AVATARS: avatars,
-    CORS_ORIGIN: Config.String("CORS_ORIGIN"),
     BETTER_AUTH_SECRET: Config.Redacted("BETTER_AUTH_SECRET"),
     BETTER_AUTH_URL: Cloudflare.Worker.URL,
     STRIPE_SECRET_KEY: Config.Redacted("STRIPE_SECRET_KEY"),
+    STRIPE_PUBLISHABLE_KEY: Config.String("STRIPE_PUBLISHABLE_KEY"),
     STRIPE_WEBHOOK_SECRET: Config.Redacted("STRIPE_WEBHOOK_SECRET"),
   },
   dev: {

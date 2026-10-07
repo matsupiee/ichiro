@@ -2,19 +2,19 @@
 
 ## 配信
 
-既存のサーバー Worker が `/`、`/terms`、`/privacy`、`/commerce` の HTML を返す。
-`apps/server/public/` の画像・CSS・フォントは、同じ Worker の Static Assets から配信する。アプリの Web 版は提供しない。
+`apps/web`（TanStack Start）のサーバールート（`apps/web/src/routes/index.ts`、`terms.ts`、`privacy.ts`、`commerce.ts`）が、`apps/web/src/server/public-page.ts` の HTML を返す。
+JS を含まない HTML のまま配信し、`script-src` を許可しない厳しい CSP を保つ。ログイン済みで `/` を開いた場合は `/app` へリダイレクトする。
+`apps/web/public/` の画像・CSS・フォントは、同じ Worker の Static Assets から配信する。
 
 `bun run dev:server` でローカル起動し、`curl -i http://localhost:3000/` で応答を確認する。
-ネイティブアプリの機能確認は iOS Simulator で行う。
 
 ## 規約
 
-本文は `apps/server/src/site/legal.ts`。利用規約・プライバシーポリシー・特定商取引法に基づく表記をそれぞれ独立した URL に出す。
-各文書の施行日は2026年9月30日と表示する。草案・未施行の案内は削除済み。検索対象には含めない。
+本文は `apps/web/src/server/site/legal.ts`。利用規約・プライバシーポリシー・特定商取引法に基づく表記をそれぞれ独立した URL に出す。
+各文書の施行日は2026年10月7日と表示する。草案・未施行の案内は削除済み。検索対象には含めない。
 
 正式公開前に、Stripe の登録と一致する事業者名、運営責任者、住所、電話番号・受付時間、問い合わせメールを反映する。
-基本利用料、税の表示、追加費用、利用者都合の返金条件・申請期限・処理期間、退会手順、個人情報の保存期間、国外での取り扱い、対象 OS も確認する。
+基本利用料、税の表示、追加費用、利用者都合の返金条件・申請期限・処理期間、退会手順、個人情報の保存期間、国外での取り扱い、対応ブラウザも確認する。
 実装と運用に合わせて本文を見直したうえで、検索対象に含める際は `noindex` を外す。アプリ側の同意取得や規約リンクの接続は、この紹介ページの実装には含まない。
 
 本文作成時に参照した一次情報：
@@ -27,12 +27,13 @@
 ## 画像の差し替え
 
 撮影用 seed と操作手順は [サービス紹介のストーリー](../user-stories/view-service-introduction.md)を参照する。
-画像はネイティブの画面を撮影したもので、個人情報や既存のテストユーザーの内容を含めない。
-`apps/server/public/images/` の画像を差し替える。スクリーンショットの元サイズは1206×2622。
+今の画像は Web 版へ移行する前のネイティブアプリの画面を撮影したもの。差し替えるときは、Web 版の画面をスマートフォンの幅で撮影する。個人情報や既存のテストユーザーの内容を含めない。
+`apps/web/public/images/` の画像を差し替える。今のスクリーンショットの元サイズは1206×2622。
 
-ロゴはアプリアイコンと同じ筆記体を使う。`apps/native/assets/images/ichiro-wordmark.png` を `apps/server/public/images/ichiro-wordmark.png` にコピーし、アプリ内と同じ画像を配信する。
+ロゴは筆記体の `apps/web/public/images/ichiro-wordmark.png`。紹介ページはこの画像をそのまま表示し、アプリの `BrandLogo`（`apps/web/src/components/ui.tsx`）はこの画像をマスクにして水色で塗る。差し替えると両方に反映される。
 
 ## 検証
 
-`bun run test`、`bun run check-types` を実行する。HTTP テストは公開ページ、規約ページ、画像の存在、既存 API のパスとの共存を検証する。
-ネイティブでは撮影用アカウントでログインし、一覧・詳細・達成報告を確認する。
+`bun run test`、`bun run check-types` を実行する。HTTP テスト（`apps/web/src/server/public-page.test.ts`）は公開ページ、規約ページ、画像の存在、既存 API のパスとの共存を検証する。
+`bun run test:e2e` の `apps/web/e2e/public-site.spec.ts` は、ブラウザで紹介ページと規約ページを開いて確かめる。手順は [E2E テスト](./e2e.md)を参照する。
+撮影用アカウントでは http://localhost:3000/app にログインし、一覧・詳細・達成報告を確認する。

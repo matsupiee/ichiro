@@ -9,18 +9,22 @@
 
 ## 動作確認の手順
 
-`bun run db:seed -- --url file:/ローカルDBの絶対パス --skip-migrations` で、移行済みのローカルDBにデモデータを作る。demo@ichiro.app / password123 でログインする。
+リポジトリのルートで `bun run dev:server` を起動し、`bun run --cwd packages/db db:seed:e2e` でデモデータを入れる。
+ブラウザで http://localhost:3000/app を開き、demo@ichiro.app / password123 でログインする。
 
 1. 新しいコミットメントを作成する。
    - チェック者の選択は表示されない。
    - 作成後のお祝い画面は「ホームに戻る」で閉じられる。友達への依頼ボタンはない。
+   - → [コミットメントを作成できる](./create-commitment.md)
 2. 詳細を開いて設定を保存する。
    - チェック者の選択や招待リンクの発行は表示されない。
 3. 報告日に「今日の達成を報告する」を押す。
    - お祝い画面が表示され、閉じると報告済みになる。
    - 他のユーザーは代わりに報告できない。
-4. 廃止前に発行した `ichiro://invite/<token>` をネイティブアプリで開く。
-   - 依頼内容や承諾ボタンは表示されない。招待APIも利用できない。
+   - → [今日の達成を報告すると、ワンちゃんが祝福してくれる](./report-achievement.md)
+4. 招待や依頼の画面がないことを確かめる。
+   - Web 版には招待リンクを開く画面がなく、依頼内容や承諾ボタンはどこにも表示されない。
+   - 廃止前に発行した招待のトークンを使っても、招待 API は利用できない。
 
 ## データの持ち方
 
@@ -33,8 +37,7 @@
 
 ## 対応するテスト
 
-- `.maestro/self-check.yaml`：作成・お祝い・編集・本人による達成報告。
-- `.maestro/retired-invite.yaml`：旧招待リンクの無効化とホームへの復帰。
+- `apps/web/e2e/commitments.spec.ts`：作成・お祝い・編集・本人による達成報告で、チェック者や依頼の項目が出ないこと。
 - `packages/api/src/test/self-check-migration.integration.test.ts`：既存データと履歴の保持、列削除後の履歴記録。
-- `packages/api/src/test/self-check.integration.test.ts`：招待APIの廃止とレスポンスからの関連項目の削除。
+- `packages/api/src/test/self-check.integration.test.ts`：招待 API の廃止とレスポンスからの関連項目の削除。
 - `packages/api/src/routers/consumer/commitment/report/handler.integration.test.ts`：本人の報告、他人の報告拒否、締め切り。

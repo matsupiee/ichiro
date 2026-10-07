@@ -1,28 +1,18 @@
 import { paymentCustomer } from "@ichiro/db/schema/index";
 import { eq } from "drizzle-orm";
-import Stripe from "stripe";
 
 import type { AuthedContext } from "../../../../context";
 
 export async function handler({ ctx }: { ctx: AuthedContext }) {
   const customerId = await ensureCustomer(ctx);
-  const ephemeralKey = await ctx.stripe.ephemeralKeys.create(
-    { customer: customerId },
-    { apiVersion: Stripe.API_VERSION },
-  );
   const setupIntent = await ctx.stripe.setupIntents.create({
     customer: customerId,
     // 罰金はユーザーがアプリを開いていないときに引き落とす
     usage: "off_session",
-    // Apple Pay もカードとして登録される
     payment_method_types: ["card"],
     metadata: { user_id: ctx.session.user.id },
   });
-  return {
-    customerId,
-    ephemeralKeySecret: ephemeralKey.secret!,
-    setupIntentClientSecret: setupIntent.client_secret!,
-  };
+  return { setupIntentClientSecret: setupIntent.client_secret! };
 }
 
 // ユーザーの Stripe Customer を返す。まだなければ作る

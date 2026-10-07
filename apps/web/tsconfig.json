@@ -1,0 +1,12 @@
+{
+  "extends": "@ichiro/config/tsconfig.base.json",
+  "compilerOptions": {
+    "noEmit": true,
+    "lib": ["ESNext", "DOM", "DOM.Iterable"],
+    "types": ["node", "@cloudflare/workers-types", "bun", "vite/client"],
+    "jsx": "react-jsx",
+    // TanStack Start の推奨。有効だとサーバー用のコードがクライアントのバンドルに混ざることがある
+    "verbatimModuleSyntax": false
+  },
+  "include": ["src", "e2e", "cloudflare-env.d.ts", "vite.config.ts", "playwright.config.ts"]
+}

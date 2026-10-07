@@ -1,0 +1,44 @@
+{
+  "name": "web",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "bun test src",
+    "check-types": "tsc --noEmit",
+    "env:generate": "varlock codegen",
+    "test:e2e": "playwright test"
+  },
+  "dependencies": {
+    "@ichiro/api": "workspace:*",
+    "@ichiro/auth": "workspace:*",
+    "@ichiro/db": "workspace:*",
+    "@stripe/react-stripe-js": "^7.0.0",
+    "@stripe/stripe-js": "^10.0.0",
+    "@tanstack/react-query": "^5.102.8",
+    "@tanstack/react-router": "^1.170.41",
+    "@tanstack/react-start": "^1.168.60",
+    "@trpc/client": "catalog:",
+    "@trpc/server": "catalog:",
+    "@trpc/tanstack-react-query": "^11.18.0",
+    "better-auth": "catalog:",
+    "react": "19.2.3",
+    "react-dom": "19.2.3",
+    "varlock": "catalog:",
+    "zod": "catalog:"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "catalog:",
+    "@ichiro/config": "workspace:*",
+    "@ichiro/infra": "workspace:*",
+    "@playwright/test": "1.56.1",
+    "@tailwindcss/vite": "^4.3.3",
+    "@types/bun": "^1.4.2",
+    "@types/node": "catalog:",
+    "@types/react": "^19.2.18",
+    "@types/react-dom": "^19.2.3",
+    "@vitejs/plugin-react": "^6.1.2",
+    "tailwindcss": "^4.3.3",
+    "typescript": "^6.0.3",
+    "vite": "^8.3.3"
+  }
+}

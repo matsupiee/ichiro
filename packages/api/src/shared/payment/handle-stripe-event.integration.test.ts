@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test";
-import { paymentMethod, penalty } from "@ichiro/db/schema/index";
+import { paymentCustomer, paymentMethod, penalty } from "@ichiro/db/schema/index";
 import { and, eq } from "drizzle-orm";
 import type Stripe from "stripe";
 
@@ -157,13 +157,17 @@ describe("Stripe の Webhook で結果を反映する", () => {
     const setup = await caller.consumer.payment.startSetup();
     const setupIntentId = setup.setupIntentClientSecret.split("_secret_")[0]!;
     const pmId = stripe.completeSetup(setupIntentId, { brand: "visa", last4: "1881" });
+    const [customer] = await db
+      .select()
+      .from(paymentCustomer)
+      .where(eq(paymentCustomer.userId, session.user.id));
 
     await handleStripeEvent(
       db,
       stripe.client,
       event("setup_intent.succeeded", {
         id: setupIntentId,
-        customer: setup.customerId,
+        customer: customer!.stripeCustomerId,
         payment_method: pmId,
       }),
     );

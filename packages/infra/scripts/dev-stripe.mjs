@@ -23,7 +23,7 @@ export async function loadSettings(env = process.env) {
   await graph.resolveEnvValues();
   if (graph.isInvalid) {
     throw new Error(
-      "開発用の環境設定が不足しています。apps/server/.env と packages/infra/.env.schema を確認してください。",
+      "開発用の環境設定が不足しています。apps/web/.env と packages/infra/.env.schema を確認してください。",
     );
   }
   return { ...env, ...graph.getResolvedEnvStringObject() };
@@ -116,7 +116,9 @@ export async function run({
   }
   try {
     if (signal?.aborted) return 0;
-    log(`Stripe のテスト環境に接続しています（転送先 http://localhost:${port}/stripe/webhook）…`);
+    log(
+      `Stripe のテスト環境に接続しています（転送先 http://localhost:${port}/api/stripe/webhook）…`,
+    );
     timer = setTimeout(() => {
       log(
         "Stripe の接続がタイムアウトしました。テスト用キーと外向き通信の許可を確認してください。",
@@ -133,7 +135,7 @@ export async function run({
         "--events",
         events,
         "--forward-to",
-        `http://localhost:${port}/stripe/webhook`,
+        `http://localhost:${port}/api/stripe/webhook`,
       ],
       childEnv,
       "stripe",
@@ -180,7 +182,7 @@ if (import.meta.main) {
     });
     if (values.help) {
       console.log(
-        "bun run dev:stripe [--port 3000]\nStripe CLI と API を起動します。STRIPE_SECRET_KEY は apps/server/.env または環境変数に設定してください。",
+        "bun run dev:stripe [--port 3000]\nStripe CLI と API を起動します。STRIPE_SECRET_KEY は apps/web/.env または環境変数に設定してください。",
       );
     } else {
       process.exitCode = await run({
