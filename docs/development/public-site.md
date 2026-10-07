@@ -4,6 +4,7 @@
 
 `apps/web`（TanStack Start）のサーバールート（`apps/web/src/routes/index.ts`、`terms.ts`、`privacy.ts`、`commerce.ts`）が、`apps/web/src/server/public-page.ts` の HTML を返す。
 JS を含まない HTML のまま配信し、`script-src` を許可しない厳しい CSP を保つ。ログイン済みで `/` を開いた場合は `/app` へリダイレクトする。
+アプリを始めるボタン（ヘッダー・最初の画面・ページ下部）はふつうのリンクで `/app/welcome` を指す。リンク先を変えるときは `public-page.ts` の `APP_START_PATH` を直す。ボタンの下の料金の注記は、`legal.ts` の基本利用料と合わせる。
 `apps/web/public/` の画像・CSS・フォントは、同じ Worker の Static Assets から配信する。
 
 `bun run dev:server` でローカル起動し、`curl -i http://localhost:3000/` で応答を確認する。

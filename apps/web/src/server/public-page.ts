@@ -4,8 +4,12 @@ const logo = `<img src="/images/ichiro-wordmark.png" alt="ichiro" width="2172" h
 
 const links = `<a href="/terms">利用規約</a><a href="/privacy">プライバシーポリシー</a><a href="/commerce">特定商取引法に基づく表記</a>`;
 const footer = `<footer class="footer"><div class="wrap footer-inner"><nav aria-label="規約・運営情報">${links}</nav><span class="copyright">© ichiro</span></div></footer>`;
+// アプリのはじめにの画面（新規登録とログインを選ぶ）。ログイン済みなら /app/_guest がホームへ送る
+const APP_START_PATH = "/app/welcome";
+const cta = (label: string) => `<a class="cta" href="${APP_START_PATH}">${label}</a>`;
+const ctaNote = `<p class="cta-note">基本利用料は無料。罰金の設定は任意です。</p>`;
 const header = (legal = false) =>
-  `<header class="header ${legal ? "legal-header" : ""}"><a class="logo" href="/" aria-label="ichiro ホーム">${logo}</a><nav aria-label="メイン"><a href="/#how">使い方</a></nav></header>`;
+  `<header class="header ${legal ? "legal-header" : ""}"><a class="logo" href="/" aria-label="ichiro ホーム">${logo}</a><nav aria-label="メイン"><a href="/#how">使い方</a><a class="header-cta" href="${APP_START_PATH}">はじめる</a></nav></header>`;
 // 検索結果と SNS の共有カードに使う本番の URL。stg や開発環境でも本番を正規の URL として示す
 export const SITE_URL = "https://ichiro.app";
 const description =
@@ -49,6 +53,7 @@ const page = document(
     <div class="hero-copy">
     <h1 class="logo" id="hero-title">${logo}</h1>
     <h2>小さな約束。<br>毎日、ちょっとずつ。</h2>
+    ${cta("さっそくはじめる")}${ctaNote}
     </div>
     <div class="hero-art">
       ${phone("commitments", "朝の読書・英語・運動の目標を並べた ichiro の実際の一覧画面", true)}
@@ -63,7 +68,7 @@ const page = document(
       <article class="step"><div class="step-visual">${phone("progress", "連続達成の記録と今日の達成を報告するボタン")}</div><div class="step-copy"><span class="number">STEP 3</span><h3>できたら報告</h3><p>今日もできたら、ボタンをタップ。<br>毎日の一歩を記録しよう。</p></div></article>
     </div></div>
   </section>
-  <section class="end"><p class="logo">${logo}</p><p>あなたの「続けたい」を応援。</p></section>
+  <section class="end"><p class="logo">${logo}</p><p>あなたの「続けたい」を応援。</p>${cta("アカウントを作ってはじめる")}${ctaNote}</section>
 </main>`,
 );
 

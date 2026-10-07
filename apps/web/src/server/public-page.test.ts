@@ -42,6 +42,21 @@ describe("公開紹介ページ", () => {
     }
   });
 
+  test("ヘッダー・最初の画面・最後の案内から、アプリのはじめにの画面へ進める", async () => {
+    const html = await (await request("/")).text();
+    const header = html.match(/<header[\s\S]*?<\/header>/)![0];
+    expect(header).toContain('<a class="header-cta" href="/app/welcome">はじめる</a>');
+    const hero = html.match(/<section class="hero"[\s\S]*?<\/section>/)![0];
+    expect(hero).toContain('<a class="cta" href="/app/welcome">さっそくはじめる</a>');
+    const end = html.match(/<section class="end"[\s\S]*?<\/section>/)![0];
+    expect(end).toContain('<a class="cta" href="/app/welcome">アカウントを作ってはじめる</a>');
+    // 料金の案内は規約（特商法表記の基本利用料）と食い違わない
+    expect(html.match(/基本利用料は無料。罰金の設定は任意です。/g)).toHaveLength(2);
+    // 規約ページのヘッダーからもアプリを始められる
+    const terms = await (await request("/terms")).text();
+    expect(terms).toContain('href="/app/welcome">はじめる</a>');
+  });
+
   test("トップのスクショ・スタイル・ロゴが配信対象に存在する", async () => {
     const html = await (await request("/")).text();
     const images = [...html.matchAll(/<img[^>]+src="([^"]+)"[^>]+alt="([^"]+)"/g)];
