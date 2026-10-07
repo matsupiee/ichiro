@@ -1,5 +1,6 @@
 @import "tailwindcss";
 @import "../components/dog/dog.css";
+@import "../components/celebration/celebration.css";
 
 /* ichiro のデザイントークン。値はネイティブ版（apps/native/global.css）と揃える */
 @theme {

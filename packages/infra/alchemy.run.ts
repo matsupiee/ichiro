@@ -37,6 +37,7 @@ export const server = Cloudflare.Website.Vite("server", {
     BETTER_AUTH_SECRET: Config.Redacted("BETTER_AUTH_SECRET"),
     BETTER_AUTH_URL: Cloudflare.Worker.URL,
     STRIPE_SECRET_KEY: Config.Redacted("STRIPE_SECRET_KEY"),
+    STRIPE_PUBLISHABLE_KEY: Config.String("STRIPE_PUBLISHABLE_KEY"),
     STRIPE_WEBHOOK_SECRET: Config.Redacted("STRIPE_WEBHOOK_SECRET"),
   },
   dev: {

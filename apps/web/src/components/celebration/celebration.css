@@ -1,0 +1,117 @@
+/*
+ * 達成の報告・コミットメントの作成のときに出すお祝い。
+ * 値はネイティブ版（apps/native/components/celebration/*.tsx）の reanimated の値を写したもの。
+ */
+@font-face {
+  font-family: "Dela Gothic One";
+  /* 見出し（宣言したワン！など）の文字だけに絞ったサブセット */
+  src: url("/fonts/dela-gothic-one-celebration.woff2") format("woff2");
+  font-display: swap;
+}
+
+.celebration {
+  animation: celebration-fade 150ms ease-out both;
+}
+.celebration-shake {
+  animation: celebration-shake 450ms ease-in-out 620ms both;
+}
+.celebration-dog {
+  animation: celebration-dog-enter 700ms cubic-bezier(0.3, 1.2, 0.5, 1) both;
+}
+.celebration-rise {
+  animation: celebration-rise 450ms ease-out var(--delay, 0ms) both;
+}
+.celebration-count {
+  animation: celebration-count 400ms ease-out var(--delay, 0ms) both;
+}
+.celebration-rays {
+  transform-origin: center;
+  transform-box: fill-box;
+  animation: celebration-spin 26s linear infinite;
+}
+.celebration-confetti {
+  animation: celebration-confetti var(--duration) cubic-bezier(0.15, 0.6, 0.35, 1) var(--delay) both;
+}
+
+@keyframes celebration-fade {
+  from {
+    opacity: 0;
+  }
+}
+@keyframes celebration-dog-enter {
+  0% {
+    transform: translateY(420px);
+  }
+  60% {
+    transform: translateY(-24px);
+  }
+  80% {
+    transform: translateY(6px);
+  }
+  100% {
+    transform: translateY(0);
+  }
+}
+/* 着地の瞬間に画面ごと揺らす */
+@keyframes celebration-shake {
+  0%,
+  100% {
+    transform: translateX(0) rotate(0);
+  }
+  15% {
+    transform: translateX(-7px) rotate(-1deg);
+  }
+  30% {
+    transform: translateX(6px) rotate(1deg);
+  }
+  45% {
+    transform: translateX(-5px) rotate(0);
+  }
+  60% {
+    transform: translateX(4px);
+  }
+  75% {
+    transform: translateX(-2px);
+  }
+}
+@keyframes celebration-rise {
+  from {
+    opacity: 0;
+    transform: translateY(28px);
+  }
+}
+@keyframes celebration-count {
+  40% {
+    transform: scale(1.35);
+  }
+}
+@keyframes celebration-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+@keyframes celebration-confetti {
+  0% {
+    opacity: 1;
+    transform: translate(0, 0) rotate(0) scale(0.3);
+  }
+  20% {
+    opacity: 1;
+    transform: translate(calc(var(--dx) * 0.5), var(--up)) rotate(calc(var(--rotate) * 0.3))
+      scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: translate(var(--dx), var(--dy)) rotate(var(--rotate)) scale(1);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .celebration *,
+  .celebration {
+    animation: none !important;
+  }
+  .celebration-confetti {
+    display: none;
+  }
+}

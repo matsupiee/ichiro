@@ -74,7 +74,7 @@ function WithdrawalScreen() {
       <ScreenHeader
         title="ichiro の退会"
         onBack={() => {
-          if (!busy) void navigate({ to: "/app" });
+          if (!busy) void navigate({ to: "/app/account" });
         }}
       />
       <div className="px-6">

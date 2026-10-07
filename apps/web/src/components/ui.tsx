@@ -258,3 +258,38 @@ export function RowButton({
     </button>
   );
 }
+
+// 回転させた L 字で描くチェックマーク
+export function CheckMark({
+  width,
+  height,
+  thickness,
+  offsetY,
+}: {
+  width: number;
+  height: number;
+  thickness: number;
+  offsetY: number;
+}) {
+  return (
+    <span
+      aria-hidden
+      className="block rotate-45 rounded-[1px] border-white"
+      style={{
+        width,
+        height,
+        marginTop: offsetY,
+        borderRightWidth: thickness,
+        borderBottomWidth: thickness,
+      }}
+    />
+  );
+}
+
+export function Spinner({ className = "" }: { className?: string }) {
+  return (
+    <span role="status" aria-label="読み込み中" className={`flex justify-center ${className}`}>
+      <span className="size-7 animate-spin rounded-full border-[3px] border-brand border-t-transparent" />
+    </span>
+  );
+}

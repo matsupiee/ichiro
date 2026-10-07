@@ -88,7 +88,7 @@ function ChangeEmailScreen() {
       <ScreenHeader
         title="メールアドレスを変更"
         onBack={() => {
-          if (!busy) void navigate({ to: "/app" });
+          if (!busy) void navigate({ to: "/app/account" });
         }}
       />
       {step === "done" ? (

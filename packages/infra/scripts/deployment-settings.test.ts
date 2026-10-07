@@ -12,6 +12,7 @@ const valid = {
   AUTH_EMAIL_FROM: "ichiro <noreply@mail.ichiro.app>",
   NODE_ENV: "production",
   STRIPE_SECRET_KEY: "sk_test_fixture",
+  STRIPE_PUBLISHABLE_KEY: "pk_test_fixture",
   STRIPE_WEBHOOK_SECRET: "whsec_fixture",
   BETTER_AUTH_SECRET: "x".repeat(32),
 };
@@ -27,6 +28,17 @@ test("stg と prod の Stripe キーを取り違えると停止する", () => {
       ...valid,
       APP_ENV: "prod",
       STRIPE_SECRET_KEY: "sk_live_fixture",
+    }),
+  ).toThrow("pk_live_");
+  expect(() =>
+    validateDeployment("stg", { ...valid, STRIPE_PUBLISHABLE_KEY: "pk_live_fixture" }),
+  ).toThrow("pk_test_");
+  expect(() =>
+    validateDeployment("prod", {
+      ...valid,
+      APP_ENV: "prod",
+      STRIPE_SECRET_KEY: "sk_live_fixture",
+      STRIPE_PUBLISHABLE_KEY: "pk_live_fixture",
     }),
   ).not.toThrow();
 });
@@ -44,7 +56,12 @@ test("暗黙の stage、環境不一致、未設定の秘密情報を拒否す�
     "32文字",
   );
   expect(() =>
-    validateDeployment("prod", { ...valid, APP_ENV: "prod", STRIPE_SECRET_KEY: "sk_live_fixture" }),
+    validateDeployment("prod", {
+      ...valid,
+      APP_ENV: "prod",
+      STRIPE_SECRET_KEY: "sk_live_fixture",
+      STRIPE_PUBLISHABLE_KEY: "pk_live_fixture",
+    }),
   ).not.toThrow();
 });
 
@@ -95,6 +112,7 @@ test("CI の環境変数から prod を読み込み、ローカル設定より�
     ...valid,
     APP_ENV: "prod",
     STRIPE_SECRET_KEY: "sk_live_ci",
+    STRIPE_PUBLISHABLE_KEY: "pk_live_ci",
   };
   expect((await loadDeployment("prod", env, join(root, "packages/infra"))).STRIPE_SECRET_KEY).toBe(
     "sk_live_ci",

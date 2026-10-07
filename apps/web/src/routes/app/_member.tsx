@@ -1,5 +1,8 @@
 import { Outlet, createFileRoute, redirect } from "@tanstack/react-router";
 
+import { CelebrationProvider } from "../../components/celebration/celebration";
+import { DialogProvider } from "../../components/dialog";
+
 // ログインとメール確認が済んだユーザーだけが使う画面
 export const Route = createFileRoute("/app/_member")({
   beforeLoad: ({ context }) => {
@@ -10,5 +13,15 @@ export const Route = createFileRoute("/app/_member")({
     }
     return { user };
   },
-  component: Outlet,
+  component: MemberLayout,
 });
+
+function MemberLayout() {
+  return (
+    <DialogProvider>
+      <CelebrationProvider>
+        <Outlet />
+      </CelebrationProvider>
+    </DialogProvider>
+  );
+}

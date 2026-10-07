@@ -27,8 +27,11 @@ import { Route as AppGuestSignUpRouteImport } from './routes/app/_guest/sign-up'
 import { Route as AppGuestVerifyEmailRouteImport } from './routes/app/_guest/verify-email'
 import { Route as AppGuestWelcomeRouteImport } from './routes/app/_guest/welcome'
 import { Route as AppMemberIndexRouteImport } from './routes/app/_member/index'
+import { Route as AppMemberAccountRouteImport } from './routes/app/_member/account'
 import { Route as AppMemberChangeEmailRouteImport } from './routes/app/_member/change-email'
 import { Route as AppMemberWithdrawalRouteImport } from './routes/app/_member/withdrawal'
+import { Route as AppMemberCommitmentsIdRouteImport } from './routes/app/_member/commitments/$id'
+import { Route as AppMemberCommitmentsNewRouteImport } from './routes/app/_member/commitments/new'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -118,6 +121,11 @@ const AppMemberIndexRoute = AppMemberIndexRouteImport.update({
   path: '/',
   getParentRoute: () => AppMemberRoute,
 } as any)
+const AppMemberAccountRoute = AppMemberAccountRouteImport.update({
+  id: '/account',
+  path: '/account',
+  getParentRoute: () => AppMemberRoute,
+} as any)
 const AppMemberChangeEmailRoute = AppMemberChangeEmailRouteImport.update({
   id: '/change-email',
   path: '/change-email',
@@ -126,6 +134,16 @@ const AppMemberChangeEmailRoute = AppMemberChangeEmailRouteImport.update({
 const AppMemberWithdrawalRoute = AppMemberWithdrawalRouteImport.update({
   id: '/withdrawal',
   path: '/withdrawal',
+  getParentRoute: () => AppMemberRoute,
+} as any)
+const AppMemberCommitmentsIdRoute = AppMemberCommitmentsIdRouteImport.update({
+  id: '/commitments/$id',
+  path: '/commitments/$id',
+  getParentRoute: () => AppMemberRoute,
+} as any)
+const AppMemberCommitmentsNewRoute = AppMemberCommitmentsNewRouteImport.update({
+  id: '/commitments/new',
+  path: '/commitments/new',
   getParentRoute: () => AppMemberRoute,
 } as any)
 
@@ -145,9 +163,12 @@ export interface FileRoutesByFullPath {
   '/app/sign-up': typeof AppGuestSignUpRoute
   '/app/verify-email': typeof AppGuestVerifyEmailRoute
   '/app/welcome': typeof AppGuestWelcomeRoute
+  '/app/account': typeof AppMemberAccountRoute
   '/app/change-email': typeof AppMemberChangeEmailRoute
   '/app/withdrawal': typeof AppMemberWithdrawalRoute
   '/app/': typeof AppMemberIndexRoute
+  '/app/commitments/$id': typeof AppMemberCommitmentsIdRoute
+  '/app/commitments/new': typeof AppMemberCommitmentsNewRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -165,8 +186,11 @@ export interface FileRoutesByTo {
   '/app/sign-up': typeof AppGuestSignUpRoute
   '/app/verify-email': typeof AppGuestVerifyEmailRoute
   '/app/welcome': typeof AppGuestWelcomeRoute
+  '/app/account': typeof AppMemberAccountRoute
   '/app/change-email': typeof AppMemberChangeEmailRoute
   '/app/withdrawal': typeof AppMemberWithdrawalRoute
+  '/app/commitments/$id': typeof AppMemberCommitmentsIdRoute
+  '/app/commitments/new': typeof AppMemberCommitmentsNewRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -187,9 +211,12 @@ export interface FileRoutesById {
   '/app/_guest/sign-up': typeof AppGuestSignUpRoute
   '/app/_guest/verify-email': typeof AppGuestVerifyEmailRoute
   '/app/_guest/welcome': typeof AppGuestWelcomeRoute
+  '/app/_member/account': typeof AppMemberAccountRoute
   '/app/_member/change-email': typeof AppMemberChangeEmailRoute
   '/app/_member/withdrawal': typeof AppMemberWithdrawalRoute
   '/app/_member/': typeof AppMemberIndexRoute
+  '/app/_member/commitments/$id': typeof AppMemberCommitmentsIdRoute
+  '/app/_member/commitments/new': typeof AppMemberCommitmentsNewRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -209,9 +236,12 @@ export interface FileRouteTypes {
     | '/app/sign-up'
     | '/app/verify-email'
     | '/app/welcome'
+    | '/app/account'
     | '/app/change-email'
     | '/app/withdrawal'
     | '/app/'
+    | '/app/commitments/$id'
+    | '/app/commitments/new'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -229,8 +259,11 @@ export interface FileRouteTypes {
     | '/app/sign-up'
     | '/app/verify-email'
     | '/app/welcome'
+    | '/app/account'
     | '/app/change-email'
     | '/app/withdrawal'
+    | '/app/commitments/$id'
+    | '/app/commitments/new'
   id:
     | '__root__'
     | '/'
@@ -250,9 +283,12 @@ export interface FileRouteTypes {
     | '/app/_guest/sign-up'
     | '/app/_guest/verify-email'
     | '/app/_guest/welcome'
+    | '/app/_member/account'
     | '/app/_member/change-email'
     | '/app/_member/withdrawal'
     | '/app/_member/'
+    | '/app/_member/commitments/$id'
+    | '/app/_member/commitments/new'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -396,6 +432,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppMemberIndexRouteImport
       parentRoute: typeof AppMemberRoute
     }
+    '/app/_member/account': {
+      id: '/app/_member/account'
+      path: '/account'
+      fullPath: '/app/account'
+      preLoaderRoute: typeof AppMemberAccountRouteImport
+      parentRoute: typeof AppMemberRoute
+    }
     '/app/_member/change-email': {
       id: '/app/_member/change-email'
       path: '/change-email'
@@ -408,6 +451,20 @@ declare module '@tanstack/react-router' {
       path: '/withdrawal'
       fullPath: '/app/withdrawal'
       preLoaderRoute: typeof AppMemberWithdrawalRouteImport
+      parentRoute: typeof AppMemberRoute
+    }
+    '/app/_member/commitments/$id': {
+      id: '/app/_member/commitments/$id'
+      path: '/commitments/$id'
+      fullPath: '/app/commitments/$id'
+      preLoaderRoute: typeof AppMemberCommitmentsIdRouteImport
+      parentRoute: typeof AppMemberRoute
+    }
+    '/app/_member/commitments/new': {
+      id: '/app/_member/commitments/new'
+      path: '/commitments/new'
+      fullPath: '/app/commitments/new'
+      preLoaderRoute: typeof AppMemberCommitmentsNewRouteImport
       parentRoute: typeof AppMemberRoute
     }
   }
@@ -434,15 +491,21 @@ const AppGuestRouteWithChildren = AppGuestRoute._addFileChildren(
 )
 
 interface AppMemberRouteChildren {
+  AppMemberAccountRoute: typeof AppMemberAccountRoute
   AppMemberChangeEmailRoute: typeof AppMemberChangeEmailRoute
   AppMemberWithdrawalRoute: typeof AppMemberWithdrawalRoute
   AppMemberIndexRoute: typeof AppMemberIndexRoute
+  AppMemberCommitmentsIdRoute: typeof AppMemberCommitmentsIdRoute
+  AppMemberCommitmentsNewRoute: typeof AppMemberCommitmentsNewRoute
 }
 
 const AppMemberRouteChildren: AppMemberRouteChildren = {
+  AppMemberAccountRoute: AppMemberAccountRoute,
   AppMemberChangeEmailRoute: AppMemberChangeEmailRoute,
   AppMemberWithdrawalRoute: AppMemberWithdrawalRoute,
   AppMemberIndexRoute: AppMemberIndexRoute,
+  AppMemberCommitmentsIdRoute: AppMemberCommitmentsIdRoute,
+  AppMemberCommitmentsNewRoute: AppMemberCommitmentsNewRoute,
 }
 
 const AppMemberRouteWithChildren = AppMemberRoute._addFileChildren(
