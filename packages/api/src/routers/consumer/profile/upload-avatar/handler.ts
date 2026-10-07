@@ -1,7 +1,6 @@
 import { user } from "@ichiro/db/schema/index";
 import { createId } from "@paralleldrive/cuid2";
 import { eq } from "drizzle-orm";
-import type { Context as HonoContext } from "hono";
 import type z from "zod";
 
 import type { AuthedContext } from "../../../../context";
@@ -31,21 +30,24 @@ function detectFormat(contentType: string | undefined, bytes: Uint8Array): Forma
   return type as Format;
 }
 
-export async function handler({ c, context }: { c: HonoContext; context: AuthedContext }) {
-  const declared = Number(c.req.header("Content-Length"));
+export async function handler({ request, context }: { request: Request; context: AuthedContext }) {
+  const declared = Number(request.headers.get("Content-Length"));
   if (declared > AVATAR_MAX_BYTES) {
-    return c.json({ message: "写真は5MB以下にしてください" }, 413);
+    return Response.json({ message: "写真は5MB以下にしてください" }, { status: 413 });
   }
-  const body = await c.req.arrayBuffer();
+  const body = await request.arrayBuffer();
   if (body.byteLength === 0) {
-    return c.json({ message: "写真を選んでください" }, 400);
+    return Response.json({ message: "写真を選んでください" }, { status: 400 });
   }
   if (body.byteLength > AVATAR_MAX_BYTES) {
-    return c.json({ message: "写真は5MB以下にしてください" }, 413);
+    return Response.json({ message: "写真は5MB以下にしてください" }, { status: 413 });
   }
-  const format = detectFormat(c.req.header("Content-Type"), new Uint8Array(body.slice(0, 16)));
+  const format = detectFormat(
+    request.headers.get("Content-Type") ?? undefined,
+    new Uint8Array(body.slice(0, 16)),
+  );
   if (!format) {
-    return c.json({ message: "JPEG・PNG・WebP の写真を選んでください" }, 415);
+    return Response.json({ message: "JPEG・PNG・WebP の写真を選んでください" }, { status: 415 });
   }
 
   const userId = context.session.user.id;
@@ -61,5 +63,5 @@ export async function handler({ c, context }: { c: HonoContext; context: AuthedC
   // 新しい写真に切り替えてから古い写真を消す。途中で失敗しても写真が消えた状態にはならない
   await deleteOwnAvatar(context.avatarStorage, userId, current?.image ?? null);
 
-  return c.json({ image } satisfies z.infer<typeof profileUploadAvatarOutputSchema>);
+  return Response.json({ image } satisfies z.infer<typeof profileUploadAvatarOutputSchema>);
 }
